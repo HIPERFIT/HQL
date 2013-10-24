@@ -10,18 +10,15 @@ type Points = M.Map Date Double
 
 -- TODO: return Cash instead of Num, use currencies etc.
 
-data FlatTermStructure = FlatTermStructure {
-    constantYield :: Floating f => f
-}
+type FlatTermStructure = forall f. (Floating f) => f
+type InterpolatedTermStructure = Points
+type AnalyticalTermStructure = forall f. (Floating f) => Int -> f
 
-data InterpolatedTermStructure = InterpolatedTermStructure {
-    yieldPoints :: Points
-}
+data TermStructure = Flat         FlatTermStructure
+                   | Interpolated InterpolatedTermStructure
+                   | Analytical   AnalyticalTermStructure
 
-data AnalyticalTermStructure = AnalyticalTermStructure {
-    yieldCurveFunction :: Floating f => Int -> f
-}
-
+{-
 class TermStructure t where
     discountD :: Floating f => t -> f
     discountT :: Floating f => t -> f
@@ -30,18 +27,18 @@ class TermStructure t where
     --discountD :: (Date d, Num a) => d -> a
     --discountT :: (Num a) => a -> a
 
-instance TermStructure FlatTermStructure where
+instance TermStructure Flat where
     discountD = constantYield -- Just a flat/constant yield
     discountT = constantYield -- Just a flat/constant yield
 
 -- Interpolated term structure, interpolating between known points (yield/date pairs)
-instance TermStructure InterpolatedTermStructure where
+instance TermStructure Interpolated where
     discountD d = 1.0 -- TODO: lookup and interpolate (use Interpolation class?)
     discountT t = 1.0 -- TODO: lookup and interpolate (use Interpolation class?)
 
 -- Analytical term strucutre, using an analytical function
-instance TermStructure AnalyticalTermStructure where
+instance TermStructure Analytical where
     discountD d = 5.0 + sqrt(1.0) * 0.25 -- Example from D.E. documentation -- TODO: convert d (date) to time
     discountT t = 5.0 + sqrt(1.0) * 0.25 -- Example from D.E. documentation
 
-
+-}
