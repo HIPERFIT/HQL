@@ -1,5 +1,5 @@
-HsDerivatives
-=============
+Hiperfit Quant Library
+======================
 
 Porting Sinan Gabel's DerivativesExpert (Mathematica) to Haskell.
 
