@@ -25,3 +25,12 @@ instance Num (Cash a) where
   abs (SEK v) = SEK (abs v)
   signum _ = undefined
   fromInteger _ = undefined
+
+(*.) :: Cash Double -> Double -> Cash Double
+(*.) (DKK v) d = DKK $ v*d
+(*.) (SEK v) d = SEK $ v*d
+(*.) (USD v) d = USD $ v*d
+(/.) :: Cash Double -> Double -> Cash Double
+(/.) (DKK v) d = DKK $ v/d
+(/.) (SEK v) d = SEK $ v/d
+(/.) (USD v) d = USD $ v/d
