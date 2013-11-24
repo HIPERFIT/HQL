@@ -1,18 +1,20 @@
 {-# LANGUAGE GADTs, RankNTypes #-}
+module Bonds where
 import qualified Data.Map as M
 import qualified Data.Time as T
-import qualified Currency as C
+import Currency
 import TermStructure
 import Control.Monad
+import Prelude hiding (exp)
 
 --
 -- Types
 --
 
-type Payment = C.Cash Double
--- type Payment = C.Cash 
 type InterestRate = Double
-type CashFlow = M.Map Date Payment
+type Years = Double -- Can be fractional
+type Payment = Cash Double
+type Payments = M.Map Date Payment
 type Settlements = Int
 
 type DiscountFunction = forall a. (Instrument a) => a -> TermStructure -> Payment
@@ -21,37 +23,35 @@ type DiscountFunction = forall a. (Instrument a) => a -> TermStructure -> Paymen
 -- Instruments
 --
 
-data CommonBond = CommonBond {
-  cprincipal      :: Payment,
-  ctermstructure  :: TermStructure
+data Vanilla = Vanilla {
+  faceValue    :: Payment,
+  bondMaturity :: Date,
+  interest     :: InterestRate
 }
 
-data Zero = Zero { 
-  faceValue :: Payment,
-  zmaturity :: Date,
-  rate      :: Double,
-  zsettle   :: Settlements
-}
+newtype Zero = Zero { zero :: Vanilla }
 
-newtype Bullet = Bullet { bullet :: CommonBond }
-
-newtype Serial = Serial { serial :: CommonBond }
-
-data Consol = Consol {
-  crate    :: Double,
-  ccoupon  :: Payment
---   cterm   :: TermStructure,
-}
+data Bullet = Bullet { bullet :: Vanilla }
 
 data Annuity = Annuity {
-    abase   :: CommonBond,
-    acoupon :: Double
+  abase     :: Vanilla,
+  acashflow :: Payment -- repayment + coupon
+}
+
+data Serial = Serial {
+  sbase     :: Vanilla,
+  repayment :: Payment -- fixed for serial bonds
+}
+
+data Consol = Consol {
+  cinterest   :: InterestRate,
+  settlements :: Payment 
 }
 
 newtype SimpleAnnuity = SimpleAnnuity { annuity :: Annuity }
 
 data MortgageBackedBond = MortgageBackedBond {
-    mbobase :: CommonBond,
+    mbobase    :: Vanilla,
     serviceFee :: Payment
 }
 
@@ -60,17 +60,18 @@ data MortgageBackedBond = MortgageBackedBond {
 -- 
 
 class Instrument i where
-  pv :: Date -> i -> Payment
-  expired :: Date -> i -> Bool
-  cashflow :: i -> CashFlow
+  pv       :: i -> Date -> Payment
+  expired  :: i -> Date -> Bool
+  yrsToExpiry :: i -> Date -> Double
+  cashflow :: i -> Payments
 
 class Instrument b => Bond b where
   principal :: b -> Payment
-  coupon :: b -> Payment
-  maturity :: b -> Date
-  ytm :: b -> Payment
-  duration :: b -> Payment
-  discount :: b -> DiscountFunction -- Does this function make sense? 
+  coupon    :: b -> Payment
+  maturity  :: b -> Date
+  ytm       :: b -> Date -> Payment
+  duration  :: b -> Payment
+  discount  :: b -> DiscountFunction
 
 class Instrument d => Derivative d where
   underlying :: (Instrument i) => d -> i
@@ -80,40 +81,37 @@ class Instrument d => Derivative d where
 
 --
 -- Instances
--- 
+--
 
 instance Instrument Zero where
-  pv p (Zero f m r s)
-    | T.diffDays m p > 365 = let
-                               yrs = T.diffDays m p `mod` 365
-                               exponent = toInteger s * yrs
-                               s'       = fromIntegral s
-                             in
-                               f C./. (1+r/s')^exponent -- Day-count conventions!
-    | otherwise = undefined -- get daily rate and recompound
-  expired p (Zero f m z s) = 0 >= T.diffDays m p
-  cashflow (Zero f m _ _) = M.insert m f M.empty -- only receive `f` on maturity
+  pv z@(Zero (Vanilla f d r)) p = scale f $ recip ((1+r)** yrsToExpiry z p)
+  expired z@(Zero (Vanilla f d r)) p = 0 >= T.diffDays p d
+  yrsToExpiry z@(Zero (Vanilla f d r)) p = fromIntegral (T.diffDays p d)/365::Double
+  cashflow z@(Zero (Vanilla f d r)) = M.insert d f M.empty
 
-instance Instrument Consol where
-  pv p (Consol r c) = c C./. r
-  expired _ _ = False
-  cashflow (Consol ts c) = undefined
+-- instance Instrument Consol where
+--   pv p (Consol r c) = scale c r
+--   expired _ _ = False
+--   cashflow (Consol ts c) = undefined
 
 instance Bond Zero where
-  principal (Zero f _ _ _) = f
-  coupon = const 0
-  maturity (Zero _ m _ _) = m
-  ytm z = undefined
+  principal (Zero (Vanilla f _ _)) = f
+  coupon (Zero (Vanilla f d r)) = scale f r
+  maturity (Zero (Vanilla _ d _)) = d
+  ytm z@(Zero (Vanilla f d r)) p = add (-1) $ exp (f/pv z p) e
+    where e = recip $ yrsToExpiry z p
   duration z = undefined
-  discount (Zero f m r s) ts = undefined
+  discount z = undefined
 
+{-
 instance Bond Consol where
   principal (Consol ts coupon) = undefined
   coupon (Consol _ c) = c
-  maturity _ =  undefined -- what is the biggest UTCTime we have? :P
+  maturity _ = undefined -- what is the biggest UTCTime we have? :P
   ytm c = undefined
   duration b = undefined
   discount b = undefined
+-}
 
 -- instance Bond Annuity where
 -- instance Bond SimpleAnnuity where
