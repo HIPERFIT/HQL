@@ -1,11 +1,14 @@
 {-# LANGUAGE GADTs #-}
 module Currency where
 
-data Cash a where
-  USD :: (Show a, Num a) => a -> Cash a
-  DKK :: (Show a, Num a) => a -> Cash a
-  SEK :: (Show a, Num a) => a -> Cash a
+data Cash = Cash {
+  currency :: Currency,
+  amoutn   :: Double
+} deriving (Show)
+ 
+data Currency = USD | DKK | SEK  deriving (Show)
 
+{-
 instance Show (Cash a) where
   show (USD v) = "USD " ++ show v
   show (DKK v) = "DKK " ++ show v
@@ -47,3 +50,4 @@ add :: (Num a) => a -> Cash a -> Cash a
 add d (DKK v) = DKK $ v+d
 add d (SEK v) = SEK $ v+d
 add d (USD v) = USD $ v+d
+-}

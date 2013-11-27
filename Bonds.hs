@@ -1,4 +1,4 @@
-{-# LANGUAGE GADTs, RankNTypes #-}
+-- {-# LANGUAGE GADTs, RankNTypes #-}
 module Bonds where
 import qualified Data.Map as M
 import qualified Data.Time as T
@@ -11,18 +11,65 @@ import Prelude hiding (exp)
 -- Types
 --
 
+data Basis = ACTACT | ACT360 | ACT365F | Thirty360 | SIA | Business | European | Japanese 
+data RollConvention = Following | Preceding | ModFol
+
+type Days = Integer
 type InterestRate = Double
 type Years = Double -- Can be fractional
-type Payment = Cash Double
-type Payments = M.Map Date Payment
+data Payment = Payment Date Cash
+type Payments = [Payment]
 type Settlements = Int
+type DiscountFactor = Double
 
-type DiscountFunction = forall a. (Instrument a) => a -> TermStructure -> Payment
+type DiscountFunction = InterestRate -> Days -> DiscountFactor
+-- Could be changed to:
+-- type DiscountFunction = Day -> TermStructure -> InterestRate
+-- if we change some things (this means we might need to build curves..)
 
 --
 -- Instruments
 --
 
+newtype Vanilla = Vanilla { payments :: Payments }
+newtype Zero   = Zero   { payment :: Payment }
+newtype Consol = Consol { cpayments :: Payments }
+newtype Bullet = Bullet { bpayments :: Payments }
+newtype Annuity = Annuity { apayments :: Payments }
+
+data Bond = Bond {
+    settle      :: Date,         -- Settlement date
+    currency    :: Currency,     -- Currency
+    maturity    :: Date,         -- Maturity date
+    couponRate  :: InterestRate, -- Coupon rate
+    period      :: Int,          -- Coupons per year (default = 2)
+    basis       :: Basis,        -- Day-count basis
+    endMontRule :: RollConvention, -- End-of-month rule
+    face        :: Double         -- Face value of bond
+}
+
+-- Convert Bond type into specific bond
+zero :: Bond -> Zero
+zero (Bond s c m i p b e fv) =
+  let 
+    chkDate = undefined -- check dates based on RollConvention
+  in
+    Zero $ Payment m $ Cash c fv
+-- consol :: Bond -> Bullet
+-- annuity :: Bond -> Annuity
+-- ...
+
+df :: DiscountFunction
+df r n = 1.0 / (1.0 + (r / 100.0)) ** (fromIntegral n)
+
+-- type Present = Date
+-- pv :: Present -> DiscountFunction -> Payment -> Payment
+-- pv p df p@(Payment date cash) = (df y) * a
+--   where 
+
+yrsToExpiry d p = fromIntegral (T.diffDays p d)/365::Double
+
+{-
 data Vanilla = Vanilla {
   faceValue    :: Payment,
   bondMaturity :: Date,
@@ -54,11 +101,12 @@ data MortgageBackedBond = MortgageBackedBond {
     mbobase    :: Vanilla,
     serviceFee :: Payment
 }
-
+-}
 --
 -- Classes
 -- 
 
+{-
 class Instrument i where
   pv       :: i -> Date -> Payment
   expired  :: i -> Date -> Bool
@@ -103,7 +151,6 @@ instance Bond Zero where
   duration z = undefined
   discount z = undefined
 
-{-
 instance Bond Consol where
   principal (Consol ts coupon) = undefined
   coupon (Consol _ c) = c
@@ -112,7 +159,6 @@ instance Bond Consol where
   duration b = undefined
   discount b = undefined
 -}
-
 -- instance Bond Annuity where
 -- instance Bond SimpleAnnuity where
 -- instance Bond MortgageBackedBond where
