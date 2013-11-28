@@ -3,7 +3,8 @@
 -- Types
 --
 type Date = Double -- Hack to test out implementation, will be date(s)
-type CouponRate = Double
+
+type CouponRates = [Double]
 
 --type Years = Double -- Can be fractional
 --type Payment = Cash Double
@@ -12,6 +13,9 @@ type CouponRate = Double
 
 --instance Show Payment where
 --    show a b = (show a) ++ " " ++ (show b)
+
+type IssueDate = Date
+type Settlements = [Date]
 
 data Payment = Payment Date Double deriving Show
 type Payments = [Payment]
@@ -78,17 +82,20 @@ pv = (\df (Payment y a) -> (df y) * a)
 -- Day-count basis
 data Basis = ActualActual | SIA | Business | European | Japanese
 
+data Compounding = Continous | Periodic Int
+
 -- End-of-month rule
 data EndMonthRule = Ignore | Apply
 
 data Bond = Bond {
-    settle      :: Date,         -- Settlement date
-    maturity    :: Date,         -- Maturity date
-    couponRate  :: CouponRate,   -- Coupon rate
-    period      :: Int,          -- Coupons per year (default = 2)
-    basis       :: Basis,        -- Day-count basis
-    endMontRule :: EndMonthRule, -- End-of-month rule
-    face        :: Double         -- Face value of bond
+    issueDate    :: IssueDate,
+    settlements  :: Settlements,   -- Settlement date
+    maturity     :: Date,          -- Maturity date
+    couponRates  :: CouponRates,   -- Coupon rate
+    compounding  :: Compounding,           -- Coupons per year (default = 2)
+    basis        :: Basis,         -- Day-count basis
+    endMonthRule :: EndMonthRule,  -- End-of-month rule
+    face         :: Double         -- Face value of bond
 }
 
 {-
