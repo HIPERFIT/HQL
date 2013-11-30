@@ -3,10 +3,17 @@ module Currency where
 
 data Cash = Cash {
   currency :: Currency,
-  amoutn   :: Double
+  amount   :: Double
 } deriving (Show)
  
 data Currency = USD | DKK | SEK  deriving (Show)
+
+scale :: Double -> Cash -> Cash
+scale s (Cash c v) = Cash c $ s * v
+
+-- (.+.), (.-.) :: Cash -> Cash -> Cash
+-- (.+.) (Cash c0 v0
+
 
 {-
 instance Show (Cash a) where

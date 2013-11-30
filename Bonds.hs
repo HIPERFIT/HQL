@@ -1,6 +1,7 @@
 -- {-# LANGUAGE GADTs, RankNTypes #-}
 module Bonds where
 import qualified Data.Map as M
+import qualified Data.List as L
 import qualified Data.Time as T
 import Currency
 import TermStructure
@@ -11,12 +12,13 @@ import Prelude hiding (exp)
 -- Types
 --
 
-data Basis = ACTACT | ACT360 | ACT365F | Thirty360 | SIA | Business | European | Japanese 
-data RollConvention = Following | Preceding | ModFol
+data Basis = ACTACT | ACT360 | ACT365F | Thirty360 | SIA | Business | European | Japanese
+data RollConvention = Following | Preceding | ModifiedFollowing
 
 type Days = Integer
 type InterestRate = Double
 type Years = Double -- Can be fractional
+
 data Payment = Payment Date Cash
 type Payments = [Payment]
 type Settlements = Int
@@ -32,32 +34,56 @@ type DiscountFunction = InterestRate -> Days -> DiscountFactor
 --
 
 newtype Vanilla = Vanilla { payments :: Payments }
-newtype Zero   = Zero   { payment :: Payment }
+newtype Zero   = Zero { payment :: Payment }
 newtype Consol = Consol { cpayments :: Payments }
 newtype Bullet = Bullet { bpayments :: Payments }
 newtype Annuity = Annuity { apayments :: Payments }
 
 data Bond = Bond {
-    settle      :: Date,         -- Settlement date
-    currency    :: Currency,     -- Currency
-    maturity    :: Date,         -- Maturity date
-    couponRate  :: InterestRate, -- Coupon rate
-    period      :: Int,          -- Coupons per year (default = 2)
-    basis       :: Basis,        -- Day-count basis
+    settle      :: Date,           -- Settlement date
+    currency    :: Currency,       -- Currency
+    maturity    :: Date,           -- Maturity date
+    couponRate  :: InterestRate,   -- Coupon rate
+    period      :: Int,            -- Settlements per year
+    basis       :: Basis,          -- Day-count basis
     endMontRule :: RollConvention, -- End-of-month rule
-    face        :: Double         -- Face value of bond
+    faceValue   :: Double          -- Face value of bond
 }
 
--- Convert Bond type into specific bond
 zero :: Bond -> Zero
-zero (Bond s c m i p b e fv) =
-  let 
-    chkDate = undefined -- check dates based on RollConvention
+zero (Bond s c m i p b e fv) = Zero $ Payment m $ Cash c fv
+
+consol :: Bond -> Consol
+consol (Bond s c m i p b e fv) =
+  let
+    mkPayment date = Payment date $ Cash c $ fv * i
+    dates = getSettlementDates e b p s
   in
-    Zero $ Payment m $ Cash c fv
--- consol :: Bond -> Bullet
--- annuity :: Bond -> Annuity
--- ...
+    Consol $ map mkPayment dates
+
+bullet :: Bond -> Bullet
+bullet (Bond s c m i p b e fv) =
+  let
+    mkPayment date = Payment date $ Cash c $ fv * i
+    dates = getSettlementDates e b p s
+  in
+    Bullet $ map mkPayment dates
+
+type Repayment = Double
+
+-- Serial takes a Bond as well as a fixed repayment
+serial :: Repayment -> Bond -> Annuity
+serial repayment (Bond s c m i p b e fv) =
+  let
+    dates = getSettlementDates e b p s
+    fv' = Cash c fv
+    fun = \(Cash c outstd) date -> let
+                                     coupon  = i * outstd
+                                     outstd' = outstd - (coupon + repayment)
+                                   in (Cash c outstd', Payment date $ Cash c coupon)
+    (remaining, payments) = L.mapAccumL fun fv' dates
+  in
+    Annuity $ payments ++ [Payment m remaining] 
 
 df :: DiscountFunction
 df r n = 1.0 / (1.0 + (r / 100.0)) ** (fromIntegral n)
@@ -67,41 +93,28 @@ df r n = 1.0 / (1.0 + (r / 100.0)) ** (fromIntegral n)
 -- pv p df p@(Payment date cash) = (df y) * a
 --   where 
 
-yrsToExpiry d p = fromIntegral (T.diffDays p d)/365::Double
+yrsToExpiry :: Date -> Date -> Integer
+yrsToExpiry d p = floor $ fromInteger (T.diffDays p d) / 365
 
-{-
-data Vanilla = Vanilla {
-  faceValue    :: Payment,
-  bondMaturity :: Date,
-  interest     :: InterestRate
-}
+getSettlementDates :: RollConvention -> Basis -> Settlements -> Date -> [Date]
+getSettlementDates r b sts dt = map (rollDay r) $ iterate nextDate dt
+ where nextDate date = T.addDays daysBetween date
+       daysBetween   = daysBetweenSettlements dt sts
 
-newtype Zero = Zero { zero :: Vanilla }
+daysBetweenSettlements :: Date -> Settlements -> Days
+daysBetweenSettlements d sts 
+  | leapYear d = floor $ 366.0 / fromIntegral sts
+  | otherwise  = floor $ 365.0 / fromIntegral sts
 
-data Bullet = Bullet { bullet :: Vanilla }
+rollDay :: RollConvention -> Date -> Date
+rollDay = undefined
 
-data Annuity = Annuity {
-  abase     :: Vanilla,
-  acashflow :: Payment -- repayment + coupon
-}
+leapYear :: Date -> Bool
+leapYear = undefined
 
-data Serial = Serial {
-  sbase     :: Vanilla,
-  repayment :: Payment -- fixed for serial bonds
-}
+legalDay :: Date -> Bool
+legalDay = undefined
 
-data Consol = Consol {
-  cinterest   :: InterestRate,
-  settlements :: Payment 
-}
-
-newtype SimpleAnnuity = SimpleAnnuity { annuity :: Annuity }
-
-data MortgageBackedBond = MortgageBackedBond {
-    mbobase    :: Vanilla,
-    serviceFee :: Payment
-}
--}
 --
 -- Classes
 -- 
@@ -159,6 +172,7 @@ instance Bond Consol where
   duration b = undefined
   discount b = undefined
 -}
+
 -- instance Bond Annuity where
 -- instance Bond SimpleAnnuity where
 -- instance Bond MortgageBackedBond where
