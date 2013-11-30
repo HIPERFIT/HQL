@@ -38,6 +38,7 @@ newtype Zero   = Zero { payment :: Payment }
 newtype Consol = Consol { cpayments :: Payments }
 newtype Bullet = Bullet { bpayments :: Payments }
 newtype Annuity = Annuity { apayments :: Payments }
+newtype Serial = Serial { spayments :: Payments }
 
 data Bond = Bond {
     settle      :: Date,           -- Settlement date
@@ -72,7 +73,7 @@ bullet (Bond s c m i p b e fv) =
 type Repayment = Double
 
 -- Serial takes a Bond as well as a fixed repayment
-serial :: Repayment -> Bond -> Annuity
+serial :: Repayment -> Bond -> Serial
 serial repayment (Bond s c m i p b e fv) =
   let
     dates = getSettlementDates e b p s
@@ -83,7 +84,7 @@ serial repayment (Bond s c m i p b e fv) =
                                    in (Cash c outstd', Payment date $ Cash c coupon)
     (remaining, payments) = L.mapAccumL fun fv' dates
   in
-    Annuity $ payments ++ [Payment m remaining] 
+    Serial $ payments ++ [Payment m remaining] 
 
 df :: DiscountFunction
 df r n = 1.0 / (1.0 + (r / 100.0)) ** (fromIntegral n)
