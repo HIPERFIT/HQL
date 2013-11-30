@@ -18,13 +18,14 @@ data RollConvention = Following | Preceding | ModifiedFollowing
 type Days = Integer
 type InterestRate = Double
 type Years = Double -- Can be fractional
+type Repayment = Double
 
-data Payment = Payment Date Cash
+data Payment = Payment Date Cash deriving (Show)
 type Payments = [Payment]
 type Settlements = Int
-type DiscountFactor = Double
+type DiscountFunction = Date -> Payment -> Payment
 
-type DiscountFunction = InterestRate -> Days -> DiscountFactor
+-- type DiscountFunction = InterestRate -> Days -> DiscountFactor
 -- Could be changed to:
 -- type DiscountFunction = Day -> TermStructure -> InterestRate
 -- if we change some things (this means we might need to build curves..)
@@ -34,16 +35,16 @@ type DiscountFunction = InterestRate -> Days -> DiscountFactor
 --
 
 newtype Vanilla = Vanilla { payments :: Payments }
-newtype Zero   = Zero { payment :: Payment }
+newtype Zero   = Zero { payment :: Payment } deriving (Show)
 newtype Consol = Consol { cpayments :: Payments }
 newtype Bullet = Bullet { bpayments :: Payments }
 newtype Annuity = Annuity { apayments :: Payments }
 newtype Serial = Serial { spayments :: Payments }
 
-data Bond = Bond {
+data BaseBond = BaseBond {
     settle      :: Date,           -- Settlement date
     currency    :: Currency,       -- Currency
-    maturity    :: Date,           -- Maturity date
+    basematurity    :: Date,           -- Maturity date
     couponRate  :: InterestRate,   -- Coupon rate
     period      :: Int,            -- Settlements per year
     basis       :: Basis,          -- Day-count basis
@@ -51,55 +52,49 @@ data Bond = Bond {
     faceValue   :: Double          -- Face value of bond
 }
 
-zero :: Bond -> Zero
-zero (Bond s c m i p b e fv) = Zero $ Payment m $ Cash c fv
+zero :: BaseBond -> Zero
+zero (BaseBond s c m i p b e fv) = Zero $ Payment m $ Cash c fv
 
-consol :: Bond -> Consol
-consol (Bond s c m i p b e fv) =
+consol :: BaseBond -> Consol
+consol (BaseBond s c m i p b e fv) =
   let
     mkPayment date = Payment date $ Cash c $ fv * i
     dates = getSettlementDates e b p s
   in
     Consol $ map mkPayment dates
 
-bullet :: Bond -> Bullet
-bullet (Bond s c m i p b e fv) =
+bullet :: BaseBond -> Bullet
+bullet (BaseBond s c m i p b e fv) =
   let
     mkPayment date = Payment date $ Cash c $ fv * i
     dates = getSettlementDates e b p s
   in
     Bullet $ map mkPayment dates
 
-type Repayment = Double
-
--- Serial takes a Bond as well as a fixed repayment
-serial :: Repayment -> Bond -> Serial
-serial repayment (Bond s c m i p b e fv) =
+-- Serial takes a BaseBond as well as a fixed repayment
+serial :: Repayment -> BaseBond -> Serial
+serial repayment (BaseBond s c m i p b e fv) =
   let
     dates = getSettlementDates e b p s
     fv' = Cash c fv
-    fun = \(Cash c outstd) date -> let
-                                     coupon  = i * outstd
-                                     outstd' = outstd - (coupon + repayment)
-                                   in (Cash c outstd', Payment date $ Cash c coupon)
+    fun (Cash c outstd) date = let
+                                 coupon  = i * outstd
+                                 outstd' = outstd - (coupon + repayment)
+                               in (Cash c outstd', Payment date $ Cash c coupon)
     (remaining, payments) = L.mapAccumL fun fv' dates
   in
     Serial $ payments ++ [Payment m remaining] 
 
-df :: DiscountFunction
-df r n = 1.0 / (1.0 + (r / 100.0)) ** (fromIntegral n)
-
+-- df :: DiscountFunction
+-- df r n = 1.0 / (1.0 + (r / 100.0)) ** (fromIntegral n)
 -- type Present = Date
 -- pv :: Present -> DiscountFunction -> Payment -> Payment
 -- pv p df p@(Payment date cash) = (df y) * a
 --   where 
 
-yrsToExpiry :: Date -> Date -> Integer
-yrsToExpiry d p = floor $ fromInteger (T.diffDays p d) / 365
-
 getSettlementDates :: RollConvention -> Basis -> Settlements -> Date -> [Date]
 getSettlementDates r b sts dt = map (rollDay r) $ iterate nextDate dt
- where nextDate date = T.addDays daysBetween date
+ where nextDate = T.addDays daysBetween
        daysBetween   = daysBetweenSettlements dt sts
 
 daysBetweenSettlements :: Date -> Settlements -> Days
@@ -120,20 +115,18 @@ legalDay = undefined
 -- Classes
 -- 
 
-{-
 class Instrument i where
-  pv       :: i -> Date -> Payment
+  pv :: i -> InterestRate -> Date -> Cash
   expired  :: i -> Date -> Bool
-  yrsToExpiry :: i -> Date -> Double
+  yrsToExpiry :: i -> Date -> Years
   cashflow :: i -> Payments
 
 class Instrument b => Bond b where
-  principal :: b -> Payment
-  coupon    :: b -> Payment
+  principal :: b -> Cash
+  coupon    :: b -> Cash
   maturity  :: b -> Date
   ytm       :: b -> Date -> Payment
   duration  :: b -> Payment
-  discount  :: b -> DiscountFunction
 
 class Instrument d => Derivative d where
   underlying :: (Instrument i) => d -> i
@@ -141,15 +134,24 @@ class Instrument d => Derivative d where
 -- class (Instrument e) => Equity e where
 -- class (Instrument o) => Option o where
 
+{- Sample usage
+    > date0 = (read "2012-01-31") :: Date
+    > date1 = (read "2012-06-31") :: Date
+    > bond0 = BaseBond date0 USD date1 10 0 ACT365F ModifiedFollowing 100
+    > zero0 = zero bond0
+    > zero0 = zero bond0
+    > pv0   = pv zero0 0.12 date0
+-}
+
 --
 -- Instances
 --
 
 instance Instrument Zero where
-  pv z@(Zero (Vanilla f d r)) p = scale f $ recip ((1+r)** yrsToExpiry z p)
-  expired z@(Zero (Vanilla f d r)) p = 0 >= T.diffDays p d
-  yrsToExpiry z@(Zero (Vanilla f d r)) p = fromIntegral (T.diffDays p d)/365::Double
-  cashflow z@(Zero (Vanilla f d r)) = M.insert d f M.empty
+  pv z@(Zero (Payment d c)) r p = flip scale c $ recip ((1+r) ** yrsToExpiry z p)
+  expired z@(Zero (Payment d c)) p = 0 >= T.diffDays p d
+  yrsToExpiry z@(Zero (Payment d c)) p = fromInteger (T.diffDays d p) / 365
+  cashflow z@(Zero payment) = [payment]
 
 -- instance Instrument Consol where
 --   pv p (Consol r c) = scale c r
@@ -157,14 +159,13 @@ instance Instrument Zero where
 --   cashflow (Consol ts c) = undefined
 
 instance Bond Zero where
-  principal (Zero (Vanilla f _ _)) = f
-  coupon (Zero (Vanilla f d r)) = scale f r
-  maturity (Zero (Vanilla _ d _)) = d
-  ytm z@(Zero (Vanilla f d r)) p = add (-1) $ exp (f/pv z p) e
-    where e = recip $ yrsToExpiry z p
+  principal (Zero (Payment d c)) = c
+  coupon (Zero (Payment d (Cash c v))) = Cash c 0
+  maturity (Zero (Payment d _)) = d
+  ytm z@(Zero (Payment _ _)) p = undefined
   duration z = undefined
-  discount z = undefined
 
+{-
 instance Bond Consol where
   principal (Consol ts coupon) = undefined
   coupon (Consol _ c) = c
