@@ -2,6 +2,8 @@ module Bonds where
 import qualified Data.Map as M
 import qualified Data.List as L
 import qualified Data.Time as T
+import qualified Data.Time.Calendar.WeekDate as WeekDate
+import qualified Data.Time.Calendar as Cal
 import Currency
 import TermStructure
 import Control.Monad
@@ -91,24 +93,48 @@ serial repayment (BaseBond s c m i p b e fv) =
 -- pv p df p@(Payment date cash) = (df y) * a
 --   where 
 
+
+-- TODO: What about the Basis? Only for discounting? if so, add to bond newtypes
 getSettlementDates :: RollConvention -> Basis -> Settlements -> Date -> [Date]
-getSettlementDates r b sts dt = map (rollDay r) $ iterate nextDate dt
+getSettlementDates conv b sts dt = map (rollDay conv) $ iterate nextDate dt
  where nextDate = T.addDays daysBetween
        daysBetween   = daysBetweenSettlements dt sts
 
 daysBetweenSettlements :: Date -> Settlements -> Days
 daysBetweenSettlements d sts 
-  | leapYear d = floor $ 366.0 / fromIntegral sts
+  | T.isLeapYear y = floor $ 366.0 / fromIntegral sts
   | otherwise  = floor $ 365.0 / fromIntegral sts
+  where (y,_,_) = WeekDate.toWeekDate d
 
 rollDay :: RollConvention -> Date -> Date
-rollDay = undefined
+rollDay conv date
+  | 1 <= day && day <= 5 = date
+  | otherwise = doRoll conv date
+  where (_,_,day) = WeekDate.toWeekDate date
 
-leapYear :: Date -> Bool
-leapYear = undefined
+doRoll :: RollConvention -> Date -> Date
+doRoll Following date = rollForward date
+doRoll Preceding date = rollBackwards date
+doRoll ModifiedFollowing date
+  | mn' == mn = fwdDate
+  | otherwise = rollBackwards date
+  where (_, mn', _) = Cal.toGregorian fwdDate
+        (_, mn , _)  = Cal.toGregorian date
+        fwdDate = rollForward date
 
-legalDay :: Date -> Bool
-legalDay = undefined
+legalDay :: Date -> Bool -- TODO: Add argument so users may specify holidays 
+legalDay date
+  | 1 <= day && day <= 5 = True
+  | otherwise = False
+  where (_,_, day) = WeekDate.toWeekDate date
+
+rollForward, rollBackwards :: Date -> Date
+rollForward date
+  | legalDay date = date
+  | otherwise     = rollForward $ Cal.addDays 1 date
+rollBackwards date
+  | legalDay date = date
+  | otherwise     = rollBackwards $ Cal.addDays (-1) date
 
 --
 -- Classes
@@ -141,6 +167,11 @@ class Instrument d => Derivative d where
     > zero0 = zero bond0
     > pv0   = pv zero0 0.12 date0
 -}
+
+date0 = (read "2012-01-31") :: Date
+date1 = (read "2012-06-31") :: Date
+a = (read "2013-12-07") :: Date
+b = (read "2013-11-30") :: Date
 
 --
 -- Instances
