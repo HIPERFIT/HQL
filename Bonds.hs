@@ -1,4 +1,3 @@
--- {-# LANGUAGE GADTs, RankNTypes #-}
 module Bonds where
 import qualified Data.Map as M
 import qualified Data.List as L
@@ -42,14 +41,14 @@ newtype Annuity = Annuity { apayments :: Payments }
 newtype Serial = Serial { spayments :: Payments }
 
 data BaseBond = BaseBond {
-    settle      :: Date,           -- Settlement date
-    currency    :: Currency,       -- Currency
-    basematurity    :: Date,           -- Maturity date
-    couponRate  :: InterestRate,   -- Coupon rate
-    period      :: Int,            -- Settlements per year
-    basis       :: Basis,          -- Day-count basis
-    endMontRule :: RollConvention, -- End-of-month rule
-    faceValue   :: Double          -- Face value of bond
+    settle       :: Date,           -- Settlement date
+    currency     :: Currency,       -- Currency
+    basematurity :: Date,           -- Maturity date
+    couponRate   :: InterestRate,   -- Coupon rate
+    period       :: Int,            -- Settlements per year
+    basis        :: Basis,          -- Day-count basis
+    endMontRule  :: RollConvention, -- End-of-month rule
+    faceValue    :: Double          -- Face value of bond
 }
 
 zero :: BaseBond -> Zero
@@ -147,16 +146,33 @@ class Instrument d => Derivative d where
 -- Instances
 --
 
+discountPayment r p (Payment d (Cash _ c)) = c / ((1+r) ** yrs)
+  where yrs = fromInteger (T.diffDays d p) / 365
+
 instance Instrument Zero where
   pv z@(Zero (Payment d c)) r p = flip scale c $ recip ((1+r) ** yrsToExpiry z p)
-  expired z@(Zero (Payment d c)) p = 0 >= T.diffDays p d
-  yrsToExpiry z@(Zero (Payment d c)) p = fromInteger (T.diffDays d p) / 365
-  cashflow z@(Zero payment) = [payment]
+  expired (Zero (Payment d c)) p = 0 >= T.diffDays p d
+  yrsToExpiry (Zero (Payment d c)) p = fromInteger (T.diffDays d p) / 365
+  cashflow (Zero payment) = [payment]
 
--- instance Instrument Consol where
---   pv p (Consol r c) = scale c r
---   expired _ _ = False
---   cashflow (Consol ts c) = undefined
+instance Instrument Consol where
+  pv (Consol (Payment _ c:_)) r = const $ scale (recip r) c
+  expired _ _ = False
+  yrsToExpiry _ _ = undefined
+  cashflow (Consol ps) = ps
+
+instance Instrument Bullet where
+  pv (Bullet ps@(Payment _ (Cash c _):_)) r p = Cash c $ sum $ map (discountPayment r p) ps
+  expired b p = 0 >= (T.diffDays p $ maturity b)
+  yrsToExpiry b p = fromInteger (T.diffDays (maturity b) p) / 365
+  cashflow (Bullet ps) = ps
+
+instance Bond Bullet where
+  principal (Bullet ps) = let (Payment d c) = last ps in c
+  coupon (Bullet (Payment d c:ps)) = c
+  maturity (Bullet ps) = let (Payment d c) = last ps in d
+  ytm (Bullet _) p = undefined
+  duration z = undefined
 
 instance Bond Zero where
   principal (Zero (Payment d c)) = c
@@ -165,15 +181,12 @@ instance Bond Zero where
   ytm z@(Zero (Payment _ _)) p = undefined
   duration z = undefined
 
-{-
 instance Bond Consol where
-  principal (Consol ts coupon) = undefined
-  coupon (Consol _ c) = c
+  principal (Consol (Payment d c:ps)) = undefined -- What do we do here..?
+  coupon (Consol (Payment _ c:_)) = c
   maturity _ = undefined -- what is the biggest UTCTime we have? :P
   ytm c = undefined
   duration b = undefined
-  discount b = undefined
--}
 
 -- instance Bond Annuity where
 -- instance Bond SimpleAnnuity where
