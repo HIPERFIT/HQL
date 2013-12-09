@@ -1,4 +1,4 @@
-{-# LANGUAGE DisambiguateRecordFields #-}
+{-# LANGUAGE RecordWildCards #-}
 module Bonds where
 import qualified Data.Map as M
 import qualified Data.List as L
@@ -40,7 +40,7 @@ data BaseBond = BaseBond {
     couponRate   :: InterestRate,   -- Coupon rate
     period       :: Int,            -- Settlements per year
     basis        :: Basis,          -- Day-count basis
-    endMontRule  :: RollConvention, -- End-of-month rule
+    roll         :: RollConvention, -- End-of-month rule
     faceValue    :: Double          -- Face value of bond
 }
 
@@ -49,18 +49,18 @@ zero (BaseBond s c m i p b e fv) = Zero $ Payment m $ Cash c fv
 
 -- Add record syntax for pattern-match (order matters)
 consol :: BaseBond -> Consol
-consol (BaseBond s c m i p b e fv) = -- BaseBond{..}
+consol (BaseBond{..}) =
   let
-    mkPayment date = Payment date $ Cash c $ fv * i
-    dates = getSettlementDates e p s -- endof month
+    mkPayment date = Payment date $ Cash currency $ faceValue * couponRate
+    dates = getSettlementDates roll period settle
   in
     Consol $ map mkPayment dates
 
 bullet :: BaseBond -> Bullet
-bullet (BaseBond s c m i p b e fv) =
+bullet (BaseBond{..}) = 
   let
-    mkPayment date = Payment date $ Cash c $ fv * i
-    dates = getSettlementDates e p s
+    mkPayment date = Payment date $ Cash currency $ faceValue * couponRate
+    dates = getSettlementDates roll period settle
   in
     Bullet $ map mkPayment dates
 
@@ -100,5 +100,3 @@ class Instrument d => Derivative d where
 
 -- class (Instrument e) => Equity e where
 -- class (Instrument o) => Option o where
-
-
