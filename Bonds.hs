@@ -45,11 +45,10 @@ data BaseBond = BaseBond {
 }
 
 zero :: BaseBond -> Zero
-zero (BaseBond s c m i p b e fv) = Zero $ Payment m $ Cash c fv
+zero BaseBond{..} = Zero $ Payment basematurity $ Cash currency faceValue
 
--- Add record syntax for pattern-match (order matters)
 consol :: BaseBond -> Consol
-consol (BaseBond{..}) =
+consol BaseBond{..} =
   let
     mkPayment date = Payment date $ Cash currency $ faceValue * couponRate
     dates = getSettlementDates roll period settle
@@ -57,7 +56,7 @@ consol (BaseBond{..}) =
     Consol $ map mkPayment dates
 
 bullet :: BaseBond -> Bullet
-bullet (BaseBond{..}) = 
+bullet BaseBond{..} = 
   let
     mkPayment date = Payment date $ Cash currency $ faceValue * couponRate
     dates = getSettlementDates roll period settle
@@ -66,17 +65,17 @@ bullet (BaseBond{..}) =
 
 -- Serial takes a BaseBond as well as a fixed repayment
 serial :: Repayment -> BaseBond -> Serial
-serial repayment (BaseBond s c m i p b e fv) =
+serial repayment BaseBond{..} =
   let
-    dates = getSettlementDates e p s
-    fv' = Cash c fv
-    fun (Cash c outstd) date = let
-                                 coupon  = i * outstd
+    dates = getSettlementDates roll period settle
+    fv' = Cash currency faceValue
+    accPymts (Cash currency outstd) date = let
+                                 coupon  = couponRate * outstd
                                  outstd' = outstd - (coupon + repayment)
-                               in (Cash c outstd', Payment date $ Cash c coupon)
-    (remaining, payments) = L.mapAccumL fun fv' dates
+                               in (Cash currency outstd', Payment date $ Cash currency coupon)
+    (remaining, payments) = L.mapAccumL accPymts fv' dates
   in
-    Serial $ payments ++ [Payment m remaining] 
+    Serial $ payments ++ [Payment basematurity remaining] 
 
 --
 -- Classes
@@ -94,6 +93,8 @@ class Instrument b => Bond b where
   maturity  :: b -> Date
   ytm       :: b -> Date -> Payment
   duration  :: b -> Payment
+--   cleanPrice :: b -> ... -> Cash
+--   dirtyPrice :: b -> ... -> Payment
 
 class Instrument d => Derivative d where
   underlying :: (Instrument i) => d -> i
