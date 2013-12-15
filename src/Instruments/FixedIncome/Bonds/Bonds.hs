@@ -1,205 +1,160 @@
+{-# LANGUAGE RecordWildCards #-}
+module Bonds where
+import qualified Data.Map as M
+import qualified Data.List as L
+import Calendar
+import Currency
+import TermStructure
+import Control.Monad
+import Prelude
+
 --
 -- Types
 --
 
---- Support for currency
-{-
-data Currency = USD | EUR | DKK | SEK deriving Show
+type InterestRate = Double
+type Repayment = Double
 
-data Cash = Cash Double Currency deriving Show
+data Basis = ACTACT | ACT360 | ACT365F | Thirty360 | SIA | Business | European | Japanese
 
-data CurrencyPair = CurrencyPair Currency Currency deriving Show
-
-data ExchangeRate = ExchangeRate Double CurrencyPair deriving Show
--}
-
-type Date = Double -- Hack to test out implementation, will be date(s)
-
-type CouponRates = [Double]
-
--- Some common currencies
-data Currency = USD | EUR | GBP | CHF | JPY | DKK | SEK deriving Show
-
-data Cash = Cash Double Currency | InvalidCash
-  
--- Format cash using currency symbol
--- TODO: Format with ***##.## decimals etc
-instance Show Cash where
-    show (Cash v USD) = "$" ++ show v
-    show (Cash v EUR) = "€" ++ show v
-    show (Cash v GBP) = "£" ++ show v
-    show (Cash v JPY) = "¥" ++ show v
-    show (Cash v CHF) = show v ++ " CHF"
-    show (Cash v DKK) = show v ++ " kr"
-    show (Cash v SEK) = show v ++ " kr"
-    show InvalidCash = "InvalidCash"
-
-instance Num Cash where
-    (Cash v USD) + (Cash w USD) = Cash (v + w) USD
-    (Cash v EUR) + (Cash w EUR) = Cash (v + w) EUR
-    (Cash v GBP) + (Cash w GBP) = Cash (v + w) GBP
-    (Cash v CHF) + (Cash w CHF) = Cash (v + w) CHF
-    (Cash v JPY) + (Cash w JPY) = Cash (v + w) JPY
-    (Cash v DKK) + (Cash w DKK) = Cash (v + w) DKK
-    (Cash v SEK) + (Cash w SEK) = Cash (v + w) SEK
-    _ + _ = InvalidCash
-    
-    (Cash v USD) * (Cash w USD) = Cash (v * w) USD
-    (Cash v EUR) * (Cash w EUR) = Cash (v * w) EUR
-    (Cash v GBP) * (Cash w GBP) = Cash (v * w) GBP
-    (Cash v CHF) * (Cash w CHF) = Cash (v * w) CHF
-    (Cash v JPY) * (Cash w JPY) = Cash (v * w) JPY
-    (Cash v DKK) * (Cash w DKK) = Cash (v * w) DKK
-    (Cash v SEK) * (Cash w SEK) = Cash (v * w) SEK
-    _ * _ = InvalidCash
-
-    -- TODOs: Ajust for negative cash?
-    fromInteger v = InvalidCash
-    abs c = c
-    signum c = c
-        
-
-data CurrencyPair = CurrencyPair Currency Currency
-
-instance Show CurrencyPair where
-    show (CurrencyPair b q) = show b ++ "/" ++ show q
-
-data ExchangeRate = ExchangeRate Double CurrencyPair
-
--- TODO: Bid/Ask
-instance Show ExchangeRate where
-    show (ExchangeRate mid pair) = show pair ++ " " ++ show mid 
-
-{-
-
-    For example, use the Cash data
-    > Cash 115.2 USD
-    $115.2
-
-    > Cash 89.0 SEK
-    89.0 kr
-
-    Define a currecy pair
-    > CurrencyPair EUR USD
-    EUR/USD
-
-    Specify an exchange rate for EUR/USD
-    > ExchangeRate 1.32 (CurrencyPair EUR USD)
-    EUR/USD 1.21
-
-    **** TODOs
-    Support conversion of currencies, like this:
-    
-    Cash 1000.00 USD `to` EUR
-    -- Will use implicits and infix operator
-    -- Idea: use the exchange rate as an implicit (ImplicitParams)
-    -- See: http://www.haskell.org/haskellwiki/Implicit_parameters
-
--}
-
---type Years = Double -- Can be fractional
---type Payment = Cash Double
---type Payments = M.Map Date Payment
---type Settlements = Int
-
---instance Show Payment where
---    show a b = (show a) ++ " " ++ (show b)
-
-type IssueDate = Date
-type Settlements = [Date]
-
-data Payment = Payment Date Double deriving Show
+data Payment = Payment Date Cash deriving (Show)
 type Payments = [Payment]
+type Cashflow = Payments
+type DiscountFunction = TermStructure -> Years -> Double
+-- type DiscountFunction = Date -> Payment -> Payment
 
--- DiscountFunction and PV
+--
+-- Instruments
+--
 
---data DiscountFunction 
--- Interest rate to come from term structure
-
--- Takes interest rate in percent -- TODO: Type for this, prevent errors
--- Take InterestRate Years
-df :: Double -> Double -> Double
-df = (\r n -> 1.0 / (1.0 + (r / 100.0)) ** n)
-
--- Take DiscountFunction, use currying from discount function
--- PartialDiscountFunction
-pv :: (Double -> Double) -> Payment -> Double
-pv = (\df (Payment y a) -> (df y) * a)
-
-{- Sample usage
-
-    > let pm1 = Payment 5.0 100.0
-    > let pms = [Payment 5.0 100.0, Payment 6.0 100.0]
-    
-    -- Present value of 100 received in 5 years, 12.0% interest annualy
-    > pv (df 12.0) pm1
-    56.742685571859916
-    
-    -- Two payments discounted 12.0% interest rate
-    > map (pv $ df 12.0) pms
-    [56.742685571859916,50.663112117732055]
-    
-    -- Sum of discounted cashflows
-    > sum $ map (pv $ df 12.0) pms
-    107.40579768959196
-
-    -- Model a Zero-Coupon Bond 
-    -- 3% coupon rate, 10 years to maturity, 1000 in face
-    > zpms = [Payment 10.0 1000.0]
-    > sum $ map (pv $ df 3.0) zpms
-    744.093914896725
-
-    -- Model an Aunnuity
-    -- 5% coupon rate, 5 years to maturity, coupons of 1000 each
-    -- face of 5000, coupon of 20%
-    > let apms = [Payment a b | a <- [1..5], b <- [1000.0]]
-    > sum $ map (pv $ df 5.0) apms
-    4329.476670630818
-    
-    -- We can model each Bond using these payments
-    -- Need to support termstructure in df / DiscountFunction
--}
-
--- pv $ df ts payments
-
--- pv df $ payments
-
--- Present value
---presentValue p = 
-
----- Bond
----- Common for all bonds
-
--- Day-count basis
-data Basis = ActualActual | SIA | Business | European | Japanese
-
+newtype Vanilla = Vanilla { payments :: Payments }
+newtype Zero   = Zero { payment :: Payment } deriving (Show)
+newtype Consol = Consol { cpayments :: Payments }
+newtype Bullet = Bullet { bpayments :: Payments }
+newtype Annuity = Annuity { apayments :: Payments }
+newtype Serial = Serial { spayments :: Payments }
 data Compounding = Continous | Periodic Int
 
--- End-of-month rule
-data EndMonthRule = Ignore | Apply
-
-data Bond = Bond {
-    issueDate    :: IssueDate,
-    settlements  :: Settlements,   -- Settlement date
-    maturity     :: Date,          -- Maturity date
-    couponRates  :: CouponRates,   -- Coupon rate
-    compounding  :: Compounding,           -- Coupons per year (default = 2)
-    basis        :: Basis,         -- Day-count basis
-    endMonthRule :: EndMonthRule,  -- End-of-month rule
-    face         :: Double         -- Face value of bond
+data BaseBond = BaseBond {
+  settle       :: Date,           -- Settlement date
+  currency     :: Currency,       -- Currency
+  basematurity :: Date,           -- Maturity date
+  couponRate   :: InterestRate,   -- Coupon rate
+  period       :: Int,            -- Settlements per year
+  basis        :: Basis,          -- Day-count basis
+  roll         :: RollConvention, -- End-of-month rule
+  faceValue    :: Double,         -- Face value of bond
+  compounding  :: Compounding,    -- Coupons per year (default = 2)
+  couponRates  :: [Double]        -- Coupon rate ???
 }
 
-{-
-    **** Notes
-    
-    Every bond will produce a series of payments, depending on settings
-    
-    DiscountFunction will be depending on the period
-    
-    TermStructure will determine the interest rate at each point in time
-    
-    ** Easy to extend to use dates etc, and amortize for passed interest coupons
-    
-    ** Able to use PV, FV and Value(t) using this method
+zero :: BaseBond -> Zero
+zero BaseBond{..} = Zero $ Payment basematurity $ Cash faceValue currency 
 
+consol :: BaseBond -> Consol
+consol BaseBond{..} =
+  let
+    mkPayment date = Payment date $ Cash (faceValue * couponRate) currency
+    dates = getSettlementDates roll period settle
+  in
+    Consol $ map mkPayment dates
+
+bullet :: BaseBond -> Bullet
+bullet BaseBond{..} = 
+  let
+    mkPayment date = Payment date $ Cash (faceValue * couponRate) currency 
+    dates = getSettlementDates roll period settle
+  in
+    Bullet $ map mkPayment dates
+
+-- Serial takes a BaseBond as well as a fixed repayment
+serial :: Repayment -> BaseBond -> Serial
+serial repayment BaseBond{..} =
+  let
+    dates = getSettlementDates roll period settle
+    fv' = Cash faceValue currency 
+    accPymts (Cash outstd currency) date = let
+                                 coupon  = couponRate * outstd
+                                 outstd' = outstd - (coupon + repayment)
+                               in (Cash outstd' currency, Payment date $ Cash coupon currency)
+    (remaining, payments) = L.mapAccumL accPymts fv' dates
+  in
+    Serial $ payments ++ [Payment basematurity remaining] 
+
+--
+-- Classes
+-- 
+
+class Instrument i where
+  pv :: i -> InterestRate -> Date -> Cash
+  expired  :: i -> Date -> Bool
+  cashflow :: i -> Payments
+  yrsToExpiry :: i -> Date -> Years
+
+class Instrument b => Bond b where
+  principal :: b -> Cash
+  coupon    :: b -> Cash
+  maturity  :: b -> Date
+  ytm       :: b -> Date -> Payment
+  duration  :: b -> Payment
+--   clean :: b -> ... -> Cash 
+--   dirty :: b -> ... -> Payment
+
+class Instrument d => Derivative d where
+  underlying :: (Instrument i) => d -> i
+
+-- class (Instrument e) => Equity e where
+-- class (Instrument o) => Option o where
+
+{-
+> df :: TermStructure -> Years -> Double
+> df (Flat r) yrs = 1.0 / (1.0 + (r / 100.0)) ** yrs
+
+Take DiscountFunction, use currying from discount function
+PartialDiscountFunction
+> pv' :: (Years -> Double) -> Date -> Payment -> Double
+> pv' df now (Payment date (Cash v _)) = (df yrs) * v
+>   where yrs = (fromIntegral $ Calendar.diffDays date now) / 365.0 -- TODO: leap year
+ 
+> yrs' now date = (fromIntegral $ Calendar.diffDays date now) / 365.0
+ 
+> rate1 = Flat 12
+> now  = (read "2011-01-01") :: Date
+> d1   = (read "2011-12-31") :: Date -- 1 yrs from spot
+> d2   = (read "2012-12-31") :: Date -- 2 yrs from spot
+> d3   = (read "2013-12-31") :: Date -- 3 yrs from spot
+> d4   = (read "2014-12-31") :: Date -- 4 yrs from spot
+> d5   = (read "2015-12-31") :: Date -- 5 yrs from spot
+> d6   = (read "2016-12-31") :: Date -- 6 yrs from spot
+> d10  = (read "2020-12-31") :: Date -- 10 yrs from spot
+> c0 = Cash 100.0 USD
+> c1 = Cash 1000.0 USD
+ 
+> pm1 = Payment d5 c0
+> pms = [Payment d5 c0, Payment d6 c0]
+> zpm = Payment d10 $ Cash 1000.0 USD
+ 
+Present value of 100 received in 5 years, 12.0% interest annualy
+> pv (df rate1) now pm1
+56.742685571859916
+
+Two payments discounted 12.0% interest rate
+> map (pv (df rate1) now) pms
+[56.742685571859916,50.64738419271504]
+
+Sum of discounted cashflows
+> sum $ map (pv (df rate1) now) pms
+107.39006976457495
+
+Model a Zero-Coupon Bond 
+3% coupon rate, 10 years to maturity, 1000 in face
+> zz = pv' (df (Flat 3)) now zpm 
+743.9734067115595
+
+Model an Annuity
+5% coupon rate, 5 years to maturity, coupons of 1000 each
+face of 5000, coupon of 20%
+> apms = [Payment a b | a <- [d1, d2, d3, d4, d5], b <- [c1]]
+> z    = sum $ map (pv' (df (Flat 5.0)) now) apms
+4329.476670630818
 -}

@@ -8,10 +8,10 @@ data Cash = Cash Double Currency | InvalidCash
 -- Format cash using currency symbol
 -- TODO: Format with ***##.## decimals etc
 instance Show Cash where
-  show (Cash v USD) = "$" ++ show v
-  show (Cash v EUR) = "€" ++ show v
-  show (Cash v GBP) = "£" ++ show v
-  show (Cash v JPY) = "¥" ++ show v
+  show (Cash v USD) = '$' : show v
+  show (Cash v EUR) = '€' : show v
+  show (Cash v GBP) = '£' : show v
+  show (Cash v JPY) = '¥' : show v
   show (Cash v CHF) = show v ++ " CHF"
   show (Cash v DKK) = show v ++ " kr"
   show (Cash v SEK) = show v ++ " kr"

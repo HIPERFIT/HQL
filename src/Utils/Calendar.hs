@@ -51,3 +51,5 @@ rollForward date
 rollBackwards date
   | legalDay date = date
   | otherwise     = rollBackwards $ Cal.addDays (-1) date
+
+diffDays = T.diffDays
