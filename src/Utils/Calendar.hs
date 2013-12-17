@@ -52,4 +52,9 @@ rollBackwards date
   | legalDay date = date
   | otherwise     = rollBackwards $ Cal.addDays (-1) date
 
-diffDays = T.diffDays
+getDayOffset :: Date ->  Date -> Years
+getDayOffset now date
+  | Cal.isLeapYear y = diff / 366
+  | otherwise      = diff / 365
+  where (y,_,_) = WeekDate.toWeekDate date
+        diff = fromIntegral $ Cal.diffDays date now 

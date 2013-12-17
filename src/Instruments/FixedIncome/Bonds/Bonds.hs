@@ -12,7 +12,6 @@ import Prelude
 -- Types
 --
 
-type InterestRate = Double
 type Repayment = Double
 
 data Basis = ACTACT | ACT360 | ACT365F | Thirty360 | SIA | Business | European | Japanese
@@ -20,8 +19,6 @@ data Basis = ACTACT | ACT360 | ACT365F | Thirty360 | SIA | Business | European |
 data Payment = Payment Date Cash deriving (Show)
 type Payments = [Payment]
 type Cashflow = Payments
-type DiscountFunction = TermStructure -> Years -> Double
--- type DiscountFunction = Date -> Payment -> Payment
 
 --
 -- Instruments
@@ -34,6 +31,7 @@ newtype Bullet = Bullet { bpayments :: Payments }
 newtype Annuity = Annuity { apayments :: Payments }
 newtype Serial = Serial { spayments :: Payments }
 data Compounding = Continous | Periodic Int
+data EndMonthRule = Ignore | Apply
 
 data BaseBond = BaseBond {
   settle       :: Date,           -- Settlement date
@@ -42,7 +40,7 @@ data BaseBond = BaseBond {
   couponRate   :: InterestRate,   -- Coupon rate
   period       :: Int,            -- Settlements per year
   basis        :: Basis,          -- Day-count basis
-  roll         :: RollConvention, -- End-of-month rule
+  roll         :: RollConvention, -- How to roll days
   faceValue    :: Double,         -- Face value of bond
   compounding  :: Compounding,    -- Coupons per year (default = 2)
   couponRates  :: [Double]        -- Coupon rate ???
@@ -97,7 +95,7 @@ class Instrument b => Bond b where
   maturity  :: b -> Date
   ytm       :: b -> Date -> Payment
   duration  :: b -> Payment
---   clean :: b -> ... -> Cash 
+--   clean :: b -> ... -> Cash
 --   dirty :: b -> ... -> Payment
 
 class Instrument d => Derivative d where
@@ -106,55 +104,94 @@ class Instrument d => Derivative d where
 -- class (Instrument e) => Equity e where
 -- class (Instrument o) => Option o where
 
+-- From Bonds2.hs:
+
+type IssueDate = Date
+type CouponRates = [Double]
+
+data Bond' = Bond' {
+    issueDate'    :: IssueDate,
+    settlements'  :: Settlements,   -- Settlement date
+    maturity'     :: Date,          -- Maturity date
+    couponRates'  :: CouponRates,   -- Coupon rate
+    compounding'  :: Compounding,           -- Coupons per year (default = 2)
+    basis'        :: Basis,         -- Day-count basis
+    endMonthRule' :: EndMonthRule,  -- End-of-month rule
+    face         :: Double         -- Face value of bond
+}
+
 {-
-> df :: TermStructure -> Years -> Double
-> df (Flat r) yrs = 1.0 / (1.0 + (r / 100.0)) ** yrs
+    **** Notes
+    
+    Every bond will produce a series of payments, depending on settings
+    
+    DiscountFunction will be depending on the period
+    
+    TermStructure will determine the interest rate at each point in time
+    
+    ** Easy to extend to use dates etc, and amortize for passed interest coupons
+    
+    ** Able to use PV, FV and Value(t) using this method
 
-Take DiscountFunction, use currying from discount function
-PartialDiscountFunction
-> pv' :: (Years -> Double) -> Date -> Payment -> Double
-> pv' df now (Payment date (Cash v _)) = (df yrs) * v
->   where yrs = (fromIntegral $ Calendar.diffDays date now) / 365.0 -- TODO: leap year
- 
-> yrs' now date = (fromIntegral $ Calendar.diffDays date now) / 365.0
- 
-> rate1 = Flat 12
-> now  = (read "2011-01-01") :: Date
-> d1   = (read "2011-12-31") :: Date -- 1 yrs from spot
-> d2   = (read "2012-12-31") :: Date -- 2 yrs from spot
-> d3   = (read "2013-12-31") :: Date -- 3 yrs from spot
-> d4   = (read "2014-12-31") :: Date -- 4 yrs from spot
-> d5   = (read "2015-12-31") :: Date -- 5 yrs from spot
-> d6   = (read "2016-12-31") :: Date -- 6 yrs from spot
-> d10  = (read "2020-12-31") :: Date -- 10 yrs from spot
-> c0 = Cash 100.0 USD
-> c1 = Cash 1000.0 USD
- 
-> pm1 = Payment d5 c0
-> pms = [Payment d5 c0, Payment d6 c0]
-> zpm = Payment d10 $ Cash 1000.0 USD
- 
-Present value of 100 received in 5 years, 12.0% interest annualy
-> pv (df rate1) now pm1
-56.742685571859916
+-}
 
-Two payments discounted 12.0% interest rate
-> map (pv (df rate1) now) pms
-[56.742685571859916,50.64738419271504]
+--
+-- Instances
+--
+{-
 
-Sum of discounted cashflows
-> sum $ map (pv (df rate1) now) pms
-107.39006976457495
+instance Instrument Zero where
+  pv z@(Zero (Payment d c)) r p = flip scale c $ recip ((1+r) ** yrsToExpiry z p)
+  expired (Zero (Payment d c)) p = 0 >= T.diffDays p d
+  cashflow (Zero payment) = [payment]
+  yrsToExpiry (Zero (Payment d c)) p = fromInteger (T.diffDays d p) / 365 -- TODO: 365 is not always right, right?
 
-Model a Zero-Coupon Bond 
-3% coupon rate, 10 years to maturity, 1000 in face
-> zz = pv' (df (Flat 3)) now zpm 
-743.9734067115595
+instance Instrument Consol where
+  pv (Consol (Payment _ c:_)) r = const $ scale (recip r) c
+  expired _ _ = False
+  yrsToExpiry _ _ = undefined
+  cashflow (Consol ps) = ps
 
-Model an Annuity
-5% coupon rate, 5 years to maturity, coupons of 1000 each
-face of 5000, coupon of 20%
-> apms = [Payment a b | a <- [d1, d2, d3, d4, d5], b <- [c1]]
-> z    = sum $ map (pv' (df (Flat 5.0)) now) apms
-4329.476670630818
+instance Instrument Bullet where
+  pv (Bullet ps@(Payment _ (Cash c _):_)) r p = Cash c $ sum $ map (discountPayment r p) ps
+  expired b p = 0 >= (T.diffDays p $ maturity b)
+  yrsToExpiry b p = fromInteger (T.diffDays (maturity b) p) / 365
+  cashflow (Bullet ps) = ps
+
+instance Instrument Annuity where
+  pv (Annuity ps@(Payment _ (Cash c _):_)) r p = Cash c $ sum $ map (discountPayment r p) ps
+  expired b p = 0 >= (T.diffDays p $ maturity b)
+  yrsToExpiry b p = fromInteger (T.diffDays (maturity b) p) / 365
+  cashflow (Annuity ps) = ps
+
+instance Bond Bullet where
+  principal (Bullet ps) = let (Payment d c) = last ps in c
+  coupon (Bullet (Payment d c:ps)) = c
+  maturity (Bullet ps) = let (Payment d c) = last ps in d
+  ytm (Bullet _) p = undefined
+  duration z = undefined
+
+instance Bond Zero where
+  principal (Zero (Payment d c)) = c
+  coupon (Zero (Payment d (Cash c v))) = Cash c 0
+  maturity (Zero (Payment d _)) = d
+  ytm z@(Zero (Payment _ _)) p = undefined
+  duration z = undefined
+
+instance Bond Consol where
+  principal (Consol (Payment d c:ps)) = undefined -- What do we do here..?
+  coupon (Consol (Payment _ c:_)) = c
+  maturity _ = undefined -- what is the biggest UTCTime we have? :P
+  ytm c = undefined
+  duration b = undefined
+
+instance Bond Annuity where
+  principal (Annuity (Payment d c:ps)) = undefined -- What do we do here..?
+  coupon (Annuity (Payment _ c:_)) = c
+  maturity _ = undefined -- what is the biggest UTCTime we have? :P
+  ytm c = undefined
+  duration b = undefined
+
+-- instance Bond SimpleAnnuity where
+-- instance Bond MortgageBackedBond where
 -}

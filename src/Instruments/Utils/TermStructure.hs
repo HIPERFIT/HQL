@@ -5,7 +5,8 @@ import Calendar
 
 -- Same types used here as we discusses
 -- type Date = D.Day
-type Points = M.Map Date Double 
+-- type Points = M.Map Date Double 
+type Points = [Double]
 
 type FlatTermStructure = forall f. (Floating f) => f
 type InterpolatedTermStructure = Points
