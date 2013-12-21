@@ -2,6 +2,8 @@ module Currency where
 
 -- Some common currencies
 data Currency = USD | EUR | GBP | CHF | JPY | DKK | SEK deriving Show
+
+-- redesign, see discounting
 type InterestRate = Double
 data Cash = Cash Double Currency | InvalidCash
   

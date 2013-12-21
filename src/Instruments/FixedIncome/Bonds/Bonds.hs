@@ -14,7 +14,10 @@ import Prelude
 
 type Repayment = Double
 
+-- Move to day-count conventions (in calendar)
 data Basis = ACTACT | ACT360 | ACT365F | Thirty360 | SIA | Business | European | Japanese
+data EndMonthRule = Ignore | Apply
+
 
 data Payment = Payment Date Cash deriving (Show)
 type Payments = [Payment]
@@ -24,14 +27,25 @@ type Cashflow = Payments
 -- Instruments
 --
 
+-- Redesign: DF is zero, Fixed coupon and Floating coupon
 newtype Vanilla = Vanilla { payments :: Payments }
 newtype Zero   = Zero { payment :: Payment } deriving (Show)
 newtype Consol = Consol { cpayments :: Payments }
 newtype Bullet = Bullet { bpayments :: Payments }
 newtype Annuity = Annuity { apayments :: Payments }
 newtype Serial = Serial { spayments :: Payments }
+
+-- Move to Discounting
 data Compounding = Continous | Periodic Int
-data EndMonthRule = Ignore | Apply
+
+-- This is the input data, will be converted to a portfolio of
+-- zero coupon bonds (discount factors)
+data FixedCouponBond = FixedCouponBond {
+    settlementDate :: Date,
+    maturityDate :: Date,
+    
+    couponRate :: InterestRate,
+}
 
 data BaseBond = BaseBond {
   settle       :: Date,           -- Settlement date
