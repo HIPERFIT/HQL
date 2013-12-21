@@ -254,3 +254,25 @@ discountPayments now ts pms = zipWith (discountPayment now) myDfs pms
         
 -}
 
+{-
+type DiscountFactor = Double
+
+-- Computes the discount factor
+df :: InterestRate -> Offset -> DiscountFactor
+df = \r n -> (exp 1)**(r*n)
+
+onDateValue :: Date -> InterestRate -> Payment -> Cash
+onDateValue now r (Payment date cash) = scale (df r y) cash
+  where y = getDayOffset now date
+
+ -- All-or-nothing semantics
+onDateValues :: Date -> TermStructure -> Payments -> [Cash]
+onDateValues now (Interpolated ts) pms
+  | M.size ts >= length pms = M.elems $ M.intersectionWith (onDateValue now) ts pmap
+  | otherwise = []
+  where pmap = M.fromList $ map (\p@(Payment d _) -> (d,p)) pms
+
+onDateValues now (Analytical f) pms = zipWith (onDateValue now) rates pms
+  where rates = map (\(Payment d c) -> f $ getDayOffset now d) pms
+
+-}
