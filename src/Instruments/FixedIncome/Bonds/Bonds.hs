@@ -5,19 +5,21 @@ import qualified Data.List as L
 import Calendar
 import Currency
 import TermStructure
-import Control.Monad
-import Prelude
+import Data.Char
 
 --
 -- Types
 --
 
 type Repayment = Double
+data Compounding = Continuous | Periodic Double deriving (Show) 
+data InterestRate = InterestRate Compounding Double 
+instance Show InterestRate where
+  show (InterestRate c r) = show r ++ "% " ++ map toLower (show c) ++ " compounded"
 
 -- Move to day-count conventions (in calendar)
 data Basis = ACTACT | ACT360 | ACT365F | Thirty360 | SIA | Business | European | Japanese
 data EndMonthRule = Ignore | Apply
-
 
 data Payment = Payment Date Cash deriving (Show)
 type Payments = [Payment]
@@ -27,47 +29,35 @@ type Cashflow = Payments
 -- Instruments
 --
 
--- Redesign: DF is zero, Fixed coupon and Floating coupon
-newtype Vanilla = Vanilla { payments :: Payments }
-newtype Zero   = Zero { payment :: Payment } deriving (Show)
+-- Currently only supporting fixed coupon bonds
+newtype Zero   = Zero { payment :: Payment }
 newtype Consol = Consol { cpayments :: Payments }
 newtype Bullet = Bullet { bpayments :: Payments }
 newtype Annuity = Annuity { apayments :: Payments }
 newtype Serial = Serial { spayments :: Payments }
 
--- Move to Discounting
-data Compounding = Continous | Periodic Int
 
 -- This is the input data, will be converted to a portfolio of
 -- zero coupon bonds (discount factors)
 data FixedCouponBond = FixedCouponBond {
-    settlementDate :: Date,
-    maturityDate :: Date,
-    
-    couponRate :: InterestRate,
+  settlement :: Date,
+  maturity   :: Date,
+  couponRate :: InterestRate,
+  roll       :: RollConvention,
+  faceValue  :: Double,
+  rate       :: InterestRate,
+  currency   :: Currency
 }
 
-data BaseBond = BaseBond {
-  settle       :: Date,           -- Settlement date
-  currency     :: Currency,       -- Currency
-  basematurity :: Date,           -- Maturity date
-  couponRate   :: InterestRate,   -- Coupon rate
-  period       :: Int,            -- Settlements per year
-  basis        :: Basis,          -- Day-count basis
-  roll         :: RollConvention, -- How to roll days
-  faceValue    :: Double,         -- Face value of bond
-  compounding  :: Compounding,    -- Coupons per year (default = 2)
-  couponRates  :: [Double]        -- Coupon rate ???
-}
+zero :: Date -> Cash -> Zero
+zero d c = Zero $ Payment d c
 
-zero :: BaseBond -> Zero
-zero BaseBond{..} = Zero $ Payment basematurity $ Cash faceValue currency 
-
-consol :: BaseBond -> Consol
-consol BaseBond{..} =
+{-
+consol :: FixedCouponBond -> Currency -> Consol
+consol FixedCouponBond{..} =
   let
     mkPayment date = Payment date $ Cash (faceValue * couponRate) currency
-    dates = getSettlementDates roll period settle
+    dates = getSettlementDates roll period settlement
   in
     Consol $ map mkPayment dates
 
@@ -93,24 +83,40 @@ serial repayment BaseBond{..} =
   in
     Serial $ payments ++ [Payment basematurity remaining] 
 
+-}
+
+{-
+    **** Notes
+    
+    Every bond will produce a series of payments, depending on settings
+
+    DiscountFunction will be depending on the period
+
+    TermStructure will determine the interest rate at each point in time
+
+    ** Easy to extend to use dates etc, and amortize for passed interest coupons
+
+    ** Able to use PV, FV and Value(t) using this method
+-}
+
 --
 -- Classes
 -- 
 
 class Instrument i where
-  pv :: i -> InterestRate -> Date -> Cash
+  pv :: i -> TermStructure -> Date -> Cash
   expired  :: i -> Date -> Bool
-  cashflow :: i -> Payments
   yrsToExpiry :: i -> Date -> Years
 
 class Instrument b => Bond b where
   principal :: b -> Cash
+  cashflow  :: b -> Payments
   coupon    :: b -> Cash
-  maturity  :: b -> Date
   ytm       :: b -> Date -> Payment
   duration  :: b -> Payment
---   clean :: b -> ... -> Cash
---   dirty :: b -> ... -> Payment
+  clean     :: b -> Date -> Cash
+  dirty     :: b -> Date -> Cash
+--   maturity  :: b -> Date
 
 class Instrument d => Derivative d where
   underlying :: (Instrument i) => d -> i
@@ -118,94 +124,20 @@ class Instrument d => Derivative d where
 -- class (Instrument e) => Equity e where
 -- class (Instrument o) => Option o where
 
--- From Bonds2.hs:
-
-type IssueDate = Date
-type CouponRates = [Double]
-
-data Bond' = Bond' {
-    issueDate'    :: IssueDate,
-    settlements'  :: Settlements,   -- Settlement date
-    maturity'     :: Date,          -- Maturity date
-    couponRates'  :: CouponRates,   -- Coupon rate
-    compounding'  :: Compounding,           -- Coupons per year (default = 2)
-    basis'        :: Basis,         -- Day-count basis
-    endMonthRule' :: EndMonthRule,  -- End-of-month rule
-    face         :: Double         -- Face value of bond
-}
-
-{-
-    **** Notes
-    
-    Every bond will produce a series of payments, depending on settings
-    
-    DiscountFunction will be depending on the period
-    
-    TermStructure will determine the interest rate at each point in time
-    
-    ** Easy to extend to use dates etc, and amortize for passed interest coupons
-    
-    ** Able to use PV, FV and Value(t) using this method
-
--}
-
 --
 -- Instances
 --
+
 {-
-
 instance Instrument Zero where
-  pv z@(Zero (Payment d c)) r p = flip scale c $ recip ((1+r) ** yrsToExpiry z p)
-  expired (Zero (Payment d c)) p = 0 >= T.diffDays p d
-  cashflow (Zero payment) = [payment]
-  yrsToExpiry (Zero (Payment d c)) p = fromInteger (T.diffDays d p) / 365 -- TODO: 365 is not always right, right?
-
 instance Instrument Consol where
-  pv (Consol (Payment _ c:_)) r = const $ scale (recip r) c
-  expired _ _ = False
-  yrsToExpiry _ _ = undefined
-  cashflow (Consol ps) = ps
-
 instance Instrument Bullet where
-  pv (Bullet ps@(Payment _ (Cash c _):_)) r p = Cash c $ sum $ map (discountPayment r p) ps
-  expired b p = 0 >= (T.diffDays p $ maturity b)
-  yrsToExpiry b p = fromInteger (T.diffDays (maturity b) p) / 365
-  cashflow (Bullet ps) = ps
-
 instance Instrument Annuity where
-  pv (Annuity ps@(Payment _ (Cash c _):_)) r p = Cash c $ sum $ map (discountPayment r p) ps
-  expired b p = 0 >= (T.diffDays p $ maturity b)
-  yrsToExpiry b p = fromInteger (T.diffDays (maturity b) p) / 365
-  cashflow (Annuity ps) = ps
-
-instance Bond Bullet where
-  principal (Bullet ps) = let (Payment d c) = last ps in c
-  coupon (Bullet (Payment d c:ps)) = c
-  maturity (Bullet ps) = let (Payment d c) = last ps in d
-  ytm (Bullet _) p = undefined
-  duration z = undefined
+instance Instrument Serial where
 
 instance Bond Zero where
-  principal (Zero (Payment d c)) = c
-  coupon (Zero (Payment d (Cash c v))) = Cash c 0
-  maturity (Zero (Payment d _)) = d
-  ytm z@(Zero (Payment _ _)) p = undefined
-  duration z = undefined
-
 instance Bond Consol where
-  principal (Consol (Payment d c:ps)) = undefined -- What do we do here..?
-  coupon (Consol (Payment _ c:_)) = c
-  maturity _ = undefined -- what is the biggest UTCTime we have? :P
-  ytm c = undefined
-  duration b = undefined
-
+instance Bond Bullet where
 instance Bond Annuity where
-  principal (Annuity (Payment d c:ps)) = undefined -- What do we do here..?
-  coupon (Annuity (Payment _ c:_)) = c
-  maturity _ = undefined -- what is the biggest UTCTime we have? :P
-  ytm c = undefined
-  duration b = undefined
-
--- instance Bond SimpleAnnuity where
--- instance Bond MortgageBackedBond where
+instance Bond Serial where
 -}

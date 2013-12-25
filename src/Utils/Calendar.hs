@@ -58,3 +58,6 @@ getDayOffset now date
   | otherwise      = diff / 365
   where (y,_,_) = WeekDate.toWeekDate date
         diff = fromIntegral $ Cal.diffDays date now 
+
+getDay :: IO Date
+getDay = T.getCurrentTime >>= \d -> return (T.utctDay d)
