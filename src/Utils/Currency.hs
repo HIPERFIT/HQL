@@ -4,7 +4,6 @@ module Currency where
 data Currency = USD | EUR | GBP | CHF | JPY | DKK | SEK deriving Show
 
 -- redesign, see discounting
-type InterestRate = Double
 data Cash = Cash Double Currency | InvalidCash
   
 -- Format cash using currency symbol
@@ -43,14 +42,14 @@ instance Num Cash where
   abs c = c
   signum c = c
 
-exp, add, scale :: Double -> Cash -> Cash
-exp d (Cash v USD) = Cash (v**d) USD
-exp d (Cash v EUR) = Cash (v**d) EUR
-exp d (Cash v GBP) = Cash (v**d) GBP
-exp d (Cash v JPY) = Cash (v**d) JPY
-exp d (Cash v CHF) = Cash (v**d) CHF
-exp d (Cash v DKK) = Cash (v**d) DKK
-exp d (Cash v SEK) = Cash (v**d) SEK
+expC, add, scale :: Double -> Cash -> Cash
+expC d (Cash v USD) = Cash (v**d) USD
+expC d (Cash v EUR) = Cash (v**d) EUR
+expC d (Cash v GBP) = Cash (v**d) GBP
+expC d (Cash v JPY) = Cash (v**d) JPY
+expC d (Cash v CHF) = Cash (v**d) CHF
+expC d (Cash v DKK) = Cash (v**d) DKK
+expC d (Cash v SEK) = Cash (v**d) SEK
 
 scale d (Cash v USD) = Cash (d*v) USD
 scale d (Cash v EUR) = Cash (d*v) EUR

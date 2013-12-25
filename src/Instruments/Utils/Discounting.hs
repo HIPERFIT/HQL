@@ -1,25 +1,13 @@
 module Discounting where
 import Prelude
-import Data.Char
 
---import Bonds
+import Bonds
 --import TermStructure
---import Currency
---import Calendar
---type DiscountFactor = Double
+import Currency
+import Calendar
 
--- Interval for periodic compounding, day-count conventions etc
-data Interval = Annually | SemiAnnually | Quarterly | Monthly | Other Double deriving (Show)
-
--- The compounding can be either continous or periodic
-data Compounding = Continuous | Periodic Interval deriving (Show)
-
--- The interest rate is described by the compounding and rate
-type Rate = Double
-data InterestRate = InterestRate Compounding Rate
-
-instance Show InterestRate where
-  show (InterestRate c r) = show r ++ "% " ++ (map toLower (show c)) ++ " compounded"
+type Offset = Double
+type DiscountFactor = Double
 
 -- Continuous compounding factor p(t,T)
 -- Zero coupon bond with nominal value N=1
@@ -34,22 +22,38 @@ instance Show InterestRate where
 --discountFactor ir tt tT = exp(-(ir/100)*(tT - tt))
 
 -- TODO: Only use continous compound factor
-
+discountFactor :: InterestRate -> Offset -> Offset -> DiscountFactor
 discountFactor (InterestRate Continuous r) tT tt = exp(-(r/100)*(tT - tt))
-discountFactor (InterestRate (Periodic p) r) tT tt = case p of
-    Annually        -> ccf r tT 1
-    SemiAnnually    -> ccf r tT 2
-    Quarterly       -> ccf r tT 4
-    Monthly         -> ccf r tT 12
-    Other i         -> ccf r tT i
-    where ccf r t p = 1/(1 + (r/100)/p)**(p*t)
-    --where ccf r t p = 1/(1 + (r/100)/p)**(p*t)
---    exp(-(r/100)*(tT - tt))
+discountFactor (InterestRate (Periodic i) r) tT tt = ccf r tT i
+  where ccf r t p = 1/(1 + (r/100)/p)**(p*t)
 
+{-
+discountPayment :: Date -> InterestRate -> Payment -> Cash
+discountPayment now ir (Payment date cash) = scale (df r y) cash
+  where y  = getDayOffset now date
+        df = discountFactor ir
+
+discountPayments :: Date -> TermStructure -> Payments -> [Cash]
+discountPayments now ts pms = zipWith (discountPayment now) myDfs pms
+  where offsets = map (\(Payment d _) -> getDayOffset now d) pms
+        myDfs = dfs ts offsets
+-} 
+
+{-
 -- Term structure - yield curve
 -- analytic | from data
 termStructure x = 5 + (1/2)*sqrt(x)
-
+ 
+-- All-or-nothing semantics
+-- onDateValues :: Date -> TermStructure -> Payments -> [Cash]
+-- onDateValues now (Interpolated ts) pms
+--   | M.size ts >= length pms = M.elems $ M.intersectionWith (onDateValue now) ts pmap
+--   | otherwise = []
+--   where pmap = M.fromList $ map (\p@(Payment d _) -> (d,p)) pms
+-- 
+-- onDateValues now (Analytical f) pms = zipWith (onDateValue now) rates pms
+--   where rates = map (\(Payment d c) -> f $ getDayOffset now d) pms
+-}
 
 -- TESTS (1-17 non-calendar time)
 
@@ -60,7 +64,7 @@ b = N[DiscountFactor[1, 9 + 28/100, Compounding -> {Linear, 1}, CompiledDF -> Tr
 0.9150805270863837
 ]
 ## HQL
-discountFactor (InterestRate (Periodic Annually) (9+28/100 :: Double)) 1.00 0.0 == 0.9150805270863837
+discountFactor (InterestRate (Periodic 1) (9+28/100 :: Double)) 1.00 0.0 == 0.9150805270863837
 -}
 
 
@@ -73,7 +77,7 @@ DiscountFactor[1.5, termstructure1, Compounding -> {Linear, 2}]
 ## HQL (using term structure)
 > let termStructure x = 5 + (1/2)*sqrt(x)
 > let r = (termStructure 1.5)
-> discountFactor (InterestRate (Periodic SemiAnnually) r) 1.50 0.0 == 0.9203271932613013
+> discountFactor (InterestRate (Periodic 2) r) 1.50 0.0 == 0.9203271932613013
 -- refined version
 -}
 
@@ -85,7 +89,7 @@ DiscountFactor[1.5, termstructure1, Compounding -> {Linear, 2}, CompiledDF -> Tr
 0.9203271932613013
 ]
 ## HQL
-> discountFactor (InterestRate (Periodic SemiAnnually) (termStructure 1.5)) 1.5 0.0 == 0.9203271932613013
+> discountFactor (InterestRate (Periodic 2) (termStructure 1.5)) 1.5 0.0 == 0.9203271932613013
 -}
 
 
@@ -129,7 +133,7 @@ DiscountFactor[4.5, termstructure1, Compounding -> {Exponential, 2}]
 ## HQL
 > let termStructure x = 5 + (1/2)*sqrt(x)
 > let r = (termStructure 4.5)
-> discountFactor (InterestRate (Periodic SemiAnnually) r) 4.50 0.0 == 0.7643885607510086
+> discountFactor (InterestRate (Periodic 2) r) 4.50 0.0 == 0.7643885607510086
 -}
 
 
@@ -140,7 +144,7 @@ DiscountFactor[4.5, termstructure1, Compounding -> {Exponential, 2}, CompiledDF 
 0.7643885607510086
 ]
 ## HQL
-> discountFactor (InterestRate (Periodic SemiAnnually) (termStructure 4.5)) 4.5 0.0 == 0.7643885607510086
+> discountFactor (InterestRate (Periodic 2) (termStructure 4.5)) 4.5 0.0 == 0.7643885607510086
 -}
 
 
@@ -151,7 +155,7 @@ DiscountFactor[1/2, 8.5, Compounding -> {LinearExponential, 1}]
 0.9592326139088729
 ]
 ## HQL (convert periodic to continous)
-> discountFactor (InterestRate (Periodic SemiAnnually) 8.5) 0.5 0.0 == 0.9592326139088729
+> discountFactor (InterestRate (Periodic 2) 8.5) 0.5 0.0 == 0.9592326139088729
 -}
 
 
@@ -162,7 +166,7 @@ DiscountFactor[1/2, 8.5, Compounding -> {LinearExponential, 1}, CompiledDF -> Tr
 0.9592326139088729
 ]
 ## HQL
-> discountFactor (InterestRate (Periodic SemiAnnually) 8.5) 0.5 0.0 == 0.9592326139088729
+> discountFactor (InterestRate (Periodic 2) 8.5) 0.5 0.0 == 0.9592326139088729
 -}
 
 
@@ -209,7 +213,7 @@ interest2 = 7.77;
 Out[8]= 7.99473
 
 ## HQL
-> (((discountFactor (InterestRate (Periodic SemiAnnually) 6.65) 0.25 0.0)/(discountFactor (InterestRate (Periodic SemiAnnually) 7.77) 1.5 0.0))**(1/(2*1.25))-1)*2*100 == 7.994727369824384
+> (((discountFactor (InterestRate (Periodic 2) 6.65) 0.25 0.0)/(discountFactor (InterestRate (Periodic 2) 7.77) 1.5 0.0))**(1/(2*1.25))-1)*2*100 == 7.994727369824384
 
 -}
 
@@ -230,49 +234,5 @@ newDF :: InterestRate -> DiscountFactor
     - Interest rate (as percentage)
     - Time to maturity
     - Linear, Exponential, Continous => Periodic, Continuous
-
-
-
--- Computes the discount factor
-df :: InterestRate -> Years -> DiscountFactor
-df = \r n -> 1.0 / (1.0 + (r / 100.0)) ** n
-
--- Computes a list of discount factors
-dfs :: TermStructure -> [Years] -> [DiscountFactor]
-dfs (Flat r) offsets = map (df r) offsets
-dfs (Analytical _) _ = undefined
-dfs (Interpolated ts) offsets = zipWith df ts offsets -- TODO: match on dates?
-
-discountPayment :: Date -> InterestRate -> Payment -> Cash
-discountPayment now r (Payment date cash) = scale (df r y) cash
-  where y = getDayOffset now date
-
-discountPayments :: Date -> TermStructure -> Payments -> [Cash]
-discountPayments now ts pms = zipWith (discountPayment now) myDfs pms
-  where offsets = map (\(Payment d _) -> getDayOffset now d) pms
-        myDfs = dfs ts offsets
-        
--}
-
-{-
-type DiscountFactor = Double
-
--- Computes the discount factor
-df :: InterestRate -> Offset -> DiscountFactor
-df = \r n -> (exp 1)**(r*n)
-
-onDateValue :: Date -> InterestRate -> Payment -> Cash
-onDateValue now r (Payment date cash) = scale (df r y) cash
-  where y = getDayOffset now date
-
- -- All-or-nothing semantics
-onDateValues :: Date -> TermStructure -> Payments -> [Cash]
-onDateValues now (Interpolated ts) pms
-  | M.size ts >= length pms = M.elems $ M.intersectionWith (onDateValue now) ts pmap
-  | otherwise = []
-  where pmap = M.fromList $ map (\p@(Payment d _) -> (d,p)) pms
-
-onDateValues now (Analytical f) pms = zipWith (onDateValue now) rates pms
-  where rates = map (\(Payment d c) -> f $ getDayOffset now d) pms
-
+       
 -}
