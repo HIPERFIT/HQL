@@ -3,8 +3,13 @@ module TermStructure where
 import qualified Data.Map as M
 import Calendar
 
-type Points = M.Map Date Double 
+data InterestRate = InterestRate Compounding Double
 
+data Compounding = Continuous | Periodic Double deriving (Show)
+instance Show InterestRate where
+  show (InterestRate c r) = show r ++ "% " ++ map toLower (show c) ++ " compounded"
+
+type Points = M.Map Date InterestRate 
 type InterpolatedTermStructure = Points
 type AnalyticalTermStructure = forall f. (Floating f) => Int -> f
 

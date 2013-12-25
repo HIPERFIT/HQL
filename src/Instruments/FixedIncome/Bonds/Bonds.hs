@@ -12,15 +12,6 @@ import Data.Char
 --
 
 type Repayment = Double
-data Compounding = Continuous | Periodic Double deriving (Show) 
-data InterestRate = InterestRate Compounding Double 
-instance Show InterestRate where
-  show (InterestRate c r) = show r ++ "% " ++ map toLower (show c) ++ " compounded"
-
--- Move to day-count conventions (in calendar)
-data Basis = ACTACT | ACT360 | ACT365F | Thirty360 | SIA | Business | European | Japanese
-data EndMonthRule = Ignore | Apply
-
 data Payment = Payment Date Cash deriving (Show)
 type Payments = [Payment]
 type Cashflow = Payments

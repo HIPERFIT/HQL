@@ -10,6 +10,10 @@ type Years = Double
 data RollConvention = Following | Preceding | ModifiedFollowing
 type Settlements = Int
 
+data Basis = ACTACT | ACT360 | ACT365F | Thirty360
+           | SIA | Business | European | Japanese
+data EndMonthRule = Ignore | Apply
+
 -- This uses interpolation
 getSettlementDates :: RollConvention -> Settlements -> Date -> [Date]
 getSettlementDates conv sts dt = map (rollDay conv) $ iterate nextDate dt

@@ -18,8 +18,6 @@ type DiscountFactor = Double
 -- where the future times S < T are prevailing at time t
 -- Present value is represented as [0,0,T] (t=S)
 -- Future value at time t=0 as [0,S,T]
---DiscountFactor :: Double -> Double -> Double -> Double
---discountFactor ir tt tT = exp(-(ir/100)*(tT - tt))
 
 -- No reason for using two offsets
 discountFactor :: InterestRate -> Offset -> DiscountFactor
