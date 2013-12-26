@@ -42,6 +42,17 @@ instance Num Cash where
   abs c = c
   signum c = c
 
+instance Fractional Cash where
+  (Cash v USD) / (Cash w USD) = Cash (v / w) USD
+  (Cash v EUR) / (Cash w EUR) = Cash (v / w) EUR
+  (Cash v GBP) / (Cash w GBP) = Cash (v / w) GBP
+  (Cash v CHF) / (Cash w CHF) = Cash (v / w) CHF
+  (Cash v JPY) / (Cash w JPY) = Cash (v / w) JPY
+  (Cash v DKK) / (Cash w DKK) = Cash (v / w) DKK
+  (Cash v SEK) / (Cash w SEK) = Cash (v / w) SEK
+  _ / _ = InvalidCash
+  fromRational c = undefined
+
 expC, add, scale :: Double -> Cash -> Cash
 expC d (Cash v USD) = Cash (v**d) USD
 expC d (Cash v EUR) = Cash (v**d) EUR
@@ -59,13 +70,13 @@ scale d (Cash v CHF) = Cash (d*v) CHF
 scale d (Cash v DKK) = Cash (d*v) DKK
 scale d (Cash v SEK) = Cash (d*v) SEK
 
-add d (Cash v USD) = Cash (d*v) USD
-add d (Cash v EUR) = Cash (d*v) EUR
-add d (Cash v GBP) = Cash (d*v) GBP
-add d (Cash v JPY) = Cash (d*v) JPY
-add d (Cash v CHF) = Cash (d*v) CHF
-add d (Cash v DKK) = Cash (d*v) DKK
-add d (Cash v SEK) = Cash (d*v) SEK
+add d (Cash v USD) = Cash (d+v) USD
+add d (Cash v EUR) = Cash (d+v) EUR
+add d (Cash v GBP) = Cash (d+v) GBP
+add d (Cash v JPY) = Cash (d+v) JPY
+add d (Cash v CHF) = Cash (d+v) CHF
+add d (Cash v DKK) = Cash (d+v) DKK
+add d (Cash v SEK) = Cash (d+v) SEK
 
 
 --- Support for currency conversion
@@ -105,4 +116,4 @@ instance Show ExchangeRate where
     -- Idea: use the exchange rate as an implicit (ImplicitParams)
     -- See: http://www.haskell.org/haskellwiki/Implicit_parameters
 
--} 
+-}
