@@ -12,7 +12,7 @@ instance Show InterestRate where
 
 type Points = M.Map Date InterestRate 
 type InterpolatedTermStructure = Points
-type AnalyticalTermStructure = forall f. (Floating f) => Int -> f
+type AnalyticalTermStructure = forall f. (Floating f) => Double -> f
 
 data TermStructure = Interpolated InterpolatedTermStructure
                    | Analytical   AnalyticalTermStructure

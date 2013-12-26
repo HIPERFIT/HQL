@@ -1,6 +1,7 @@
-module Discounting where
+-- module Discounting where
 import Prelude
 
+import qualified Data.Map as M
 import Bonds
 import TermStructure
 import Currency
@@ -29,6 +30,15 @@ discountPayment :: InterestRate -> Date -> Payment -> Cash
 discountPayment ir now (Payment date cash) = scale df cash
   where df = discountFactor ir $ getDayOffset date now
 
--- TODO: Implement TermStructure to work on Payments (=[Payment])
 discountPayments :: Date -> TermStructure -> Payments -> [Cash]
-discountPayments = undefined
+discountPayments now (Analytical f) pms = zipWith df rates pms
+  where rates = map (\(Payment d c) -> mkCont $ f $ getDayOffset now d) pms
+        df    = \r p -> discountPayment r now p
+        mkCont  = InterestRate Continuous
+-- TODO: Intersection should match on compounding if there are multiple
+-- interest rates for a given date
+discountPayments now (Interpolated ts) pms
+  | M.size ts >= length pms = M.elems $ M.intersectionWith df ts pmap
+  | otherwise = []
+  where pmap = M.fromList $ map (\p@(Payment d _) -> (d,p)) pms
+        df   = \r p -> discountPayment r now p
