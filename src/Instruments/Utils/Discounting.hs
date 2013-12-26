@@ -42,3 +42,23 @@ discountPayments now (Interpolated ts) pms
   | otherwise = []
   where pmap = M.fromList $ map (\p@(Payment d _) -> (d,p)) pms
         df   = \r p -> discountPayment r now p
+
+-- Zero coupon yield
+zcbYield :: Cash -> Cash -> Int -> Double
+zcbYield face pv periods =
+  let 
+    (Cash v _) = expC (1/ fromIntegral periods) (face/pv) -- Checks currencies
+  in
+    v - 1
+
+{- Yield tests
+
+a = Cash 100 SEK
+b = Cash  90 SEK
+zcbYield a b 1 == 0.11111111111111116
+
+c = Cash 500 USD
+d = Cash 490 USD
+zcbYield a b 3 == 0.006756961723555888
+
+-}
