@@ -2,6 +2,7 @@
 module TermStructure where
 import qualified Data.Map as M
 import Calendar
+import Data.Char
 
 data InterestRate = InterestRate Compounding Double
 
