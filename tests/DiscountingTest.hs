@@ -43,7 +43,7 @@ DiscountFactor[3, 8.5, Compounding -> {Exponential, 12}]
 0.7756133702070986
 ]
 ## HQL
-> discountFactor (InterestRate (Periodic Monthly) 8.5) 3.0 0.0 == 0.7756133702070988
+> discountFactor (InterestRate (Periodic 12) 8.5) 3.0 0.0 == 0.7756133702070988
 -}
 
 {-
@@ -53,7 +53,7 @@ DiscountFactor[3, 8.5, Compounding -> {Exponential, 12}, CompiledDF -> True]
 0.7756133702070988
 ]
 ## HQL
-> discountFactor (InterestRate (Periodic Monthly) 8.5) 3.0 0.0 == 0.7756133702070988
+> discountFactor (InterestRate (Periodic 12) 8.5) 3.0 0.0 == 0.7756133702070988
 -}
 
 {-
