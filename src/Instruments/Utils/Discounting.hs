@@ -23,8 +23,8 @@ type DiscountFactor = Double
 -- No reason for using two offsets
 discountFactor :: InterestRate -> Offset -> DiscountFactor
 discountFactor (InterestRate Continuous r) tt = exp(-(r/100)*tt)
-discountFactor (InterestRate (Periodic i) r) tt = ccf r tt i
-  where ccf r t p = 1/(1 + (r/100)/p)**(p*t)
+discountFactor (InterestRate (Periodic i) r) tt =  1/(1 + (r/100)/p)**(p*tt)
+  where p = fromIntegral i
 
 discountPayment :: InterestRate -> Date -> Payment -> Cash
 discountPayment ir now (Payment date cash) = scale df cash
@@ -32,7 +32,7 @@ discountPayment ir now (Payment date cash) = scale df cash
 
 discountPayments :: Date -> TermStructure -> Payments -> [Cash]
 discountPayments now (Analytical f) pms = zipWith df rates pms
-  where rates = map (\(Payment d c) -> mkCont $ f $ getDayOffset now d) pms
+  where rates = map (\(Payment d _) -> mkCont $ f $ getDayOffset now d) pms
         df    = \r p -> discountPayment r now p
         mkCont  = InterestRate Continuous
 -- TODO: Intersection should match on compounding if there are multiple

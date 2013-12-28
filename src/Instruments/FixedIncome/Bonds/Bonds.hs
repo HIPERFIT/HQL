@@ -1,11 +1,10 @@
 {-# LANGUAGE RecordWildCards #-}
+{-# LANGUAGE GADTs #-}
 module Bonds where
-import qualified Data.Map as M
 import qualified Data.List as L
 import Calendar
 import Currency
 import TermStructure
-import Data.Char
 
 --
 -- Types
@@ -20,62 +19,77 @@ type Cashflow = Payments
 -- Instruments
 --
 
--- Currently only supporting fixed coupon bonds
-newtype Zero   = Zero { payment :: Payment }
-newtype Consol = Consol { cpayments :: Payments }
-newtype Bullet = Bullet { bpayments :: Payments }
-newtype Annuity = Annuity { apayments :: Payments }
-newtype Serial = Serial { spayments :: Payments }
+data FixedCouponBond where
+  Zero   :: { zsett :: Date,
+              zmatu :: Date,
+              zface :: Cash,
+              zintr :: InterestRate,
+              zroll :: RollConvention } -> FixedCouponBond
+  Consol :: { csett :: Date,
+              cface :: Cash,
+              crate ::  InterestRate,
+              croll :: RollConvention } -> FixedCouponBond
+  Bullet :: { bsett :: Date,
+              bmatu :: Date,
+              bface :: Cash,
+              brate ::  InterestRate,
+              broll :: RollConvention } -> FixedCouponBond
+  Annuity :: { asett :: Date,
+              amatu :: Date,
+              aface :: Cash,
+              arate ::  InterestRate,
+              aroll :: RollConvention } -> FixedCouponBond
+  Serial :: { ssett :: Date,
+              smatu :: Date,
+              sface :: Cash,
+              srate ::  InterestRate,
+              sroll :: RollConvention } -> FixedCouponBond
 
+cashflow :: FixedCouponBond -> Payments
+cashflow Zero{..} = Payment zmatu zface : []
+cashflow Consol{..} =
+  map (mkPayment crate cface) $ extrapolateDates croll (getComp crate) csett
+cashflow Bullet{..} = map (mkPayment brate bface) dates
+  where dates = interpolateDates bmatu broll (getComp brate) bsett
+cashflow Serial{..} = 
+  let
+    dates = interpolateDates smatu sroll (getComp srate) ssett
+    repayment = mkRepayment dates sface
+    accPymts :: Cash -> Date -> (Cash, Payment)
+    accPymts outstd date = let
+                             payment = repayment + scale (getRate srate) outstd
+                             outstd' = outstd - repayment
+                           in
+                             (outstd', Payment date payment)
+  in
+    snd $ L.mapAccumL accPymts sface dates
+cashflow Annuity{..} = undefined
 
--- This is the input data, will be converted to a portfolio of
--- zero coupon bonds (discount factors)
-data FixedCouponBond = FixedCouponBond {
-  settlement :: Date,
-  maturity   :: Date,
-  couponRate :: InterestRate,
-  roll       :: RollConvention,
-  faceValue  :: Double,
-  rate       :: InterestRate,
-  currency   :: Currency
-}
+mkRepayment :: [Date] -> Cash -> Cash
+mkRepayment ds face = scale (recip . fromIntegral $ length ds) face
 
-zero :: Date -> Cash -> Zero
-zero d c = Zero $ Payment d c
+mkPayment :: InterestRate -> Cash -> Date -> Payment
+mkPayment (InterestRate _ rate) face date = Payment date $ scale rate face
+
+getComp :: InterestRate -> Compounding
+getComp (InterestRate c _) = c
+getRate :: InterestRate -> Double
+getRate (InterestRate _ d) = d
 
 {-
-consol :: FixedCouponBond -> Currency -> Consol
-consol FixedCouponBond{..} =
-  let
-    mkPayment date = Payment date $ Cash (faceValue * couponRate) currency
-    dates = getSettlementDates roll period settlement
-  in
-    Consol $ map mkPayment dates
+-- Tests
+settle = (read "2000-01-01")::Date 
+maturity = (read "2006-01-01")::Date
+rate1 = InterestRate (Periodic 1) 0.1
 
-bullet :: BaseBond -> Bullet
-bullet BaseBond{..} = 
-  let
-    mkPayment date = Payment date $ Cash (faceValue * couponRate) currency 
-    dates = getSettlementDates roll period settle
-  in
-    Bullet $ map mkPayment dates
+serial = Serial settle maturity (Cash 100 USD) rate1 Following
 
--- Serial takes a BaseBond as well as a fixed repayment
-serial :: Repayment -> BaseBond -> Serial
-serial repayment BaseBond{..} =
-  let
-    dates = getSettlementDates roll period settle
-    fv' = Cash faceValue currency 
-    accPymts (Cash outstd currency) date = let
-                                 coupon  = couponRate * outstd
-                                 outstd' = outstd - (coupon + repayment)
-                               in (Cash outstd' currency, Payment date $ Cash coupon currency)
-    (remaining, payments) = L.mapAccumL accPymts fv' dates
-  in
-    Serial $ payments ++ [Payment basematurity remaining] 
+sPayments = cashflow serial
+>[Payment 2001-01-01 $26.666666666666664,Payment 2002-01-01 $25.0,
+Payment 2003-01-01 $23.333333333333332,Payment 2004-01-01 $21.666666666666668,
+Payment 2004-12-31 $20.0,Payment 2006-01-02 $18.333333333333332]
 
 -}
-
 {-
     **** Notes
     
@@ -84,9 +98,7 @@ serial repayment BaseBond{..} =
     DiscountFunction will be depending on the period
 
     TermStructure will determine the interest rate at each point in time
-
-    ** Easy to extend to use dates etc, and amortize for passed interest coupons
-
+** Easy to extend to use dates etc, and amortize for passed interest coupons 
     ** Able to use PV, FV and Value(t) using this method
 -}
 
@@ -100,13 +112,14 @@ class Instrument i where
   yrsToExpiry :: i -> Date -> Years
 
 class Instrument b => Bond b where
-  principal :: b -> Cash
-  cashflow  :: b -> Payments
-  coupon    :: b -> Cash
+--   principal :: b -> Cash
+  outstanding :: b -> Payments -- Look in DE.pdf!
+--   cashflow  :: b -> Payments
+  coupons   :: b -> Payments
   ytm       :: b -> Date -> Payment
-  duration  :: b -> Payment
-  clean     :: b -> Date -> Cash
-  dirty     :: b -> Date -> Cash
+--   duration  :: b -> Payment
+--   clean     :: b -> Date -> Cash
+--   dirty     :: b -> Date -> Cash
 --   maturity  :: b -> Date
 
 class Instrument d => Derivative d where
@@ -119,8 +132,14 @@ class Instrument d => Derivative d where
 -- Instances
 --
 
+-- instance Instrument Zero where
+--   pv (Zero Payment d c) = discountPayment
+--   pv = undefined
+
+-- instance Bond Zero where
+--   ytm (Zero Payment d c) = undefined -- yieldAtD
+
 {-
-instance Instrument Zero where
 instance Instrument Consol where
 instance Instrument Bullet where
 instance Instrument Annuity where

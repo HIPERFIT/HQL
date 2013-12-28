@@ -27,6 +27,15 @@ instance Num Cash where
   (Cash v DKK) + (Cash w DKK) = Cash (v + w) DKK
   (Cash v SEK) + (Cash w SEK) = Cash (v + w) SEK
   _ + _ = InvalidCash
+
+  (Cash v USD) - (Cash w USD) = Cash (v - w) USD
+  (Cash v EUR) - (Cash w EUR) = Cash (v - w) EUR
+  (Cash v GBP) - (Cash w GBP) = Cash (v - w) GBP
+  (Cash v CHF) - (Cash w CHF) = Cash (v - w) CHF
+  (Cash v JPY) - (Cash w JPY) = Cash (v - w) JPY
+  (Cash v DKK) - (Cash w DKK) = Cash (v - w) DKK
+  (Cash v SEK) - (Cash w SEK) = Cash (v - w) SEK
+  _ - _ = InvalidCash
     
   (Cash v USD) * (Cash w USD) = Cash (v * w) USD
   (Cash v EUR) * (Cash w EUR) = Cash (v * w) EUR

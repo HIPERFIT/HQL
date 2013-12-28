@@ -6,7 +6,7 @@ import Data.Char
 
 data InterestRate = InterestRate Compounding Double
 
-data Compounding = Continuous | Periodic Double deriving (Show)
+-- data Compounding = Continuous | Periodic Int deriving (Show)
 instance Show InterestRate where
   show (InterestRate c r) = show r ++ "% " ++ map toLower (show c) ++ " compounded"
 
