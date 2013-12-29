@@ -3,19 +3,22 @@ module Discounting where
 import Interest
 import Prelude
 import Data.Char
+import Control.Applicative
+import Calendar
 
 -- Continuous discount factor p(t,T), T is fixed
 --type DiscountFactor = DiscountFactor Double
+type DiscountFactor = Double
     
 -- |The 'discountFactor' function returns a continous discount factor
 -- It takes two argument, the interest rate and the time to maturity
 -- The last parameter is used for currying, but can be set to zero intially
 --discountFactor :: InterestRate -> Rate -> DiscountFactor
-discountFactor (InterestRate r) timeToMaturity t = (exp(-(r/100.0)*(timeToMaturity - t)))
+discountFactor r timeToMaturity t = (exp(-(r/100.0)*(timeToMaturity - t)))
 
 -- |Returns a list of discount factors, this is the preferred way of usage
 -- Returns a discount function, a list of discount factors to take an offset t
---discountFactors :: InterestRate -> t -> Rate -> [DiscountFactor]
+-- discountFactors :: InterestRate -> t -> Rate -> [DiscountFactor]
 discountFactors interest timeToMaturity length = 
     [discountFactor interest i| i <- [1..length]]
 

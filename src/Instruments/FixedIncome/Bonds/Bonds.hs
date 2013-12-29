@@ -3,6 +3,7 @@
 module Bonds where
 import qualified Data.List as L
 import Calendar
+import Interest
 import Currency
 import TermStructure
 
@@ -45,6 +46,7 @@ data FixedCouponBond where
               srate ::  InterestRate,
               sroll :: RollConvention } -> FixedCouponBond
 
+-- instance Bond FixedCouponBond where -- TODO: Make into instance
 cashflow :: FixedCouponBond -> Payments
 cashflow Zero{..} = Payment zmatu zface : []
 cashflow Consol{..} =
@@ -58,12 +60,23 @@ cashflow Serial{..} =
     accPymts :: Cash -> Date -> (Cash, Payment)
     accPymts outstd date = let
                              payment = repayment + scale (getRate srate) outstd
-                             outstd' = outstd - repayment
                            in
-                             (outstd', Payment date payment)
+                             (outstd - repayment, Payment date payment)
   in
     snd $ L.mapAccumL accPymts sface dates
-cashflow Annuity{..} = undefined
+cashflow Annuity{..} =
+  let
+    dates = interpolateDates amatu aroll (getComp arate) asett
+    yield = annualCash arate
+    annualCash (InterestRate (Periodic n) r) =
+      let
+        cmps = length dates
+        factor = r/(1-(recip $ (1+r)^cmps))
+      in
+        scale factor aface -- TODO: Fix periodic compounding vs settlements/year
+    annualCash (InterestRate Continuous r) = undefined
+  in
+    map (flip Payment yield) dates
 
 mkRepayment :: [Date] -> Cash -> Cash
 mkRepayment ds face = scale (recip . fromIntegral $ length ds) face
@@ -76,20 +89,19 @@ getComp (InterestRate c _) = c
 getRate :: InterestRate -> Double
 getRate (InterestRate _ d) = d
 
-{-
 -- Tests
 settle = (read "2000-01-01")::Date 
 maturity = (read "2006-01-01")::Date
 rate1 = InterestRate (Periodic 1) 0.1
+rate2 = InterestRate (Periodic 2) 0.1
 
 serial = Serial settle maturity (Cash 100 USD) rate1 Following
+annuity = Annuity settle maturity (Cash 100 GBP) rate2 ModifiedFollowing
 
 sPayments = cashflow serial
->[Payment 2001-01-01 $26.666666666666664,Payment 2002-01-01 $25.0,
-Payment 2003-01-01 $23.333333333333332,Payment 2004-01-01 $21.666666666666668,
-Payment 2004-12-31 $20.0,Payment 2006-01-02 $18.333333333333332]
+aPayments = cashflow annuity
+-- iz = mapM_ print aPayments
 
--}
 {-
     **** Notes
     
@@ -98,7 +110,7 @@ Payment 2004-12-31 $20.0,Payment 2006-01-02 $18.333333333333332]
     DiscountFunction will be depending on the period
 
     TermStructure will determine the interest rate at each point in time
-** Easy to extend to use dates etc, and amortize for passed interest coupons 
+    ** Easy to extend to use dates etc, and amortize for passed interest coupons 
     ** Able to use PV, FV and Value(t) using this method
 -}
 
@@ -107,7 +119,7 @@ Payment 2004-12-31 $20.0,Payment 2006-01-02 $18.333333333333332]
 -- 
 
 class Instrument i where
-  pv :: i -> TermStructure -> Date -> Cash
+  pv :: i -> TermStructure -> IO Cash -- IO to get system time 
   expired  :: i -> Date -> Bool
   yrsToExpiry :: i -> Date -> Years
 
