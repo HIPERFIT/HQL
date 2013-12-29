@@ -1,18 +1,22 @@
 {-# LANGUAGE RankNTypes #-}
 module TermStructure where
+--import Calendar
+import Interest
 import qualified Data.Map as M
-import Calendar
 import Data.Char
 
-data InterestRate = InterestRate Compounding Double
-
--- data Compounding = Continuous | Periodic Int deriving (Show)
-instance Show InterestRate where
-  show (InterestRate c r) = show r ++ "% " ++ map toLower (show c) ++ " compounded"
-
-type Points = M.Map Date InterestRate 
+-- We don't use dates here?
+-- Term structure/yield is a function of time to maturity (t :: Double)
+type Points = M.Map Double InterestRate 
 type InterpolatedTermStructure = Points
-type AnalyticalTermStructure = forall f. (Floating f) => Double -> f
+type AnalyticalTermStructure = Double => Double
 
 data TermStructure = Interpolated InterpolatedTermStructure
-                   | Analytical   AnalyticalTermStructure
+                   | Analytical AnalyticalTermStructure
+
+instance Show TermStructure where
+    show (Interpolated _) = "InterpolatedTermStructure"
+    show (Analytical _) = "AnalyticalTermStructure"
+            
+-- |Create an analytic term structure
+termStructure function = Analytical function
