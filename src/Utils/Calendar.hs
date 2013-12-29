@@ -13,21 +13,16 @@ type Settlements = Int
 data Basis = ACTACT | ACT360 | ACT365F | Thirty360
            | SIA | Business | European | Japanese
 data EndMonthRule = Ignore | Apply
-data Compounding = Continuous | Periodic Int deriving (Show)  
 
--- getDates :: Date -> [Date] -> [Date]
--- getDates d ds = filter (\
+-- TODO: refactor extrapolate/interpolate
+-- This uses interpolation 
+extrapolateDates :: RollConvention -> Settlements -> Date -> [Date]
+extrapolateDates conv stms from = map (rollDay conv) $ iterate (T.addDays between) from
+  where  between = daysBetweenSettlements from stms
 
--- This uses interpolation
-extrapolateDates :: RollConvention -> Compounding -> Date -> [Date]
-extrapolateDates conv cmp from = map (rollDay conv) $ iterate (T.addDays between) from
-  where  between = daysBetweenSettlements from $ case cmp of Periodic i -> i
-                                                             Continuous -> 1
-
-interpolateDates :: Date -> RollConvention -> Compounding -> Date -> [Date]
-interpolateDates mat conv cmp from = iterateEnd from
-  where  between = daysBetweenSettlements from $ case cmp of Periodic i -> i
-                                                             Continuous -> 1
+interpolateDates :: Date -> RollConvention -> Settlements -> Date -> [Date]
+interpolateDates mat conv stms from = iterateEnd from
+  where  between = daysBetweenSettlements from stms
          iterateEnd date
            | T.diffDays mat date < 0 = []
            | otherwise = let

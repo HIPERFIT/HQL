@@ -5,12 +5,10 @@ import Text.Printf
 
 type Rate = Double
 data InterestRate = InterestRate Compounding Rate
+data Compounding = Continuous | Periodic Int deriving (Show)
 
 instance Show InterestRate where
   show = printf "InterestRate %.2f%%" . interestRate
-
--- instance Show InterestRate where
---   show (InterestRate r) = printf "InterestRate %.2f%%" r
 
 -- |Returns a continuously compounded interest rate
 interestRate :: InterestRate -> Rate 

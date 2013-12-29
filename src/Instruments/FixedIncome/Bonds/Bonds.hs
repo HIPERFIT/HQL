@@ -29,33 +29,37 @@ data FixedCouponBond where
   Consol :: { csett :: Date,
               cface :: Cash,
               crate ::  InterestRate,
+              cstms :: Settlements,
               croll :: RollConvention } -> FixedCouponBond
   Bullet :: { bsett :: Date,
               bmatu :: Date,
               bface :: Cash,
               brate ::  InterestRate,
+              bstms :: Settlements,
               broll :: RollConvention } -> FixedCouponBond
   Annuity :: { asett :: Date,
               amatu :: Date,
               aface :: Cash,
               arate ::  InterestRate,
+              astms :: Settlements,
               aroll :: RollConvention } -> FixedCouponBond
   Serial :: { ssett :: Date,
               smatu :: Date,
               sface :: Cash,
               srate ::  InterestRate,
+              sstms :: Settlements,
               sroll :: RollConvention } -> FixedCouponBond
 
 -- instance Bond FixedCouponBond where -- TODO: Make into instance
 cashflow :: FixedCouponBond -> Payments
 cashflow Zero{..} = Payment zmatu zface : []
 cashflow Consol{..} =
-  map (mkPayment crate cface) $ extrapolateDates croll (getComp crate) csett
+  map (mkPayment crate cface) $ extrapolateDates croll cstms csett
 cashflow Bullet{..} = map (mkPayment brate bface) dates
-  where dates = interpolateDates bmatu broll (getComp brate) bsett
+  where dates = interpolateDates bmatu broll bstms bsett
 cashflow Serial{..} = 
   let
-    dates = interpolateDates smatu sroll (getComp srate) ssett
+    dates = interpolateDates smatu sroll sstms ssett
     repayment = mkRepayment dates sface
     accPymts :: Cash -> Date -> (Cash, Payment)
     accPymts outstd date = let
@@ -66,7 +70,7 @@ cashflow Serial{..} =
     snd $ L.mapAccumL accPymts sface dates
 cashflow Annuity{..} =
   let
-    dates = interpolateDates amatu aroll (getComp arate) asett
+    dates = interpolateDates amatu aroll astms asett
     yield = annualCash arate
     annualCash (InterestRate (Periodic n) r) =
       let
@@ -94,13 +98,14 @@ settle = (read "2000-01-01")::Date
 maturity = (read "2006-01-01")::Date
 rate1 = InterestRate (Periodic 1) 0.1
 rate2 = InterestRate (Periodic 2) 0.1
+stms1 = 1 :: Settlements
+stms2 = 2 :: Settlements
 
-serial = Serial settle maturity (Cash 100 USD) rate1 Following
-annuity = Annuity settle maturity (Cash 100 GBP) rate2 ModifiedFollowing
+serial = Serial settle maturity (Cash 100 USD) rate1 stms1 Following
+annuity = Annuity settle maturity (Cash 100 GBP) rate2 stms2 ModifiedFollowing
 
 sPayments = cashflow serial
 aPayments = cashflow annuity
--- iz = mapM_ print aPayments
 
 {-
     **** Notes
