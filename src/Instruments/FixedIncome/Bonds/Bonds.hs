@@ -12,8 +12,7 @@ import Discounting
 --
 
 type Repayment = Double
-data Payment = Payment Date Cash deriving (Show)
--- newtype Payment = Payment (Date, Cash) deriving (Show)
+type Payment = (Date, Cash)
 -- instance Show Payment where
 --     show (Payment (d,c)) = "{" ++ show d ++ ", " ++ show c ++ "}"
 type Payments = [Payment]
@@ -98,8 +97,7 @@ instance Instrument FixedCouponBond where
 instance Bond FixedCouponBond where
   pv bond ts c = getDay >>= return . fv bond ts c
   fv bond ts c now = sum $ zipWith scale (discountFactors c now ts ds) cs
-    where (ds, cs) = unzip $ map (\(Payment d c) -> (d,c)) $ cashflow bond
-    -- Consider changing Payment to a tuple
+    where (ds, cs) = unzip $ cashflow bond
 
   principal Zero{..} = zface
   principal Consol{..} = cface
@@ -107,19 +105,19 @@ instance Bond FixedCouponBond where
   principal Serial{..} = sface
   principal Annuity{..} = aface
 
-  outstanding z@Zero{..} = [Payment zmatu $ principal z]
-  outstanding b@Bullet{..} = map (flip Payment bface) $ paymentDates b
-  outstanding c@Consol{..} = map (flip Payment cface) $ paymentDates c
+  outstanding z@Zero{..} = [(zmatu, principal z)]
+  outstanding b@Bullet{..} = map (flip (,) bface) $ paymentDates b
+  outstanding c@Consol{..} = map (flip (,) cface) $ paymentDates c
   outstanding s@Serial{..} = 
     let
       dates = paymentDates s
       repayment = scale (recip . fromIntegral $ length dates) sface
       outstds = take (length dates) $ iterate (\p -> p-repayment) sface
     in
-      zipWith Payment dates outstds
+      zipWith ((,)) dates outstds
   outstanding Annuity{..} = undefined
 
-  cashflow Zero{..} = Payment zmatu zface : []
+  cashflow Zero{..} = (zmatu, zface) : []
   cashflow Consol{..} = map (mkPayment crate cface) $ extrapolateDates croll cstms csett
   cashflow Bullet{..} = map (mkPayment brate bface) dates
     where dates = interpolateDates bmatu broll bstms bsett
@@ -131,7 +129,7 @@ instance Bond FixedCouponBond where
       accPymts outstd date = let
                                payment = repayment + scale srate outstd
                              in
-                               (outstd - repayment, Payment date payment)
+                               (outstd - repayment, (date, payment))
     in
       snd $ L.mapAccumL accPymts sface dates
   cashflow Annuity{..} =
@@ -145,7 +143,7 @@ instance Bond FixedCouponBond where
         in
           scale factor aface -- TODO: Fix periodic compounding vs settlements/year
     in
-      map (flip Payment yield) dates
+      map (flip (,) yield) dates
   coupons = undefined
   ytm = undefined
 
@@ -156,7 +154,7 @@ instance Bond FixedCouponBond where
   paymentDates Annuity{..} = interpolateDates amatu aroll astms asett
   
 mkPayment :: InterestRate -> Cash -> Date -> Payment
-mkPayment rate face date = Payment date $ scale rate face
+mkPayment rate face date = (date, scale rate face)
 
 -- Tests
 settle = (read "2000-01-01")::Date 
