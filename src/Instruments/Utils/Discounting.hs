@@ -1,78 +1,48 @@
--- module Discounting where
 module Discounting where
 import TermStructure
-import Prelude
+import Calendar
+import Currency
+import qualified Data.Map as M
 
 -- Round a number f to n number of digits
+rnd :: Integer -> Double -> Double
 rnd n f = fromInteger (round $ f * (10 ^ nn)) / (10.0 ^^ nn)
 	where nn = max 0 (n - floor(logBase 10 f) - 1)
 
 -- |Discount Factors
-df t maturityT r = exp(-(r/100.0)*(maturityT - t))
-discountFactor r maturityT t = df t maturityT r
+df :: Double -> Rate -> Double -- DiscountFactor
+df t r = exp(-r*t)
 
--- |Lazy lists Discount Factors from rate, rates of term structure.
--- will repeat the input sequence to infinity
-discountFactors (InterestRate Continuous r) offsetT =
-  zipWith (df offsetT) [offsetT+1..] (repeat r)
-discountFactors (InterestRates Continuous rs) offsetT =
-  zipWith (df offsetT) [offsetT+1..] (cycle rs)
-discountFactors (TermStructureRates Continuous (Analytical ts)) offsetT =
-  map (\t ->discountFactor (ts t) t offsetT) [offsetT+1..]
+discountFactors :: Compounding -> Date -> TermStructure -> [Date] -> [Double]
+discountFactors c now (Analytical f) ds =
+  zipWith df offsets rates
+  where offsets = map (getDayOffset now) ds
+        rates = map (makeContinuous c . recip . f) offsets
+discountFactors c now (Interpolated ts) ds =
+  let
+    offsets = map (getDayOffset now) ds -- TODO: Wrap in ErrorT monad
+    rates = map (\d -> makeContinuous c $ ts M.! d) ds
+  in
+    zipWith df offsets rates
 
-discountFactors (InterestRate (Periodic p) r) offsetT =
-  discountFactors (InterestRate Continuous (mc p r)) offsetT
-discountFactors (InterestRates (Periodic p) rs) offsetT =
-  discountFactors (InterestRates Continuous (map (mc p) rs)) offsetT
-discountFactors (TermStructureRates (Periodic p) (Analytical ts)) offsetT =
-  map (\t ->discountFactor (mc p (ts t)) t offsetT) [offsetT+(1/pp)..]
-  where pp = fromIntegral p
-
--- EXPERIMENTAL
+-- Tests
 analyticalFun1 x = 5 + (1/2)*sqrt x
 
--- Finite list of cash flows, merging coupons and nominal at maturity
-cfs n c f = [c | i <- [0..n-2]] ++ [f+c]
+-- NTest 11
+ts1  = Analytical analyticalFun1
+now1 = read "2000-01-01" :: Date
+mat1 = read "2004-07-05" :: Date
+cmp1 = Exponential 2
+df1  = discountFactors cmp1 now1 ts1 [mat1] -- TODO: Conversion is buggy,
+                                            -- check `mc` in TermStructure
 
--- PV takes two lists cfs and dfs
-pv cfs dfs = sum $ zipWith (*) cfs dfs
-fv cfs dfs = sum $ zipWith (/) cfs dfs
+-- NTest 15
+mat2 = read "2000-07-02" :: Date
+ts2  = Interpolated $ M.fromList [(mat2, 0.083)]
+cmp2 = Continuous
+df2  = discountFactors cmp2 now1 ts2 [mat2]
 
--- Test cases for discounting
-input = map (rnd 6) [
-		
-	-- Example - Fixed Coupon Bond (see documentation)
-	-- Maturity: 5 years
-	-- Coupon: 100
-	-- Face: 1000
-	-- Interest rates: 3.00%, 3.25%, 3.50%, 3.55%, 3.30%
-	-- PV: time t=0
-	pv (cfs 5 100 1000) (take 5 $ discountFactors (InterestRates (Periodic 1) [3.0,3.25,3.5,3.55,3.3]) 0)
-	--pv (cfs 5 100 1000) (take 5 $ dfs2 [3.0,3.25,3.5,3.55,3.3] 0) -- 1303.2324619858493
-	,
-	
-	-- Example - Annuity (see documentation)
-	-- Maturity: 5 years
-	-- Coupon: 1000
-	-- Face: 0
-	-- Interest rate: 5.00%
-	--pv (cfs 5 1000 0) (take 5 $ dfs 5 0) -- 4329.476670630818
-	pv (cfs 5 1000 0) (take 5 $ discountFactors (InterestRate (Periodic 1) 5) 0)
-	,
-	
-	-- USING TERMSTRUCTURE
-	
-	-- Example - Discount factor (DE test 7)
-	-- Maturity: 1/2 years
-	-- Interest rate: term structure
-	-- Compounding: 2 / year
-	discountFactors (TermStructureRates (Periodic 2) (termStructure analyticalFun1)) 0 !! 1
-	--df (mc3 (termStructure 1.5) 2) 1.5 -- 0.9203271932613013
-	--(take 6 $ discountFactors (TermStructureRates (Periodic 2) termStructure) 0)
-	] 
+-- tests = [df1 == 0.7643885607510086,
+tests = [head df2 == 0.9593493353414723]
 
--- Expected outout
-expected = 
-	[1303.23,4329.48,0.920327]
-	
-test = input == expected 
+testAll = all (==True) tests

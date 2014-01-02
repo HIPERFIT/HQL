@@ -1,27 +1,32 @@
 {-# LANGUAGE RankNTypes #-}
 module TermStructure where
 import qualified Data.Map as M
+import Calendar
 
 type Rate = Double
 type Rates = [Double]
 
-data Compounding = Continuous | Periodic Int deriving (Show)
+-- TODO: LinearExponential
+data Compounding = Continuous
+                 | Linear Int 
+                 | Exponential Int deriving (Show) 
 
-data InterestRates = InterestRate Compounding Rate
-                   | InterestRates Compounding Rates
-                   | TermStructureRates Compounding TermStructure
+type InterestRate = Rate
 
--- |Convert disscrete compounding to continous
-mc 1 r = log(1+r/100.0)*100.0
-mc p r = log((1.0+r/(100.0*pp))**pp)*100.0 where pp = fromIntegral p
-makeContinuous (InterestRate (Periodic p) r) = InterestRate Continuous (mc p r)
-makeContinuous (InterestRates (Periodic p) rs) = InterestRates Continuous (map (mc p) rs)
+mc :: Int -> Rate -> Rate
+-- TODO: Check this
+mc 1 r = log(1+r)
+mc p r = log((1.0+r/(100*pp))**pp) where pp = fromIntegral p
 
--- We don't use dates here?
--- Term structure/yield is a function of time to maturity (t :: Double)
-type Points = M.Map Double Rate
+-- |Convert discrete compounding to continous
+makeContinuous :: Compounding -> Rate -> Rate
+makeContinuous Continuous r = r
+makeContinuous (Exponential n) r = mc n r
+makeContinuous (Linear n) r = log $ r*n'  ** recip n' where n' = fromIntegral n
+
+type Points = M.Map Date Rate -- Assumes zero rates
 type InterpolatedTermStructure = Points
-type AnalyticalTermStructure = Double => Double
+type AnalyticalTermStructure = Double -> Double
 
 data TermStructure = Interpolated InterpolatedTermStructure
                    | Analytical AnalyticalTermStructure
@@ -31,4 +36,5 @@ instance Show TermStructure where
     show (Analytical _) = "AnalyticalTermStructure"
             
 -- |Create an analytic term structure
-termStructure function = Analytical function
+termStructure :: AnalyticalTermStructure -> TermStructure
+termStructure = Analytical

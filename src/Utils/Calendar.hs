@@ -83,3 +83,5 @@ getDayOffset now date
 
 getDay :: IO Date
 getDay = T.getCurrentTime >>= \d -> return (T.utctDay d)
+
+isExpired maturityDate = do {now <- getDay; return $ T.diffDays now maturityDate < 0}
