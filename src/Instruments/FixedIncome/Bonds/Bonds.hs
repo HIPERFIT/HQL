@@ -1,6 +1,6 @@
-{-# LANGUAGE RecordWildCards #-}
-{-# LANGUAGE GADTs #-}
+{-# LANGUAGE GADTs, RecordWildCards #-}
 module Bonds where
+import Control.Monad (liftM)
 import qualified Data.List as L
 import Calendar
 import Currency
@@ -13,8 +13,6 @@ import Discounting
 
 type Repayment = Double
 type Payment = (Date, Cash)
--- instance Show Payment where
---     show (Payment (d,c)) = "{" ++ show d ++ ", " ++ show c ++ "}"
 type Payments = [Payment]
 type Cashflow = Payments
 
@@ -24,7 +22,6 @@ type Cashflow = Payments
 
 class Instrument i where
   expired :: i -> IO Bool
-  yrsToExpiry :: i -> Date -> Years
 
 class Instrument b => Bond b where
   pv :: b -> TermStructure -> Compounding -> IO Cash
@@ -92,10 +89,9 @@ instance Instrument FixedCouponBond where
   expired Bullet{..} = isExpired bmatu
   expired Serial{..} = isExpired smatu
   expired Annuity{..} = isExpired amatu
-  yrsToExpiry _ = undefined -- Refactor to use this in `expired`
 
 instance Bond FixedCouponBond where
-  pv bond ts c = getDay >>= return . fv bond ts c
+  pv bond ts c = liftM (fv bond ts c) getDay
   fv bond ts c now = sum $ zipWith scale (discountFactors c now ts ds) cs
     where (ds, cs) = unzip $ cashflow bond
 
@@ -114,15 +110,18 @@ instance Bond FixedCouponBond where
       repayment = scale (recip . fromIntegral $ length dates) sface
       outstds = take (length dates) $ iterate (\p -> p-repayment) sface
     in
-      zipWith ((,)) dates outstds
+      zip dates outstds
   outstanding Annuity{..} = undefined
 
+  --
+  -- Returns list of cash flows
+  --
   cashflow Zero{..} = (zmatu, zface) : []
-  cashflow Consol{..} = map (mkPayment crate cface) $ extrapolateDates croll cstms csett
+  cashflow c@Consol{..} = coupons c
   cashflow Bullet{..} = map (mkPayment brate bface) dates
     where dates = interpolateDates bmatu broll bstms bsett
-  cashflow Serial{..} = 
-    let
+  cashflow s@Serial{..} = 
+      let
       dates = interpolateDates smatu sroll sstms ssett
       repayment = scale (recip . fromIntegral $ length dates) sface
       accPymts :: Cash -> Date -> (Cash, Payment)
@@ -139,12 +138,27 @@ instance Bond FixedCouponBond where
       annualCash r =
         let
           cmps = length dates
-          factor = r/(1-(recip $ (1+r)^cmps))
+          factor = r/(1-(recip (1+r)^cmps))
         in
           scale factor aface -- TODO: Fix periodic compounding vs settlements/year
     in
       map (flip (,) yield) dates
-  coupons = undefined
+
+  --
+  -- Compute coupons for a bond 
+  --
+  coupons Zero{..} = []
+  coupons Consol{..} = map (mkPayment crate cface) $ extrapolateDates croll cstms csett
+  coupons b@Bullet{..} = case cashflow b of
+                           [] -> []
+                           cs -> init cs
+  coupons Serial{..} = 
+    let
+      dates = interpolateDates smatu sroll sstms ssett
+      repayment = scale (recip . fromIntegral $ length dates) sface
+    in
+      snd $ L.mapAccumL (\o d -> (o-repayment, (d, scale srate o))) sface dates
+  coupons Annuity{..} = undefined
   ytm = undefined
 
   paymentDates Zero{..} = zmatu : []
