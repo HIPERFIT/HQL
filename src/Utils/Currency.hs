@@ -1,4 +1,4 @@
-module Currency where
+module Utils.Currency where
 
 -- Some common currencies
 data Currency = USD | EUR | GBP | CHF | JPY | DKK | SEK deriving Show

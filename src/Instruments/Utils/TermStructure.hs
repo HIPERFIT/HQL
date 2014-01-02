@@ -1,5 +1,5 @@
 {-# LANGUAGE RankNTypes #-}
-module TermStructure where
+module Instruments.Utils.TermStructure where
 import qualified Data.Map as M
 import Calendar
 

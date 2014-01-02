@@ -1,4 +1,5 @@
-module Calendar where
+module Utils.Calendar where
+
 import qualified Data.Time as T
 import qualified Data.Time.Calendar.WeekDate as WeekDate
 import qualified Data.Time.Calendar as Cal

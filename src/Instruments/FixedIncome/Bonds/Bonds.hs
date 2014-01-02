@@ -1,5 +1,6 @@
 {-# LANGUAGE GADTs, RecordWildCards #-}
-module Bonds where
+module Instruments.FixedIncome.Bonds where
+
 import Control.Monad (liftM)
 import qualified Data.List as L
 import Calendar

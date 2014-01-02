@@ -8,19 +8,22 @@ author:           Johan Astborg <joastbg@gmail.com>
 maintainer:       Johan Astborg <joastbg@gmail.com>
                   Andreas Bock <bock@andreasbock.dk>
 copyright:        (c) Sinan Gabel, all rights reserved.
+homepage: 	  https://github.com/HIPERFIT/HQL
+bug-reports:      https://github.com/HIPERFIT/HQL/issues
 build-type:       Simple
+cabal-version:    >= 1.8
+description:
+  Porting Sinan Gabel's DerivativesExpert (Mathematica) to Haskell.
 
 library
   exposed-modules:
-    HQL.Calendar
-    HQL.Currency
-    HQL.Instruments.FixedIncome
-    HQL.PricingEngine.FixedIncome
+    Instruments.FixedIncome
 
 test-suite tests
   hs-source-dirs: tests
-  main-is:        Properties.hs
+  type:	      exitcode-stdio-1.0
+  main-is:    Properties.hs
 
 source-repository head
   type:       git
-  location: git://github.com/HIPERFIT/HQL.git
+  location:   git://github.com/HIPERFIT/HQL.git

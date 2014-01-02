@@ -1,4 +1,4 @@
-module Discounting where
+module Instruments.Utils.Discounting where
 import TermStructure
 import Calendar
 import Currency
