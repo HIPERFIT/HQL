@@ -16,13 +16,39 @@ description:
   Porting Sinan Gabel's DerivativesExpert (Mathematica) to Haskell.
 
 library
+  hs-source-dirs: src
   exposed-modules:
-    Instruments.FixedIncome
+    Instruments.FixedIncome.Bonds.Bonds
+
+  build-depends:
+    base == 4.*,
+    containers,
+    deepseq,
+    hashable >= 1.1.2.0,
+    mtl,
+    old-locale,
+    template-haskell >= 2.4,
+    text >= 0.11.1.0,
+    time
 
 test-suite tests
   hs-source-dirs: tests
   type:	      exitcode-stdio-1.0
   main-is:    Properties.hs
+
+  build-depends:
+    QuickCheck,
+    base,
+    containers,
+    bytestring,
+    template-haskell,
+    test-framework,
+    test-framework-quickcheck2,
+    text,
+    time,
+    unordered-containers,
+    vector,
+    ghc-prim >= 0.2
 
 source-repository head
   type:       git

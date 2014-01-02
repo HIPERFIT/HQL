@@ -1,12 +1,12 @@
 {-# LANGUAGE GADTs, RecordWildCards #-}
-module Instruments.FixedIncome.Bonds where
+module Instruments.FixedIncome.Bonds.Bonds where
 
 import Control.Monad (liftM)
 import qualified Data.List as L
-import Calendar
-import Currency
-import TermStructure
-import Discounting
+import Utils.Calendar
+import Utils.Currency
+import Instruments.Utils.TermStructure
+import Instruments.Utils.Discounting
 
 --
 -- Types

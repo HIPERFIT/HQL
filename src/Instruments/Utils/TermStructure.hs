@@ -1,7 +1,7 @@
 {-# LANGUAGE RankNTypes #-}
 module Instruments.Utils.TermStructure where
 import qualified Data.Map as M
-import Calendar
+import Utils.Calendar
 
 type Rate = Double
 type Rates = [Double]

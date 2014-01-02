@@ -1,7 +1,7 @@
 module Instruments.Utils.Discounting where
-import TermStructure
-import Calendar
-import Currency
+import Instruments.Utils.TermStructure
+import Utils.Calendar
+import Utils.Currency
 import qualified Data.Map as M
 
 -- Round a number f to n number of digits
