@@ -166,7 +166,7 @@ which means you can load this file into GHCi:
 In this section the terminology used in the field of fixed income and how it applies to HQL.
 
 \ctable[
-caption = The caption is centered by default,
+caption = Terminology,
 pos = ht,
 doinside=\small
 ]{ll}{
@@ -185,19 +185,31 @@ doinside=\small
 
 \section{Compounding}
 \subsection{Discrete}
-Simple compounding, that is linear compounding,
+\subsubsection{Linear}
+
+$FV$, the future value in $T$ periods of a nominal $N$, is expressed as:
+
 \[
-FV = N(1+R_TT)
+FV_T = N(1+R_TT)
 \]
 
-Future value of a nominal cash flow $N$ discretely compounding,
-\[ FV = N(1+r)^n \]
-Present value of a nominal future cash flow $N$,
-\[ PV = \frac{N}{(1+r)^n} \]
+where $R_T$ is the interest rate.
 
-Discrete or periodic compounding where n is the number of compounding per period and m is number of periods ($m=nT$),
+\subsubsection{Exponential}
+
+Future value of a nominal cash flow $N$ under exponential compounding over
+$n$ periods:
+
+\[ FV_T = N(1+R_T)^n \]
+
+The present value of a nominal future cash flow $N$ is therefore:
+
+\[ PV_T = \frac{N}{(1+R_T)^n} \]
+
+Periodic compounding where $n$ is the number of times interest compounded per period
+
 \[ 
-FV=N\left( 1 + \frac{R}{n}  \right)^m
+FV_T=N\left( 1 + \frac{R}{n}  \right)^{nT}
 \]
 
 \subsection{Continuous}
@@ -209,8 +221,10 @@ FV=\lim_{n \to \infty} N \left(1+\frac{R}{n}\right)^{nT}=Ne^{RT}
 \subsection{Transition between discrete and continuous}
 Table of interest rates at various compounding frequencies.
 
+\ab{Jost said we need to describe the table here}
+
 \ctable[
-caption = The caption is centered by default,
+caption = Interest rates at various compounding frequencies,
 pos = ht,
 doinside=\small
 ]{lllllll}{
