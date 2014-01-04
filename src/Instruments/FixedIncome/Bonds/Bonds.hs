@@ -1,3 +1,4 @@
+{-# LANGUAGE TypeFamilies #-}
 {-# LANGUAGE GADTs, RecordWildCards #-}
 module Instruments.FixedIncome.Bonds.Bonds where
 
@@ -15,7 +16,6 @@ import Instruments.Utils.Discounting
 type Repayment = Double
 type Payment = (Date, Cash)
 type Payments = [Payment]
-type Cashflow = Payments
 
 --
 -- Classes
@@ -39,11 +39,7 @@ class Instrument b => Bond b where
 --   dirty     :: b -> Date -> Cash
 --   maturity  :: b -> Date
 
-class Instrument d => Derivative d where
-  underlying :: (Instrument i) => d -> i
-
 -- class (Instrument e) => Equity e where
--- class (Instrument o) => Option o where
 
 --
 -- Instruments
@@ -121,7 +117,7 @@ instance Bond FixedCouponBond where
   cashflow c@Consol{..} = coupons c
   cashflow Bullet{..} = map (mkPayment brate bface) dates
     where dates = interpolateDates bmatu broll bstms bsett
-  cashflow s@Serial{..} = 
+  cashflow Serial{..} = 
       let
       dates = interpolateDates smatu sroll sstms ssett
       repayment = scale (recip . fromIntegral $ length dates) sface
@@ -170,6 +166,28 @@ instance Bond FixedCouponBond where
   
 mkPayment :: InterestRate -> Cash -> Date -> Payment
 mkPayment rate face date = (date, scale rate face)
+
+-- The following classes and types are purely proof of concept
+type FloatingCouponBond = Int
+data Option where 
+  Call :: { callint :: Int } -> Option
+  Put  :: { putint :: Int } -> Option
+  Swap :: { fxcb :: FixedCouponBond,
+            flcb :: FloatingCouponBond } -> Option
+
+class Instrument d => Derivative d where
+  data Underlying :: *
+  underlying :: d -> Underlying
+
+instance Instrument Option where
+  expired = undefined
+
+instance Derivative Option where
+  data Underlying = Legs (FixedCouponBond, FloatingCouponBond)
+                  | Commodity Int
+  underlying Call{..} = Commodity callint
+  underlying Put{..}  = Commodity putint
+  underlying Swap{..}  = Legs (fxcb,flcb)
 
 -- Tests
 settle = (read "2000-01-01")::Date 
