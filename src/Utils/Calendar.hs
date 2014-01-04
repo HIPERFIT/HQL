@@ -15,6 +15,10 @@ data Basis = ACTACT | ACT360 | ACT365F | Thirty360
            | SIA | Business | European | Japanese
 data EndMonthRule = Ignore | Apply
 
+class Calendar c where
+  isLegalDay :: c -> Date -> Bool
+  isHoliday  :: c -> Date -> Bool
+
 -- TODO: refactor extrapolate/interpolate
 -- This uses interpolation 
 extrapolateDates :: RollConvention -> Settlements -> Date -> [Date]
