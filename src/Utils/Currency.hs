@@ -1,7 +1,7 @@
 module Utils.Currency where
 import Prelude hiding (sum)
 -- Some common currencies
-data Currency = USD | EUR | GBP | CHF | JPY | DKK | SEK deriving Show
+data Currency = USD | EUR | GBP | CHF | JPY | DKK | SEK deriving (Show,Eq)
 
 -- redesign, see discounting
 data Cash = Cash Double Currency | InvalidCash
@@ -61,6 +61,9 @@ instance Fractional Cash where
   (Cash v SEK) / (Cash w SEK) = Cash (v / w) SEK
   _ / _ = InvalidCash
   fromRational c = undefined
+
+instance Eq Cash where
+  (Cash v c) == (Cash v' c') = v == v' && c == c'
 
 expC, add, scale :: Double -> Cash -> Cash
 expC d (Cash v USD) = Cash (v**d) USD
