@@ -1,5 +1,5 @@
 module Utils.Currency where
-
+import Prelude hiding (sum)
 -- Some common currencies
 data Currency = USD | EUR | GBP | CHF | JPY | DKK | SEK deriving Show
 
@@ -87,6 +87,9 @@ add d (Cash v CHF) = Cash (d+v) CHF
 add d (Cash v DKK) = Cash (d+v) DKK
 add d (Cash v SEK) = Cash (d+v) SEK
 
+sum :: [Cash] -> Cash
+sum (c:[]) = c
+sum (c:cs) = c + sum cs
 
 --- Support for currency conversion
 
