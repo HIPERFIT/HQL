@@ -8,6 +8,7 @@ import Utils.Calendar
 import Utils.Currency
 import Instruments.Utils.TermStructure
 import Instruments.Utils.Discounting
+import Prelude hiding (sum)
 
 --
 -- Types
@@ -26,7 +27,8 @@ class Instrument i where
 
 class Instrument b => Bond b where
   pv :: b -> TermStructure -> Compounding -> IO Cash
-  fv :: b -> TermStructure -> Compounding -> Date -> Cash
+  clean, dirty :: b -> TermStructure -> Compounding -> Date -> Cash
+  ai :: b -> Date -> Cash
   principal :: b -> Cash
   outstanding :: b -> Payments
   cashflow  :: b -> Payments
@@ -38,6 +40,9 @@ class Instrument b => Bond b where
 --   clean     :: b -> Date -> Cash
 --   dirty     :: b -> Date -> Cash
 
+-- Repayable class for Serials, Annuities, MBBs
+class Bond r => Repayable r where
+  repayment :: r -> [Cash]
 -- class (Instrument e) => Equity e where
 
 --
@@ -87,9 +92,12 @@ instance Instrument FixedCouponBond where
   expired Annuity{..} = isExpired amatu
 
 instance Bond FixedCouponBond where
-  pv bond ts c = liftM (fv bond ts c) getDay
-  fv bond ts c now = sum $ zipWith scale (discountFactors c now ts ds) cs
+  pv bond ts c = liftM (dirty bond ts c) getDay
+  dirty bond ts c now = sum $ zipWith scale (discountFactors c now ts ds) cs
     where (ds, cs) = unzip $ cashflow bond
+  clean bond ts c now = dirtyPrice - ai bond now
+    where dirtyPrice = dirty bond ts c now
+  ai = undefined
 
   principal Zero{..} = zface
   principal Consol{..} = cface
@@ -132,12 +140,8 @@ instance Bond FixedCouponBond where
     let
       dates = interpolateDates amatu aroll astms asett
       yield = annualCash arate
-      annualCash r =
-        let
-          cmps = length dates
-          factor = r/(1-(recip (1+r)^cmps))
-        in
-          scale factor aface -- TODO: Fix periodic compounding vs settlements/year
+      annualCash r = scale (recip factor) aface
+        where factor = (((1+r)^(length dates)) - 1)/r
     in
       map (flip (,) yield) dates
 
@@ -192,21 +196,24 @@ instance Derivative Option where
   underlying Swap{..}  = Legs (fxcb,flcb)
 
 -- Tests
-settle = (read "2000-01-01")::Date 
-maturity = (read "2006-01-01")::Date
-maturity1 = (read "2005-01-02")::Date
-maturity2 = (read "2003-01-01")::Date
+settle = (read "2010-01-01")::Date 
+maturity = (read "2014-07-02")::Date
+-- maturity = (read "2016-01-01")::Date
+maturity1 = (read "2015-01-02")::Date
+maturity2 = (read "2013-01-01")::Date
 rate1 = 0.1
 rate2 = 0.1
 stms1 = 1 :: Settlements
 stms2 = 2 :: Settlements
+present = settle
 
+-- Example instruments
 zero    = Zero settle maturity (Cash 100 SEK) rate1 Preceding
 bullet  = Bullet settle maturity1 (Cash 100 USD) rate1 stms2 Following
 consol  = Consol settle (Cash 100 USD) rate1 stms2 Following
 serial  = Serial settle maturity (Cash 100 USD) rate1 stms1 Following
 annuity = Annuity settle maturity2 (Cash 100 GBP) rate2 stms2 ModifiedFollowing
 
-sPayments = cashflow serial
-sOut = outstanding serial
--- aPayments = cashflow annuity
+-- Actual tests
+test0 = [(dirty zero ts1 Continuous present) == (Cash 70.56481405950817 SEK)] -- fails, Discounting.hs bug
+tests = [test0]
