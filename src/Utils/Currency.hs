@@ -1,10 +1,11 @@
 module Utils.Currency where
 import Prelude hiding (sum)
+import Data.Number.CReal
 -- Some common currencies
 data Currency = USD | EUR | GBP | CHF | JPY | DKK | SEK deriving (Show,Eq)
 
 -- redesign, see discounting
-data Cash = Cash Double Currency | InvalidCash
+data Cash = Cash CReal Currency | InvalidCash
   
 -- Format cash using currency symbol
 -- TODO: Format with ***##.## decimals etc
@@ -65,7 +66,7 @@ instance Fractional Cash where
 instance Eq Cash where
   (Cash v c) == (Cash v' c') = v == v' && c == c'
 
-expC, add, scale :: Double -> Cash -> Cash
+expC, add, scale :: CReal -> Cash -> Cash
 expC d (Cash v USD) = Cash (v**d) USD
 expC d (Cash v EUR) = Cash (v**d) EUR
 expC d (Cash v GBP) = Cash (v**d) GBP

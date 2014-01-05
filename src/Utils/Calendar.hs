@@ -3,10 +3,11 @@ module Utils.Calendar where
 import qualified Data.Time as T
 import qualified Data.Time.Calendar.WeekDate as WeekDate
 import qualified Data.Time.Calendar as Cal
+import Data.Number.CReal
 
 type Date = T.Day
 type Days = Integer
-type Years = Double
+type Years = CReal
 
 data RollConvention = Following | Preceding | ModifiedFollowing
 type Settlements = Int

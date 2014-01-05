@@ -2,9 +2,10 @@
 module Instruments.Utils.TermStructure where
 import qualified Data.Map as M
 import Utils.Calendar
+import Data.Number.CReal
 
-type Rate = Double
-type Rates = [Double]
+type Rate = CReal
+type Rates = [CReal]
 
 -- TODO: LinearExponential
 data Compounding = Continuous
@@ -26,7 +27,7 @@ makeContinuous (Linear n) r = log $ r*n'  ** recip n' where n' = fromIntegral n
 
 type Points = M.Map Date Rate -- Assumes zero rates
 type InterpolatedTermStructure = Points
-type AnalyticalTermStructure = Double -> Double
+type AnalyticalTermStructure = CReal -> CReal
 
 data TermStructure = Interpolated InterpolatedTermStructure
                    | Analytical AnalyticalTermStructure

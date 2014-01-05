@@ -9,12 +9,13 @@ import Utils.Currency
 import Instruments.Utils.TermStructure
 import Instruments.Utils.Discounting
 import Prelude hiding (sum)
+import Data.Number.CReal
 
 --
 -- Types
 --
 
-type Repayment = Double
+type Repayment = CReal
 type Payment = (Date, Cash)
 type Payments = [Payment]
 

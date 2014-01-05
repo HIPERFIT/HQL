@@ -3,6 +3,7 @@ import Instruments.Utils.TermStructure
 import Utils.Calendar
 import Utils.Currency
 import qualified Data.Map as M
+import Data.Number.CReal
 
 -- Round a number f to n number of digits
 rnd :: Integer -> Double -> Double
@@ -10,10 +11,10 @@ rnd n f = fromInteger (round $ f * (10 ^ nn)) / (10.0 ^^ nn)
 	where nn = max 0 (n - floor(logBase 10 f) - 1)
 
 -- |Discount Factors
-df :: Double -> Rate -> Double -- DiscountFactor
-df t r = exp(-r*t)
+df :: CReal -> Rate -> CReal -- DiscountFactor
+df t r = exp(-r*t :: CReal)
 
-discountFactors :: Compounding -> Date -> TermStructure -> [Date] -> [Double]
+discountFactors :: Compounding -> Date -> TermStructure -> [Date] -> [CReal]
 discountFactors c now (Analytical f) ds =
   zipWith df offsets rates
   where offsets = map (getYearOffset now) ds

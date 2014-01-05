@@ -29,6 +29,7 @@ library
     old-locale,
     template-haskell >= 2.4,
     text >= 0.11.1.0,
+    numbers >= 3000.2.0.0,
     time
 
 test-suite tests
