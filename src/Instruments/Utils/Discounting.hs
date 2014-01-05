@@ -16,11 +16,11 @@ df t r = exp(-r*t)
 discountFactors :: Compounding -> Date -> TermStructure -> [Date] -> [Double]
 discountFactors c now (Analytical f) ds =
   zipWith df offsets rates
-  where offsets = map (getDayOffset now) ds
+  where offsets = map (getYearOffset now) ds
         rates = map (makeContinuous c . recip . f) offsets
 discountFactors c now (Interpolated ts) ds =
   let
-    offsets = map (getDayOffset now) ds -- TODO: Wrap in ErrorT monad
+    offsets = map (getYearOffset now) ds -- TODO: Wrap in ErrorT monad
     rates = map (\d -> makeContinuous c $ ts M.! d) ds
   in
     zipWith df offsets rates

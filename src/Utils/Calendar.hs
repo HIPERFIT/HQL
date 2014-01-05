@@ -29,11 +29,11 @@ interpolateDates :: Date -> RollConvention -> Settlements -> Date -> [Date]
 interpolateDates mat conv stms from = iterateEnd from
   where  between = daysBetweenSettlements from stms
          iterateEnd date
-           | T.diffDays mat date < 0 = []
-           | otherwise = let
-                           date' = rollDay conv $ T.addDays between date
-                         in
-                           date' : iterateEnd date'
+           | T.diffDays mat date' < 0 = mat : []
+           | otherwise = date' : iterateEnd date'
+           where date' = rollDay conv $ T.addDays between date
+
+ost conv between date = rollDay conv $ T.addDays between date
 
 {-
 -- Tests
@@ -79,8 +79,8 @@ rollBackwards date
   | legalDay date = date
   | otherwise     = rollBackwards $ Cal.addDays (-1) date
 
-getDayOffset :: Date ->  Date -> Years
-getDayOffset now date
+getYearOffset :: Date ->  Date -> Years
+getYearOffset now date
   | Cal.isLeapYear y = diff / 366
   | otherwise      = diff / 365
   where (y,_,_) = WeekDate.toWeekDate date

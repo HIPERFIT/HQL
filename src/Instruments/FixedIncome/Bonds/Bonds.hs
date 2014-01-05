@@ -37,7 +37,6 @@ class Instrument b => Bond b where
 --   convexity :: b -> ... -> Payment
 --   clean     :: b -> Date -> Cash
 --   dirty     :: b -> Date -> Cash
---   maturity  :: b -> Date
 
 -- class (Instrument e) => Equity e where
 
@@ -98,7 +97,7 @@ instance Bond FixedCouponBond where
   principal Serial{..} = sface
   principal Annuity{..} = aface
 
-  outstanding z@Zero{..} = [(zmatu, principal z)]
+  outstanding z@Zero{..} = [(zsett, principal z)]
   outstanding b@Bullet{..} = map (flip (,) bface) $ paymentDates b
   outstanding c@Consol{..} = map (flip (,) cface) $ paymentDates c
   outstanding s@Serial{..} = 
@@ -107,7 +106,7 @@ instance Bond FixedCouponBond where
       repayment = scale (recip . fromIntegral $ length dates) sface
       outstds = take (length dates) $ iterate (\p -> p-repayment) sface
     in
-      zip dates outstds
+      zip (ssett : dates) (outstds ++ [(sface-sface)])
   outstanding Annuity{..} = undefined
 
   --
@@ -115,8 +114,9 @@ instance Bond FixedCouponBond where
   --
   cashflow Zero{..} = (zmatu, zface) : []
   cashflow c@Consol{..} = coupons c
-  cashflow Bullet{..} = map (mkPayment brate bface) dates
+  cashflow Bullet{..} = map (mkPayment (brate/stms) bface) dates
     where dates = interpolateDates bmatu broll bstms bsett
+          stms  = fromIntegral bstms
   cashflow Serial{..} = 
       let
       dates = interpolateDates smatu sroll sstms ssett
@@ -145,7 +145,9 @@ instance Bond FixedCouponBond where
   -- Compute coupons for a bond 
   --
   coupons Zero{..} = []
-  coupons Consol{..} = map (mkPayment crate cface) $ extrapolateDates croll cstms csett
+  coupons Consol{..} = map (mkPayment (crate/stms) cface) dates
+    where stms = fromIntegral cstms
+          dates =  extrapolateDates croll cstms csett
   coupons b@Bullet{..} = case cashflow b of
                            [] -> []
                            cs -> init cs
@@ -192,13 +194,19 @@ instance Derivative Option where
 -- Tests
 settle = (read "2000-01-01")::Date 
 maturity = (read "2006-01-01")::Date
+maturity1 = (read "2005-01-02")::Date
+maturity2 = (read "2003-01-01")::Date
 rate1 = 0.1
 rate2 = 0.1
 stms1 = 1 :: Settlements
 stms2 = 2 :: Settlements
 
-serial = Serial settle maturity (Cash 100 USD) rate1 stms1 Following
-annuity = Annuity settle maturity (Cash 100 GBP) rate2 stms2 ModifiedFollowing
+zero    = Zero settle maturity (Cash 100 SEK) rate1 Preceding
+bullet  = Bullet settle maturity1 (Cash 100 USD) rate1 stms2 Following
+consol  = Consol settle (Cash 100 USD) rate1 stms2 Following
+serial  = Serial settle maturity (Cash 100 USD) rate1 stms1 Following
+annuity = Annuity settle maturity2 (Cash 100 GBP) rate2 stms2 ModifiedFollowing
 
 sPayments = cashflow serial
-aPayments = cashflow annuity
+sOut = outstanding serial
+-- aPayments = cashflow annuity
