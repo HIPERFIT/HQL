@@ -746,11 +746,24 @@ yields the following output:
 \subsection{Yield to maturity}
 
 The yield of a bond is the discount rate that makes the future value of all future
-cashflows equal to the present value. For coupon payments $C_i$, bond price $N_t$
-at time $t$, the yield $y_t$ satisfies: 
+cashflows equal to the present value. For coupon payments $C_i$, bond price $N_t^T$
+at time $t$ with maturity $T$, the yield $y_t$ satisfies: 
 
 \[
-N_t = \sum_{T_i > t} C_i (1+y_t)^{-(T_i - t)}
+N_t^T = \sum_{T_i > t} C_i (1+y_t)^{-(T_i - t)}, \hspace{2cm} \forall\; T_i < T
+\]
+
+For zero-coupon bonds, we therefore have the following for a maturity $T$ at
+time $t$:
+
+\[
+N_t^T = (1+y_t^T)^{-(T-t)}
+\]
+
+with yield, $y_t^T$:
+
+\[
+y_t^T = \sqrt[T-t]{N_t^T} - 1
 \]
 
 \ab{Note on perpetual bonds}
