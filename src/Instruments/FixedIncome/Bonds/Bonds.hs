@@ -26,14 +26,14 @@ class Instrument i where
   expired :: i -> IO Bool
 
 class Instrument b => Bond b where
-  pv :: b -> TermStructure -> Compounding -> IO Cash
+  pv           :: b -> TermStructure -> Compounding -> IO Cash
   clean, dirty :: b -> TermStructure -> Compounding -> Date -> Cash
-  ai :: b -> Date -> Cash
-  principal :: b -> Cash
-  outstanding :: b -> Payments
-  cashflow  :: b -> Payments
-  coupons   :: b -> Payments
-  ytm       :: b -> Date -> Payment
+  ai           :: b -> Date -> Cash
+  principal    :: b -> Cash
+  outstanding  :: b -> Payments
+  cashflow     :: b -> Payments
+  coupons      :: b -> Payments
+  ytm          :: b -> TermStructure -> Compounding -> Double
   paymentDates :: b -> [Date]
 --   duration  :: b -> ... -> Payment
 --   convexity :: b -> ... -> Payment
@@ -47,7 +47,7 @@ class Bond r => Repayable r where
 
 --
 -- Instruments
-
+--
 
 -- TODO: Add daycount convention!
 data FixedCouponBond where
@@ -162,7 +162,10 @@ instance Bond FixedCouponBond where
     in
       snd $ L.mapAccumL (\o d -> (o-repayment, (d, scale srate o))) sface dates
   coupons Annuity{..} = undefined
-  ytm = undefined
+  ytm z@Zero{..} ts cmp = face ** (negate $ recip t) - 1
+    where zpv  = pv z ts cmp
+          t    = getYearOffset zsett zmatu
+          (Cash face _) = zface
 
   paymentDates Zero{..} = zmatu : []
   paymentDates Bullet{..} = interpolateDates bmatu broll bstms bsett
