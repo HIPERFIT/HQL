@@ -18,7 +18,14 @@ description:
 library
   hs-source-dirs: src
   exposed-modules:
-    Instruments.FixedIncome.Bonds.Bonds
+    Utils.Calendar
+    Utils.Currency
+    Instruments.Utils.TermStructure,
+    Instruments.Utils.Discounting
+    --Instruments.FixedIncome.Bonds.Bonds
+  other-modules:
+--   Instruments.Utils.TermStructure,
+   --Instruments.Utils.Discounting
 
   build-depends:
     base == 4.*,
@@ -30,22 +37,29 @@ library
     template-haskell >= 2.4,
     text >= 0.11.1.0,
     time
+  
+  ghc-options: -O2 -Wall
 
 test-suite tests
   hs-source-dirs: tests
   type:	      exitcode-stdio-1.0
   main-is:    Properties.hs
-
+  other-modules:
+    --HQL.Instruments.Utils.Discounting
   build-depends:
-    QuickCheck,
+    HQL,
+    QuickCheck >= 2.6,
+    HUnit,
     base,
     containers,
     bytestring,
     template-haskell,
     test-framework,
     test-framework-quickcheck2,
+    test-framework-hunit,
     text,
     time,
+    ieee754,
     unordered-containers,
     vector,
     ghc-prim >= 0.2

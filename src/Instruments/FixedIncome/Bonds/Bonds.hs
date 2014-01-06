@@ -47,7 +47,7 @@ class Bond r => Repayable r where
 
 --
 -- Instruments
---
+
 
 -- TODO: Add daycount convention!
 data FixedCouponBond where
@@ -195,6 +195,9 @@ instance Derivative Option where
   underlying Put{..}  = Commodity putint
   underlying Swap{..}  = Legs (fxcb,flcb)
 
+ts1  = Analytical analyticalFun1
+analyticalFun1 x = 5 + (1/2)*sqrt x
+
 -- Tests
 settle = (read "2010-01-01")::Date 
 maturity = (read "2014-07-02")::Date
@@ -215,5 +218,8 @@ serial  = Serial settle maturity (Cash 100 USD) rate1 stms1 Following
 annuity = Annuity settle maturity2 (Cash 100 GBP) rate2 stms2 ModifiedFollowing
 
 -- Actual tests
+-- analyticalFun1 (getYearOffset settle maturity) == 6.0608215993999295
+-- discountFactor' (analyticalFun1 (getYearOffset settle maturity)) (getYearOffset settle maturity) 0 == 0.7612297990008563
+-- discountFactor' 6.0608215993999295 (getYearOffset settle maturity) 0 -- 0.7612297990008563
 test0 = [(dirty zero ts1 Continuous present) == (Cash 70.56481405950817 SEK)] -- fails, Discounting.hs bug
 tests = [test0]
