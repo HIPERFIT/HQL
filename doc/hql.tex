@@ -744,6 +744,17 @@ yields the following output:
 \end{lstlisting}
 
 \subsection{Yield to maturity}
+
+The yield of a bond is the discount rate that makes the future value of all future
+cashflows equal to the present value. For coupon payments $C_i$, bond price $N_t$
+at time $t$, the yield $y_t$ satisfies: 
+
+\[
+N_t = \sum_{T_i > t} C_i (1+y_t)^{-(T_i - t)}
+\]
+
+\ab{Note on perpetual bonds}
+
 \subsection{Duration and convexity}
 
 \section{Day-count conventions}
