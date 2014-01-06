@@ -20,6 +20,7 @@ library
   exposed-modules:
     Utils.Calendar
     Utils.Currency
+    Instruments.Utils.InterestRate,
     Instruments.Utils.TermStructure,
     Instruments.Utils.Discounting
     --Instruments.FixedIncome.Bonds.Bonds

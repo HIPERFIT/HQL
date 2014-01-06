@@ -13,6 +13,7 @@ import qualified Data.ByteString.Lazy.Char8 as L
 import Data.Time.Clock (UTCTime(..))
 import Data.Time (ZonedTime(..))
 
+import qualified Instruments.Utils.InterestRate as IR
 import Instruments.Utils.TermStructure
 import Instruments.Utils.Discounting
 
@@ -39,12 +40,18 @@ encodeInteger i = (show i) == (show i)
 cfs n c f = [c | i <- [0..n-2]] ++ [f+c]
 pv cfs dfs = sum $ zipWith (*) cfs dfs
 
+----------- Interest rates
+
+interestRate1 = IR.rate (IR.toContinuous (IR.InterestRate 1.0 IR.Compounded IR.Annually)) @=~? 1.005016708416795
+interestRate2 = IR.rate (IR.toContinuous (IR.InterestRate 5.0625 IR.Compounded IR.SemiAnnually)) @=~? 5.127116313804603
+interestRate3 = IR.rate (IR.toContinuous (IR.InterestRate 10.4713 IR.Compounded IR.Monthly)) @=~? 10.517119897313698
+
+--------------------------
+
+
 -- TEST 5
 --discountFactor5 = discountFactor (InterestRate (Periodic Annually) (9+28/100 :: Double)) 1.00 0.0 == 0.9150805270863837
 analyticalFun1 x = 5 + (1/2)*sqrt x
-
--- Test conversion between continous and exponential
-interestRate1 = ((exp ((mc 1 5.0)/100) - 1)*100) @=~? 5.0
 
 discountFactor1 = (discountFactors' (InterestRate (Exponential 1) (9+28/100 :: Double)) 0.0 0.0 !! 0) @=~? 0.915080527086383 
 
@@ -109,7 +116,9 @@ tests = [
 		--testCase "bondTest1" bondTest1
 	],
 	testGroup "InterestRate" [
-		testCase "interestRate1" interestRate1
+		testCase "interestRate1" interestRate1,
+		testCase "interestRate2" interestRate2,
+		testCase "interestRate3" interestRate3
 		-- TODO: Add test cases
 	],
 	testGroup "Discounting" [

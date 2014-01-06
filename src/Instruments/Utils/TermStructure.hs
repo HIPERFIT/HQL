@@ -27,6 +27,8 @@ data InterestRates = InterestRate Compounding Rate
                    | InterestRates Compounding Rates
                    | TermStructureRates Compounding TermStructure
 
+----- New type for Interest rates (from QuantLib)
+
 mc :: Int -> Rate -> Rate
 -- TODO: Check this
 --mc 1 r = log(1+r)
