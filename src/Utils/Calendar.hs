@@ -11,8 +11,6 @@ type Years = Double
 data RollConvention = Following | Preceding | ModifiedFollowing
 type Settlements = Int
 
-data Basis = ACTACT | ACT360 | ACT365F | Thirty360
-           | SIA | Business | European | Japanese
 data EndMonthRule = Ignore | Apply
 
 class Calendar c where
@@ -32,8 +30,6 @@ interpolateDates mat conv stms from = iterateEnd from
            | T.diffDays mat date' < 0 = mat : []
            | otherwise = date' : iterateEnd date'
            where date' = rollDay conv $ T.addDays between date
-
-ost conv between date = rollDay conv $ T.addDays between date
 
 {-
 -- Tests
