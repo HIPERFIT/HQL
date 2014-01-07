@@ -70,7 +70,7 @@ data SimpleInterestRate = SimpleSpotRate Offset Offset
 
 class InterestRateInstrument a where
     rate :: a -> Rate
-    discountFactor :: a -> DiscountFactor
+    discountFactor :: a -> Time -> DiscountFactor
 
 instance InterestRateInstrument InterestRate where
 
@@ -89,18 +89,20 @@ instance InterestRateInstrument InterestRate where
     -- Returns the simple LIBOR forward rate
     rate (LIBORForwardRate r _ _ _) = r
 
-    -- Convert interest rate to DiscountFactor
-    discountFactor (ShortRate r) = DiscountFactor (exp(-r/100.0)) 0
+    -- Convert interest rate to DiscountFactor at time t
+    discountFactor (ShortRate r) t = DiscountFactor (exp(-(r/100.0)*t)) 0
 	
     -- Returns the discount factor p(S,T)
-    discountFactor (ContinuousSpotRate r offsetS offsetT) = DiscountFactor (exp(-r(offsetT-offsetS))) offsetT
+    discountFactor (ContinuousSpotRate r offsetS offsetT) t = DiscountFactor (exp(-(r/100.0)*t)) offsetT
 
     -- Returns the continuously compounded forward rate for [S,T] contracted at t
-    discountFactor (ContinuousForwardRate r time offsetS offsetT) = DiscountFactor (exp) offsetT
+    discountFactor (ContinuousForwardRate r time offsetS offsetT) t = DiscountFactor (exp(-(r/100.0)*t)) offsetT
 
+    -- Returns the LIBOR spot rate at time t
+    discountFactor (LIBORSpotRate r _ offsetT) t = DiscountFactor (exp(-(r/100.0)*t)) offsetT
 
-    discountFactor (LIBORSpotRate r _ offsetT) = DiscountFactor r offsetT
-    discountFactor (LIBORForwardRate r time _ offsetT) = DiscountFactor (exp(-r*(offsetT - time))) offsetT
+    -- Returns the LIBOR forward rate at time t
+    discountFactor (LIBORForwardRate r time _ offsetT) t = DiscountFactor (exp(-(r/100.0)*t)) offsetT
 
 
 
