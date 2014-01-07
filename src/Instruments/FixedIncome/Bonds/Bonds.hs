@@ -1,5 +1,4 @@
-{-# LANGUAGE TypeFamilies #-}
-{-# LANGUAGE GADTs, RecordWildCards #-}
+{-# LANGUAGE TypeFamilies, GADTs, RecordWildCards #-}
 module Instruments.FixedIncome.Bonds.Bonds where
 
 import Control.Monad (liftM)
@@ -55,29 +54,34 @@ data FixedCouponBond where
               zmatu :: Date,
               zface :: Cash,
               zintr :: InterestRate,
+              zdayc :: (DayCount d) => d,
               zroll :: RollConvention } -> FixedCouponBond
   Consol :: { csett :: Date,
               cface :: Cash,
               crate :: InterestRate,
               cstms :: Settlements,
+              cdayc :: (DayCount d) => d,
               croll :: RollConvention } -> FixedCouponBond
   Bullet :: { bsett :: Date,
               bmatu :: Date,
               bface :: Cash,
               brate :: InterestRate,
               bstms :: Settlements,
+              bdayc :: (DayCount d) => d,
               broll :: RollConvention } -> FixedCouponBond
   Annuity :: { asett :: Date,
               amatu :: Date,
               aface :: Cash,
               arate :: InterestRate,
               astms :: Settlements,
+              adayc :: (DayCount d) => d,
               aroll :: RollConvention } -> FixedCouponBond
   Serial :: { ssett :: Date,
               smatu :: Date,
               sface :: Cash,
               srate :: InterestRate,
               sstms :: Settlements,
+              sdayc :: (DayCount d) => d,
               sroll :: RollConvention } -> FixedCouponBond
 
 --
