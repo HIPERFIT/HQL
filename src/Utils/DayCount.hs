@@ -8,7 +8,6 @@ class DayCount d where
   modifier :: d -> Date -> Date -> Double
 
 data Basis = ACTACT | ACT360   | ACT365F  | Thirty360
-           | SIA    | Business | European | Japanese
 
 instance DayCount Basis where
   modifier ACTACT dt0 dt1 = dc dt0 end0 + dc dt1 start1 + yearsBetween
@@ -27,17 +26,11 @@ instance DayCount Basis where
   modifier Thirty360 dt0 dt1 = dc0/360 + dc1/360 + yearsBetween
     where (y0,m0,d0) = Cal.toGregorian dt0
           (y1,m1,d1) = Cal.toGregorian dt1
-          dc0 = fromIntegral $ 30*(12 - m0) + min 30 d0
-          dc1 = fromIntegral $ 30*m1 + min 30 d1 - 1
+          dc0 = fromIntegral $ 30*(12 - m0) + (30 - (min 30 d0)) + leapFactor
+          dc1 = fromIntegral $ 30*m1 - (30 - (min 30 d1))
           yearsBetween = fromIntegral $ y1-y0-1
-
--- Tests
-
--- Ex4 http://www.deltaquants.com/day-count-conventions.html
-a = read "2008-02-01" :: Date
-b = read "2009-05-31" :: Date
-
-test0 = 1.3262594505576764 == modifier ACTACT a b
-test1 = 1.3333333333333335 == modifier Thirty360 a b
-test2 = 1.3472222222222223 == modifier ACT360 a b
-test = all (==True) [test0, test1, test2]
+          daysInMonth_d0 = Cal.gregorianMonthLength y0 m0
+          daysInMonth_d1 = Cal.gregorianMonthLength y1 m1
+          leapFactor
+            | T.isLeapYear y0 = 1
+            | otherwise       = 0
