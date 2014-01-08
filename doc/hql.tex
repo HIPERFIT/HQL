@@ -582,6 +582,51 @@ Bullet has a fixed rate coupon which is paid at every settlement. No repayments 
 
 \[ p(t,T) = \sum_{t=1}^{T}\frac{C}{(1+r)^t} + \frac{N}{(1+r)^T} \]
 
+\begin{figure}[h!]
+\begin{center}
+\begin{tikzpicture}[-,shorten >=1pt,auto,node distance=1.5cm,thick,minimum size=0.8cm,main node/.style={circle,draw=red,very thick}]
+\tikzstyle{selected edge} = [draw,line width=6pt,-,blue!30]
+
+\coordinate (belowstart) at (0,-1);
+\coordinate (start) at (0,0);
+\coordinate (stop) at (10.2,0);
+\coordinate (abovestop) at (10.2,2);
+\draw (start) -- (stop);
+\draw (start) -- (belowstart);
+\draw (stop) -- (abovestop);
+
+\node at (0, -1.5) () {$t=0$};
+
+\filldraw[draw=black, fill=red]  (2,0) rectangle node {} +(0.2,0.25);
+\node at (2, 2.5) () {$t=2$};
+
+\filldraw[draw=black, fill=red]  (4,0) rectangle node {} +(0.2,0.25);
+\node at (4, 2.5) () {$t=4$};
+
+\filldraw[draw=black, fill=red]  (6,0) rectangle node {} +(0.2,0.25);
+\node at (6, 2.5) () {$t=6$};
+
+\filldraw[draw=black, fill=red]  (8,0) rectangle node {} +(0.2,0.25);
+\node at (8, 2.5) () {$t=8$};
+
+\filldraw[draw=black, fill=blue] (10,0) rectangle node {} +(0.2,1);
+\filldraw[draw=black, fill=red]  (10,1) rectangle node {} +(0.2,0.25);
+\node at (10, 2.5) () {$t=10$};
+
+% Legend
+\filldraw[draw=black, fill=blue] (7,-1) rectangle node {} +(0.2,0.2);
+\node at (8.3, -0.92) () {repayment};
+
+\filldraw[draw=black, fill=red] (7,-1.5) rectangle node {} +(0.2,0.2);
+\node at (8, -1.44) () {coupon};
+
+\end{tikzpicture}
+\caption{Cashflow of a bullet.}
+\label{fig:anc}
+\end{center}
+\end{figure}
+
+
 \subsection{Consol}
 Consol has a fixed rate coupon and never terminates and there is no payments at any settlement,
 only interest (the coupon) is paid.
