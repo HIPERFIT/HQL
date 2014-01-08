@@ -50,13 +50,20 @@ type Term = Double
 type Tenor = Double
 type Maturity = Double
 
-data DiscountFactor = DiscountFactor Rate Maturity deriving (Show)
+data DiscountFactor = DiscountFactor Double deriving (Show)
+
+class DiscountFactorInstrument a where
+    df :: a -> Rate
+
+instance DiscountFactorInstrument DiscountFactor where
+    df (DiscountFactor r) = r
 
 --InterestRateInstrument = ForwardRate | InterestRate | TermStructure
 
 data InterestRate = ShortRate Rate
 		  | ContinuousSpotRate Rate Tenor 
 	          | ContinuousForwardRate Rate Term Tenor
+                  | CompoundedSpotRate Rate Tenor
 		  | LIBORSpotRate Rate Tenor 
 	          | LIBORForwardRate Rate Term Tenor
 	          deriving (Show)
@@ -71,7 +78,8 @@ data SimpleInterestRate = SimpleSpotRate Offset Offset
 
 class InterestRateInstrument a where
     rate :: a -> Rate
-    discountFactor :: a -> Time -> DiscountFactor
+--    discountFactor :: a -> DiscountFactor
+    discountFactor :: a -> Maturity -> DiscountFactor
 
 instance InterestRateInstrument InterestRate where
 
@@ -91,19 +99,19 @@ instance InterestRateInstrument InterestRate where
     rate (LIBORForwardRate r _ _) = r
 
     -- Convert interest rate to DiscountFactor at time t
-    discountFactor (ShortRate r) t = DiscountFactor (exp(-(r/100.0)*t)) 0
+    discountFactor (ShortRate r) t = DiscountFactor 1 
 	
     -- Returns the discount factor p(S,T)
-    discountFactor (ContinuousSpotRate r termN) t = DiscountFactor (exp(-(r/100.0)*t)) termN
+    discountFactor (ContinuousSpotRate r termN) t = DiscountFactor (exp(-(r/100)*t)) 
 
     -- Returns the continuously compounded forward rate for [S,T] contracted at t
-    discountFactor (ContinuousForwardRate r termN tenorM) t = DiscountFactor (exp(-(r/100.0)*t)) tenorM
+    discountFactor (ContinuousForwardRate r termN tenorM) t = DiscountFactor 1 
 
     -- Returns the LIBOR spot rate at time t
-    discountFactor (LIBORSpotRate r termN) t = DiscountFactor (exp(-(r/100.0)*t)) termN
+    discountFactor (LIBORSpotRate r termN) t = DiscountFactor ((1 + (r/100)/(1/termN))**(-t*(1/termN))) 
 
     -- Returns the LIBOR forward rate at time t
-    discountFactor (LIBORForwardRate r termN tenorM) t = DiscountFactor (exp(-(r/100.0)*t)) tenorM
+    discountFactor (LIBORForwardRate r termN tenorM) t = DiscountFactor 1 
 
 -- TODO: Test cases
 
