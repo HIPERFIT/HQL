@@ -46,7 +46,7 @@ termStructure = Analytical
 
 --type Points = M.Map Date ContinuousInterestRate -- Assumes zero rates
 --type InterpolatedTermStructure = Double -> ContinuousInterestRate
-type AnalyticalTermStructure = Double -> ContinuousInterestRate
+type AnalyticalTermStructure = Double -> InterestRate
 
 data TermStructure = --Interpolated InterpolatedTermStructure
                     Analytical AnalyticalTermStructure
@@ -73,25 +73,26 @@ continuousDf offsetT maturityT r = exp(-(r/100.0)*(maturityT - offsetT))
 
 -- Continuous discount factor p(t,T), T is fixed
 
-InterestRate
+--InterestRate
 
-interestRate -> discountFactor
-termStructure -> discountFactor
+--interestRate -> discountFactor
+--termStructure -> discountFactor
 
-discountFactor interestRate offsetT maturityT
-discountFactor termStructure offsetT maturityT
+--discountFactor interestRate offsetT maturityT
+--discountFactor termStructure offsetT maturityT
 
-discountFactors :: CompoundedInterestRate -> Double -> [Double]
+discountFactors :: InterestRate -> Double -> [Double]
 
 discountFactors interestRate offsetT = 
-  zipWith (continuousDf offsetT) [(offsetT+1-delta)..] (repeat continuousRate)
-  where continuousRate = rate (toContinuous interestRate)
-	delta = 0.0 -- TODO: Daycount conventions
+  zipWith (continuousDf offsetT) [(offsetT+1)..] (repeat 0)
 
+{-
 discountFactors' :: TermStructure -> Double -> [Double]
 discountFactors' (Analytical f) offsetT = 
-  map (\t ->continuousDf offsetT t (rate (toContinuous (f t)))) [offsetT+1-delta]
+  map (\t ->continuousDf offsetT t (rate (discountFactor (f t)))) [offsetT+1-delta]
   where delta = 0.0 -- TODO: Daycount conventions
+-}
+
 
 -- Forward rate
 
@@ -122,6 +123,7 @@ discountFactors' (TermStructureRates (Exponential p) (Analytical ts)) offsetT de
   map (\t ->discountFactor' (mc p (ts t)) t offsetT delta) [offsetT+(1/pp)..]
   where pp = fromIntegral p
 
+
 -- Interface for use externally
 discountFactors :: Compounding -> Date -> TermStructure -> [Date] -> [Double]
 discountFactors c now (Analytical f) ds =
@@ -134,7 +136,7 @@ discountFactors c now (Interpolated ts) ds =
     rates = map (\d -> makeContinuous c $ ts M.! d) ds
   in
     zipWith df offsets rates
-
+-}
 -- Tests
 
 
@@ -158,7 +160,7 @@ discountFactors c now (Interpolated ts) ds =
 --testAll = all (==True) tests
 --
 --
--}
+
 
 -- $use
 -- 

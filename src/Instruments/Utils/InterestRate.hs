@@ -11,6 +11,7 @@
 -- Types and functions for working with interest rates.
 
 module Instruments.Utils.InterestRate where
+--import Utils.DayCount
 
 type ContinuousRate = Double
 type CompoundedRate = Double
@@ -43,10 +44,10 @@ data Compounding = Continuous
 --data ContinuousInterestRate = ContinuousInterestRate Rate deriving (Show)
 --data CompoundedInterestRate = InterestRate Rate Compounding Frequency deriving (Show)
 
-
 --type Rate = Double
 type Time = Double
-type Offset = Double
+type Term = Double
+type Tenor = Double
 type Maturity = Double
 
 data DiscountFactor = DiscountFactor Rate Maturity deriving (Show)
@@ -54,10 +55,10 @@ data DiscountFactor = DiscountFactor Rate Maturity deriving (Show)
 --InterestRateInstrument = ForwardRate | InterestRate | TermStructure
 
 data InterestRate = ShortRate Rate
-		  | ContinuousSpotRate Rate Offset Offset 
-	          | ContinuousForwardRate Rate Time Offset Offset
-		  | LIBORSpotRate Rate Offset Offset 
-	          | LIBORForwardRate Rate Time Offset Offset
+		  | ContinuousSpotRate Rate Tenor 
+	          | ContinuousForwardRate Rate Term Tenor
+		  | LIBORSpotRate Rate Tenor 
+	          | LIBORForwardRate Rate Term Tenor
 	          deriving (Show)
 
 {-
@@ -78,35 +79,38 @@ instance InterestRateInstrument InterestRate where
     rate (ShortRate r) = r
 
     -- Returns the continuously compounded spot rate
-    rate (ContinuousSpotRate r _ _) = r
+    rate (ContinuousSpotRate r _) = r
 
     -- Returns the continuously compounded forward rate
-    rate (ContinuousForwardRate r _ _ _) = r
+    rate (ContinuousForwardRate r _ _) = r
 
     -- Returns the simple LIBOR spot rate
-    rate (LIBORSpotRate r _ _) = r
+    rate (LIBORSpotRate r _) = r
 
     -- Returns the simple LIBOR forward rate
-    rate (LIBORForwardRate r _ _ _) = r
+    rate (LIBORForwardRate r _ _) = r
 
     -- Convert interest rate to DiscountFactor at time t
     discountFactor (ShortRate r) t = DiscountFactor (exp(-(r/100.0)*t)) 0
 	
     -- Returns the discount factor p(S,T)
-    discountFactor (ContinuousSpotRate r offsetS offsetT) t = DiscountFactor (exp(-(r/100.0)*t)) offsetT
+    discountFactor (ContinuousSpotRate r termN) t = DiscountFactor (exp(-(r/100.0)*t)) termN
 
     -- Returns the continuously compounded forward rate for [S,T] contracted at t
-    discountFactor (ContinuousForwardRate r time offsetS offsetT) t = DiscountFactor (exp(-(r/100.0)*t)) offsetT
+    discountFactor (ContinuousForwardRate r termN tenorM) t = DiscountFactor (exp(-(r/100.0)*t)) tenorM
 
     -- Returns the LIBOR spot rate at time t
-    discountFactor (LIBORSpotRate r _ offsetT) t = DiscountFactor (exp(-(r/100.0)*t)) offsetT
+    discountFactor (LIBORSpotRate r termN) t = DiscountFactor (exp(-(r/100.0)*t)) termN
 
     -- Returns the LIBOR forward rate at time t
-    discountFactor (LIBORForwardRate r time _ offsetT) t = DiscountFactor (exp(-(r/100.0)*t)) offsetT
+    discountFactor (LIBORForwardRate r termN tenorM) t = DiscountFactor (exp(-(r/100.0)*t)) tenorM
 
-
+-- TODO: Test cases
 
 {-
+
+LIBORForwardRate (5.0 :: Rate) (6 :: Term) (9 :: Tenor)
+
  -
 ShortRate rate
 SpotRate offsetS offsetT DiscountFactor = 
