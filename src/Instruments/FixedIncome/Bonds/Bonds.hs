@@ -53,60 +53,66 @@ class Instrument b => Bond b where
 --   clean     :: b -> Date -> Cash
 --   dirty     :: b -> Date -> Cash
 
--- Repayable class for Serials, Annuities, MBBs
-class Bond r => Repayable r where
-  repayment :: r -> [Cash]
+-- | Class declaration for amortized bonds
+class Bond r => Amortized r where
+  repayments :: r -> Payments
 -- class (Instrument e) => Equity e where
+
+-- | Class for mortage-backed Obligations
+class Instrument m => MBO m where
+  prepayment          :: m -> Cash
+  periodicPrepayment  :: m -> Cash
+  survivalRate        :: m -> Rate
+  scheduledPrepayment :: m -> Cash
+  scheduledCoupon     :: m -> Cash
 
 --
 -- Instruments
 --
 
+data FixedAmortizedBond where 
+  Annuity :: { asett :: Date,
+               amat  :: Date,
+               aface :: Cash,
+               arate :: InterestRate,
+               astms :: Settlements,
+               aroll :: RollConvention } -> FixedAmortizedBond
+  Serial :: {  asett :: Date,
+               amatu :: Date,
+               aface :: Cash,
+               arate :: InterestRate,
+               astms :: Settlements,
+               aroll :: RollConvention } -> FixedAmortizedBond
+
 -- TODO: Add daycount convention!
 data FixedCouponBond where
-  Zero   :: { zsett :: Date,
-              zmatu :: Date,
-              zface :: Cash,
-              zintr :: InterestRate,
-              zdayc :: (DayCount d) => d,
-              zroll :: RollConvention } -> FixedCouponBond
-  Consol :: { csett :: Date,
-              cface :: Cash,
-              crate :: InterestRate,
-              cstms :: Settlements,
-              cdayc :: (DayCount d) => d,
-              croll :: RollConvention } -> FixedCouponBond
-  Bullet :: { bsett :: Date,
-              bmatu :: Date,
-              bface :: Cash,
-              brate :: InterestRate,
-              bstms :: Settlements,
-              bdayc :: (DayCount d) => d,
-              broll :: RollConvention } -> FixedCouponBond
-  Annuity :: { asett :: Date,
-              amatu :: Date,
-              aface :: Cash,
-              arate :: InterestRate,
-              astms :: Settlements,
-              adayc :: (DayCount d) => d,
-              aroll :: RollConvention } -> FixedCouponBond
-  Serial :: { ssett :: Date,
-              smatu :: Date,
-              sface :: Cash,
-              srate :: InterestRate,
-              sstms :: Settlements,
-              sdayc :: (DayCount d) => d,
-              sroll :: RollConvention } -> FixedCouponBond
-
+  Zero   :: { fsett :: Date,
+              fmatu :: Date,
+              fface :: Cash,
+              frate :: InterestRate,
+              froll :: RollConvention } -> FixedCouponBond
+  Consol :: { fsett :: Date,
+              fface :: Cash,
+              frate :: InterestRate,
+              fstms :: Settlements,
+              froll :: RollConvention } -> FixedCouponBond
+  Bullet :: { fsett :: Date,
+              fmatu :: Date,
+              fface :: Cash,
+              frate :: InterestRate,
+              fstms :: Settlements,
+              froll :: RollConvention } -> FixedCouponBond
 --
 -- Instances
 --
 
 instance Instrument FixedCouponBond where
-  expired Zero{..} = isExpired zmatu
+  expired Zero{..} = isExpired fmatu
   expired Consol{..} = return False
-  expired Bullet{..} = isExpired bmatu
-  expired Serial{..} = isExpired smatu
+  expired Bullet{..} = isExpired fmatu
+
+instance Instrument FixedAmortizedBond where
+  expired Serial{..} = isExpired amatu
   expired Annuity{..} = isExpired amatu
 
 instance Bond FixedCouponBond where
@@ -117,43 +123,59 @@ instance Bond FixedCouponBond where
     where dirtyPrice = dirty bond ts c now
   ai = undefined
 
-  principal Zero{..} = zface
-  principal Consol{..} = cface
-  principal Bullet{..} = bface
-  principal Serial{..} = sface
-  principal Annuity{..} = aface
+  principal Zero{..} = fface
+  principal Consol{..} = fface
+  principal Bullet{..} = fface
 
-  outstanding z@Zero{..} = [(zsett, principal z)]
-  outstanding b@Bullet{..} = map (flip (,) bface) $ paymentDates b
-  outstanding c@Consol{..} = map (flip (,) cface) $ paymentDates c
-  outstanding s@Serial{..} = 
-    let
-      dates = paymentDates s
-      repayment = scale (recip . fromIntegral $ length dates) sface
-      outstds = take (length dates) $ iterate (\p -> p-repayment) sface
-    in
-      zip (ssett : dates) (outstds ++ [(sface-sface)])
-  outstanding Annuity{..} = undefined
+  outstanding z@Zero{..} = [(fsett, principal z)]
+  outstanding b@Bullet{..} = map (flip (,) fface) $ paymentDates b
+  outstanding c@Consol{..} = map (flip (,) fface) $ paymentDates c
+
+  coupons Zero{..} = []
+  coupons Consol{..} = map (mkPayment (frate/stms) fface) dates
+    where stms = fromIntegral fstms
+          dates =  extrapolateDates roll fstms fsett
+  coupons b@Bullet{..} = case cashflow b of
+                           [] -> []
+                           cs -> init cs
 
   --
   -- Returns list of cash flows
   --
-  cashflow Zero{..} = (zmatu, zface) : []
+  cashflow Zero{..} = (fmatu, fface) : []
   cashflow c@Consol{..} = coupons c
-  cashflow Bullet{..} = map (mkPayment (brate/stms) bface) dates
-    where dates = interpolateDates bmatu broll bstms bsett
-          stms  = fromIntegral bstms
+  cashflow Bullet{..} = map (mkPayment (frate/stms) fface) dates
+    where dates = interpolateDates matu roll fstms fsett
+          stms  = fromIntegral fstms
+
+  paymentDates Zero{..} = fmatu : []
+  paymentDates Bullet{..} = interpolateDates fmatu froll fstms fsett
+  paymentDates Consol{..} = extrapolateDates froll fstms fsett
+
+instance Bond FixedAmortizedBond where
+  principal Serial{..} = aface
+  principal Annuity{..} = aface
+
+  outstanding s@Serial{..} = 
+    let
+      dates = paymentDates s
+      repayment = scale (recip . fromIntegral $ length dates) aface
+      outstds = take (length dates) $ iterate (\p -> p-repayment) aface
+    in
+      zip (asett : dates) (outstds ++ [(aface-aface)])
+  outstanding Annuity{..} = undefined
+
   cashflow Serial{..} = 
       let
-      dates = interpolateDates smatu sroll sstms ssett
-      repayment = scale (recip . fromIntegral $ length dates) sface
+      dates = interpolateDates amatu aroll astms asett
+      repayment = scale (recip . fromIntegral $ length dates) aface
       accPymts :: Cash -> Date -> (Cash, Payment)
       accPymts outstd date = let
-                               payment = repayment + scale srate outstd
+                               payment = repayment + scale arate outstd
                              in
                                (outstd - repayment, (date, payment))
     in
-      snd $ L.mapAccumL accPymts sface dates
+      snd $ L.mapAccumL accPymts aface dates
   cashflow Annuity{..} =
     let
       dates = interpolateDates amatu aroll astms asett
@@ -166,31 +188,21 @@ instance Bond FixedCouponBond where
   --
   -- Compute coupons for a bond 
   --
-  coupons Zero{..} = []
-  coupons Consol{..} = map (mkPayment (crate/stms) cface) dates
-    where stms = fromIntegral cstms
-          dates =  extrapolateDates croll cstms csett
-  coupons b@Bullet{..} = case cashflow b of
-                           [] -> []
-                           cs -> init cs
   coupons Serial{..} = 
     let
-      dates = interpolateDates smatu sroll sstms ssett
-      repayment = scale (recip . fromIntegral $ length dates) sface
+      dates = interpolateDates amatu aroll astms asett
+      repayment = scale (recip . fromIntegral $ length dates) aface
     in
-      snd $ L.mapAccumL (\o d -> (o-repayment, (d, scale srate o))) sface dates
+      snd $ L.mapAccumL (\o d -> (o-repayment, (d, scale arate o))) aface dates
   coupons Annuity{..} = undefined
   ytm z@Zero{..} ts cmp = face ** (negate $ recip t) - 1
     where zpv  = pv z ts cmp
-          t    = getYearOffset zsett zmatu
-          (Cash face _) = zface
+          t    = getYearOffset asett amatu
+          (Cash face _) = aface
 
-  paymentDates Zero{..} = zmatu : []
-  paymentDates Bullet{..} = interpolateDates bmatu broll bstms bsett
-  paymentDates Consol{..} = extrapolateDates croll cstms csett
   paymentDates Serial{..} = interpolateDates smatu sroll sstms ssett
   paymentDates Annuity{..} = interpolateDates amatu aroll astms asett
-  
+
 mkPayment :: InterestRate -> Cash -> Date -> Payment
 mkPayment rate face date = (date, scale rate face)
 
