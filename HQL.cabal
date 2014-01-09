@@ -18,12 +18,13 @@ description:
 library
   hs-source-dirs: src
   exposed-modules:
-    Utils.Calendar
-    Utils.Currency
+    Utils.Calendar,
+    Utils.Currency,
+    --Utils.DayCount,
     Instruments.Utils.InterestRate,
     Instruments.Utils.TermStructure,
-    Instruments.Utils.Discounting
-    --Instruments.FixedIncome.Bonds.Bonds
+    Instruments.Utils.Discounting,
+    Instruments.FixedIncome.Bonds.Bonds
   other-modules:
 --   Instruments.Utils.TermStructure,
    --Instruments.Utils.Discounting

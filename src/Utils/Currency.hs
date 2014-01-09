@@ -1,3 +1,13 @@
+-- |
+-- Module:      Instruments.FixedIncome.Bonds.Bonds
+-- Copyright:   (c) 2013 HIPERFIT
+-- License:     BSD-3
+-- Maintainer:  Andreas Bock <bock@andreasbock.dk>
+-- Stability:   experimental
+-- Portability: portable
+--
+-- Types and functions for working with interest rates
+
 module Utils.Currency where
 import Prelude hiding (sum)
 -- Some common currencies

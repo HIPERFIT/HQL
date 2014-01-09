@@ -1,3 +1,13 @@
+-- |
+-- Module:      Instruments.FixedIncome.Bonds.Bonds
+-- Copyright:   (c) 2013 HIPERFIT
+-- License:     BSD-3
+-- Maintainer:  Andreas Bock <bock@andreasbock.dk>
+-- Stability:   experimental
+-- Portability: portable
+--
+-- Types and functions for working with interest rates
+
 module Visualize where
 import Graphics.EasyPlot
 import Utils.Calendar
@@ -9,6 +19,7 @@ type PlotData = (Int, Int)
 
 transformCash (Cash v _) = v
 
+-- | Transform dates in a list
 transformDates [] = []
 transformDates dates = transformDates' (head dates) (init dates)
   where transformDates' offsetDate (d:ds) = 0 : map (getYearOffset offsetDate) ds 

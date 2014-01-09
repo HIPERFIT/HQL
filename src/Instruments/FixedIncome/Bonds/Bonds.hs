@@ -1,12 +1,25 @@
-{-# LANGUAGE TypeFamilies, GADTs, RecordWildCards #-}
+{-# LANGUAGE TypeFamilies, GADTs, RecordWildCards, RankNTypes #-}
+
+-- |
+-- Module:      Instruments.FixedIncome.Bonds.Bonds
+-- Copyright:   (c) 2013 HIPERFIT
+-- License:     BSD-3
+-- Maintainer:  Andreas Bock <bock@andreasbock.dk>
+-- Stability:   experimental
+-- Portability: portable
+--
+-- Types and functions for working with interest rates
+
 module Instruments.FixedIncome.Bonds.Bonds where
 
 import Control.Monad (liftM)
 import qualified Data.List as L
 import Utils.Calendar
 import Utils.Currency
-import Instruments.Utils.TermStructure
+import Utils.DayCount
+--import Instruments.Utils.TermStructure
 import Instruments.Utils.Discounting
+import Instruments.Utils.InterestRate
 import Prelude hiding (sum)
 
 --
@@ -24,6 +37,7 @@ type Payments = [Payment]
 class Instrument i where
   expired :: i -> IO Bool
 
+-- | Bonds are instruments with the following specification (just to get Haddock up and running)
 class Instrument b => Bond b where
   pv           :: b -> TermStructure -> Compounding -> IO Cash
   clean, dirty :: b -> TermStructure -> Compounding -> Date -> Cash
