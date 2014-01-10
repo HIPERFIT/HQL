@@ -803,6 +803,11 @@ Long term debt instruments that mature in twenty to thirty years.
 \subsection{Example using HQL}
 
 \section{The term structure}
+
+A \textbf{term structure of interest rates} refers to the general relation between yield and maturity that exists in a given bond market. If the term structure is derived from zero-coupon bonds it forms a good basis for pricing analysis of \emph{any} bond.\\
+
+A \textbf{yield curve} is a plot of a specific set of bond yields as a function of their maturity. This is not good for general pricing or valuation purposes, except for the specific bonds plotted. The key difference between a term structure and a yield curve is that we discount \emph{any} cashflow by using former, while the latter is only applicable for bonds who's yields correspond. Figure SOMETHING 
+
 The term structure or the yield curve.
 Created from zero coupon bonds, zero yield curve
 \[
@@ -823,6 +828,45 @@ We can price a bond from the yield curve, given face value $N$,
 \[
 p(t,T)=e^{-y(t,T)(T-t)}\cdot N
 \]
+
+
+\begin{figure}[h!]
+\begin{center}
+\begin{tikzpicture}[-,shorten >=1pt,auto,node distance=1.5cm,thick,minimum size=0.8cm,main node/.style={circle,draw=red,very thick}]
+\tikzstyle{selected edge} = [draw,line width=6pt,-,blue!30]
+
+\coordinate (belowstart) at (0,-1);
+\coordinate (xaxis) at (10,0);
+\coordinate (origo) at (0,0);
+\coordinate (yaxis) at (0,5);
+
+% Draw axes
+\draw[->] (origo) -- (xaxis) node[right] {Time to maturity};
+\draw[->] (origo) -- (yaxis) node[above] {Interest rate};
+
+% Flat TS
+\draw[thick,draw=blue] (0,1.5) -- (10,1.5);
+% "Normal" TS
+\draw[thick,draw=green] (0,0) parabola[bend at end] (10,5);
+% Inverse TS
+\draw[thick,draw=red] (0,5) parabola[bend at end] (10,0.5);
+
+% Legend
+\filldraw[draw=black, fill=blue] (5.2,-1) rectangle node {} +(0.2,0.2);
+\node at (6, -0.92) () {Flat};
+
+\filldraw[draw=black, fill=green] (0,-1) rectangle node {} +(0.2,0.2);
+\node at (1.55, -0.92) () {Logarithmic};
+
+\filldraw[draw=black, fill=red] (3,-1) rectangle node {} +(0.2,0.2);
+\node at (4.15, -0.92) () {Inverse};
+
+\end{tikzpicture}
+\caption{An example of different term structures.}
+\label{fig:anc}
+\end{center}
+\end{figure}
+
 
 \subsection{Flat term structure}
 \begin{lstlisting}
