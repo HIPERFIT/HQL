@@ -556,8 +556,15 @@ doinside=\small
 Not yet supported by HQL (this means stochastic interest rates).
 
 \section{Standard bond types}
+
+We now present the bonds supported in HQL.
+
 \subsection{Annuity}
 
+An annuity is an example of an amortized bond meaning that the debitor repays the
+face value over its lifetime. Payments are distributed equally over all the settlement
+dates, increasing and decreasing the repayment amount and coupon respectively (see figure
+\ref{fig:annuitycf}.
 
 \begin{figure}[h!]
 \begin{center}
@@ -603,11 +610,9 @@ Not yet supported by HQL (this means stochastic interest rates).
 
 \end{tikzpicture}
 \caption{Cashflow of an annuity.}
-\label{fig:anc}
+\label{fig:annuitycf}
 \end{center}
 \end{figure}
-
-
 
 \subsubsection{Example}
 Suppose we want to price an annuity maturing in 5 years, a face of \$1000.00 at an annual interest rate of 5.00\%.
@@ -629,7 +634,8 @@ yields the following output:
 \end{lstlisting}
 
 \subsection{Bullet}
-Bullet has a fixed rate coupon which is paid at every settlement. No repayments before maturity.
+
+Bullet has a fixed rate coupon which is paid at every settlement. No repayments before maturity. Figure \ref{fig:bulletcf} shows the cashflows.
 
 \[ p(t,T) = \sum_{t=1}^{T}\frac{C}{(1+r)^t} + \frac{N}{(1+r)^T} \]
 
@@ -673,14 +679,15 @@ Bullet has a fixed rate coupon which is paid at every settlement. No repayments 
 
 \end{tikzpicture}
 \caption{Cashflow of a bullet.}
-\label{fig:anc}
+\label{fig:bulletcf}
 \end{center}
 \end{figure}
 
 
 \subsection{Consol}
-Consol has a fixed rate coupon and never terminates and there is no payments at any settlement,
-only interest (the coupon) is paid.
+Consol has a fixed rate coupon and never terminates and there is no payments at any
+settlement, only interest (the coupon) is paid. Figure \ref{fig:consolcf} shows this
+pictorially.
 
 \[
 p(t) = N \cdot p(t,T_n)+\sum_{i=1}^{n} (c_i \cdot p(t,T_i))
@@ -729,15 +736,15 @@ p(t) = \frac{\delta N}{r}
 
 \end{tikzpicture}
 \caption{Cashflow of a consol.}
-\label{fig:anc}
+\label{fig:consolcf}
 \end{center}
 \end{figure}
 
-
-
 \subsection{Serial}
-Serial has a fixed rate coupon, the repayments are spread evenly over all remaining settlements and the coupon payments, $C_t$ decline
-over time.
+
+Serial is an amortized bond with a fixed rate coupon, the repayments are spread evenly over all remaining settlements and the coupon payments, $C_t$ decline over time as depicted in figure
+\ref{fig:serialcf}.
+
 \[ p(t,T) = \sum_{t=1}^{T}\frac{C_t}{(1+r)^t} + \frac{N}{(1+r)^T} \]
 
 \begin{figure}[h!]
@@ -784,7 +791,7 @@ over time.
 
 \end{tikzpicture}
 \caption{Cashflow of a serial.}
-\label{fig:anc}
+\label{fig:serialcf}
 \end{center}
 \end{figure}
 
