@@ -79,14 +79,14 @@ class InterestRateInstrument a where
     discountFactor :: a -> Offset -> DiscountFactor 
     -- | A lazy list of discount factors starting at an offset
     -- using the spacing implied by the conventions
-    discountFactors :: a -> Offset -> [DiscountFactor]
+    --discountFactors :: a -> Offset -> [DiscountFactor]
 
 instance InterestRateInstrument InterestRate where
 
     -- | InterestRateInstrument
-    continuousRate (SimpleSpotRate r _) = r
+    continuousRate (SimpleSpotRate r termN) = (1/termN)*(exp(r/(100*(1/termN))) - 1)*100
     continuousRate (ContinuousSpotRate r _) = r
-    continuousRate (CompoundedSpotRate r _) = r
+    continuousRate (CompoundedSpotRate r termN) = (1/termN)*(exp(r/(100*(1/termN))) - 1)*100
     
 -- | ForwardRateInstruments
     continuousRate (SimpleForwardRate r _ _) = r
@@ -94,9 +94,9 @@ instance InterestRateInstrument InterestRate where
     continuousRate (CompoundedForwardRate r _ _) = r
 
     -- | InterestRateInstrument
-    discountFactor (SimpleSpotRate r termN) offsetT = DiscountFactor ((1 + (r/100)/(1/offsetT))**(-offsetT*(1/termN)))
-    discountFactor (ContinuousSpotRate r termN) offsetT = DiscountFactor ((1 + (r/100)/(1/offsetT))**(-offsetT*(1/termN)))
-    discountFactor (CompoundedSpotRate r termN) offsetT = DiscountFactor ((1 + (r/100)/(1/offsetT))**(-offsetT*(1/termN)))
+    discountFactor (SimpleSpotRate r termN) offsetT = DiscountFactor (1/(1+r/(100*(1/termN)))**(offsetT*(1/termN))) 
+    discountFactor (ContinuousSpotRate r termN) offsetT = DiscountFactor (exp(-r/100*offsetT))
+    discountFactor (CompoundedSpotRate r termN) offsetT = DiscountFactor (1/(1+r/(100*(1/termN)))**(offsetT*(1/termN))) 
     
 -- | ForwardRateInstruments    
     -- ...

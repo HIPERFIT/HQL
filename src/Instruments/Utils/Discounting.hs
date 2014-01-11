@@ -11,7 +11,7 @@
 
 module Instruments.Utils.Discounting where
 --import Instruments.Utils.TermStructure
-import Instruments.Utils.InterestRate
+--import Instruments.Utils.InterestRate
 
 --import qualified Data.Map as M
 
@@ -46,18 +46,6 @@ termStructure = Analytical
 
 --type Points = M.Map Date ContinuousInterestRate -- Assumes zero rates
 --type InterpolatedTermStructure = Double -> ContinuousInterestRate
-type AnalyticalTermStructure = Double -> InterestRate
-
-data TermStructure = --Interpolated InterpolatedTermStructure
-                    Analytical AnalyticalTermStructure
-
-instance Show TermStructure where
---    show (Interpolated _) = "InterpolatedTermStructure"
-    show (Analytical _) = "AnalyticalTermStructure"
-            
--- |Create an analytic term structure
-termStructure :: AnalyticalTermStructure -> TermStructure
-termStructure = Analytical
 
 type DiscountFactor = Double -> Double -> Double
 
@@ -81,10 +69,10 @@ continuousDf offsetT maturityT r = exp(-(r/100.0)*(maturityT - offsetT))
 --discountFactor interestRate offsetT maturityT
 --discountFactor termStructure offsetT maturityT
 
-discountFactors :: InterestRate -> Double -> [Double]
+--discountFactors :: InterestRate -> Double -> [Double]
 
-discountFactors interestRate offsetT = 
-  zipWith (continuousDf offsetT) [(offsetT+1)..] (repeat 0)
+--discountFactors interestRate offsetT = 
+--  zipWith (continuousDf offsetT) [(offsetT+1)..] (repeat 0)
 
 {-
 discountFactors' :: TermStructure -> Double -> [Double]

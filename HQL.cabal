@@ -23,8 +23,8 @@ library
     --Utils.DayCount,
     Instruments.Utils.InterestRate,
     Instruments.Utils.TermStructure,
-    Instruments.Utils.Discounting,
-    Instruments.FixedIncome.Bonds.Bonds
+    Instruments.Utils.Discounting
+    --Instruments.FixedIncome.Bonds.Bonds
   other-modules:
 --   Instruments.Utils.TermStructure,
    --Instruments.Utils.Discounting
