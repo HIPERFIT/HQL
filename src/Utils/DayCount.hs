@@ -7,8 +7,6 @@
 -- Portability: portable
 --
 -- Types and functions for working with interest rates
-
-{-# LANGUAGE TypeFamilies #-}
 module Utils.DayCount where
 import qualified Data.Time.Calendar as Cal
 import qualified Data.Time as T
@@ -36,8 +34,8 @@ instance DayCount Basis where
   modifier Thirty360 dt0 dt1 = dc0/360 + dc1/360 + yearsBetween
     where (y0,m0,d0) = Cal.toGregorian dt0
           (y1,m1,d1) = Cal.toGregorian dt1
-          dc0 = fromIntegral $ 30*(12 - m0) + (30 - (min 30 d0)) + leapFactor
-          dc1 = fromIntegral $ 30*m1 - (30 - (min 30 d1))
+          dc0 = fromIntegral $ 30*(12 - m0) + 30 - min 30 d0 + leapFactor
+          dc1 = fromIntegral $ 30*m1 - 30 + min 30 d1
           yearsBetween = fromIntegral $ y1-y0-1
           daysInMonth_d0 = Cal.gregorianMonthLength y0 m0
           daysInMonth_d1 = Cal.gregorianMonthLength y1 m1

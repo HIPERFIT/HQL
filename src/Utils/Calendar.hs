@@ -37,7 +37,7 @@ interpolateDates :: Date -> RollConvention -> Settlements -> Date -> [Date]
 interpolateDates mat conv stms from = iterateEnd from
   where  between = daysBetweenSettlements from stms
          iterateEnd date
-           | T.diffDays mat date' < 0 = mat : []
+           | T.diffDays mat date' < 0 = [mat]
            | otherwise = date' : iterateEnd date'
            where date' = rollDay conv $ T.addDays between date
 
