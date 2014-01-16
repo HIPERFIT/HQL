@@ -165,7 +165,7 @@ which means you can load this file into GHCi:
 \end{lstlisting}
 
 \section{Terminology}
-In this section the terminology used in the field of fixed income and how it applies to HQL.
+In this section you'll find a the most commonly used words in this document, which are specific to the domain of finance and fixed income valuation.
 
 \ctable[
 caption = Terminology,
@@ -186,9 +186,14 @@ doinside=\small
 }
 
 \section{Compounding}
-\subsection{Discrete}
-\subsubsection{Linear}
+Compounding refers to the method where money accumulates during the progess of time. The oppostite of compounding is discounting.
+When one talks about compounding, the interest rate or rate determines the rate at which the deposited amount of money will increase as a function of time.
+Compounding is often separated into discrete and continous compounding.
 
+\subsubsection{Discrete compounding}
+Discrete compounding refers to compounding with fixed and known intervals of compounding, typically annually, semi-annually or quartlery.
+
+\subsubsection{Linear discrete compounding}
 $FV$, the future value in $T$ periods of a nominal $N$, is expressed as:
 
 \[
@@ -197,7 +202,7 @@ FV_T = N(1+R_TT)
 
 where $R_T$ is the interest rate.
 
-\subsubsection{Exponential}
+\subsubsection{Exponential discrete compounding}
 
 Future value of a nominal cash flow $N$ under exponential compounding over
 $n$ periods:
@@ -214,8 +219,8 @@ Periodic compounding where $n$ is the number of times interest compounded per pe
 FV_T=N\left( 1 + \frac{R}{n}  \right)^{nT}
 \]
 
-\subsection{Continuous}
-Continuous compounding is defined as taking the limit of the periodic compounding as n goes to infinity,
+\subsection{Continuous compounding}
+Continuous compounding is defined as taking the limit of the discrete compounding as n goes to infinity,
 \[ 
 FV=\lim_{n \to \infty} N \left(1+\frac{R}{n}\right)^{nT}=Ne^{RT}
 \]
@@ -224,6 +229,10 @@ FV=\lim_{n \to \infty} N \left(1+\frac{R}{n}\right)^{nT}=Ne^{RT}
 Table of interest rates at various compounding frequencies.
 
 \ab{Jost said we need to describe the table here}
+
+The table below illustrates the effect of compounding at various frequencies. The nominal rate
+is the annualized interest rate, compounded once per year. As the frequency increases, the discrete
+rate almost equals the continous one.
 
 \ctable[
 caption = Interest rates at various compounding frequencies,
