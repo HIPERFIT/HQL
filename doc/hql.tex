@@ -182,6 +182,14 @@ doinside=\small
     Basis & Day-count basis \\ 
     EndMonthRule & End-of-month payment rule \\ 
     IssueDate & Bond issue date \\ 
+	Term & - \\
+	Tenor & - \\
+	LIBOR & - \\
+	Annuity & - \\
+	Bond & - \\
+	Compounding & - \\
+	Actual rate & - \\
+	Annualized rate & - \\
   \bottomrule
 }
 
@@ -338,6 +346,10 @@ yields the following output:
 
 
 \section{Interest rates}
+
+- annualized rate (nominal rate)
+- actual rate
+
 \ctable[
 caption = The caption is centered by default,
 pos = h,
@@ -356,6 +368,9 @@ center,
 }
 
 \subsection{Spot rates}
+Spot rates refers to rates that are observable at present time in the market.
+Spot rates are quoted on an annualized basis.
+
 \subsection{Forward rates}
 Forward rates indicate the interest rate between two future dates [S,T]
 \[
@@ -411,6 +426,11 @@ yields the following output:
 The LIBOR (London InterBank Offered Rate) interest rate is the most important interbank rate
 used for fixed income valuation. LIBOR rates are quoted on a simple compounding basis with maturities
 from overnight to 12 months.
+
+The rate quoted is the annualized rate, to calculate the actual rate we do as follows...
+
+LIBOR comes in 8 maturities
+5 different currencies
 \\
 \\
 Table of LIBOR rates per 2013-12-26,
