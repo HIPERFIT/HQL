@@ -32,7 +32,7 @@
 %\usepackage{xcolor}
 %\usepackage{filter}
 %\usepackage{vim}
-%\usepackage{caption}
+\usepackage{caption}
 \usepackage[compatibility=true]{caption} 
 \usepackage{etex}
 \usepackage{ctable}
@@ -217,7 +217,7 @@ $n$ periods:
 
 \[ FV_T = N(1+R_T)^n \]
 
-The present value of a nominal future cash flow $N$ is therefore:
+The present value of a nominal future cash flow $N$ is therefore
 
 \[ PV_T = \frac{N}{(1+R_T)^n} \]
 
@@ -232,6 +232,22 @@ Continuous compounding is defined as taking the limit of the discrete compoundin
 \[ 
 FV=\lim_{n \to \infty} N \left(1+\frac{R}{n}\right)^{nT}=Ne^{RT}
 \]
+
+%\begin{minipage}{\linewidth}
+%\begin{figure}[h]
+%\centering
+%\includegraphics[scale=.50]{gnuplot/comp01.eps}
+%\caption{Continuous compounding with various rates}
+%\label{fig:digraph}
+%\end{figure}
+%\end{minipage}
+
+\begin{minipage}{\linewidth}
+\makebox[\linewidth]{%
+  \includegraphics[keepaspectratio=true,scale=1.0]{gnuplot/comp01.eps}}
+\captionof{figure}{Continuous compounding with various rates}
+\label{visina8}
+\end{minipage}
 
 \subsection{Transition between discrete and continuous}
 Table of interest rates at various compounding frequencies.
