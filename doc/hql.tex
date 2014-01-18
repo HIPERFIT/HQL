@@ -19,6 +19,7 @@
 \usepackage{listings,setspace,framed}
 \usepackage{pgfplots}
 %\usepackage{bashful}
+\usepackage{color} 
 \usepackage{tikz}
 \usetikzlibrary{decorations.pathreplacing}
 \usepackage{lmodern,inconsolata}
@@ -112,14 +113,17 @@ stringstyle=\color{black},tabsize=2,backgroundcolor=\color{lightgray},language=H
   breakatwhitespace=true,
   frame=tblr,
   columns=fullflexible,
-  backgroundcolor=\color{background},
+  backgroundcolor=\color{gray!10},
   linewidth=1.0\linewidth,
   xleftmargin=0.1\linewidth,
   keywordstyle= \color{keywords},
   identifierstyle=\color{identifier},
   stringstyle=\color{strings},
   commentstyle=\color{comments},
-  basicstyle=\fontsize{10}{12}\color{black}\ttfamily    
+  basicstyle=\fontsize{10}{12}\color{black}\ttfamily,
+  frame=single,
+  framesep=2pt,
+  framerule=0.6pt  
 }
 
 \lstdefinestyle{Output}{
@@ -131,11 +135,15 @@ stringstyle=\color{black},tabsize=2,backgroundcolor=\color{lightgray},language=H
   backgroundcolor=\color{gray!10},
   linewidth=1.0\linewidth,
   xleftmargin=0.1\linewidth,
-  keywordstyle= \color{keywords}\bfseries,
+  keywordstyle= \color{keywords},
   identifierstyle=\color{identifier},
   stringstyle=\color{strings},
   commentstyle=\color{comments},
-  basicstyle=\fontsize{10}{12}\color{black}\bfseries
+  basicstyle=\fontsize{10}{12}\color{black}\bfseries,
+  frame=single,
+  framesep=2pt,
+  framerule=0.9pt,
+  %rulecolor=\color{gray}
 }
 
 \lstset{escapechar=@,style=BashInputStyle}
@@ -153,6 +161,8 @@ stringstyle=\color{black},tabsize=2,backgroundcolor=\color{lightgray},language=H
 
 \vskip 0.5\FrameSep
 
+\newpage
+
 \section{Introduction}
 This is the documentation of the Hiperfit Quant Library, HQL. As a reader you will
 find valuable information about the theory behind the implementation together with
@@ -169,7 +179,7 @@ In this section you'll find a the most commonly used words in this document, whi
 
 \ctable[
 caption = Terminology,
-pos = ht,
+pos = !ht,
 doinside=\small
 ]{ll}{
 }{
@@ -197,6 +207,15 @@ doinside=\small
 Compounding refers to the method where money accumulates during the progess of time. The oppostite of compounding is discounting.
 When one talks about compounding, the interest rate or rate determines the rate at which the deposited amount of money will increase as a function of time.
 Compounding is often separated into discrete and continous compounding.
+
+Figure ~\ref{fig:comp01} illustrates the effect of various interest during a period of ten years.
+
+\begin{minipage}{\linewidth}
+\makebox[\linewidth]{%
+  \includegraphics[keepaspectratio=true,scale=1.0]{gnuplot/comp02.eps}}
+\captionof{figure}{Continuous compounding with various rates}
+\label{fig:comp01}
+\end{minipage}
 
 \subsubsection{Discrete compounding}
 Discrete compounding refers to compounding with fixed and known intervals of compounding, typically annually, semi-annually or quartlery.
@@ -242,17 +261,19 @@ FV=\lim_{n \to \infty} N \left(1+\frac{R}{n}\right)^{nT}=Ne^{RT}
 %\end{figure}
 %\end{minipage}
 
+Figure ~\ref{fig:comp01} illustrates the effect of various interest during a period of ten years.
+
 \begin{minipage}{\linewidth}
 \makebox[\linewidth]{%
   \includegraphics[keepaspectratio=true,scale=1.0]{gnuplot/comp01.eps}}
 \captionof{figure}{Continuous compounding with various rates}
-\label{visina8}
+\label{fig:comp01}
 \end{minipage}
 
 \subsection{Transition between discrete and continuous}
-Table of interest rates at various compounding frequencies.
+%Table of interest rates at various compounding frequencies.
 
-\ab{Jost said we need to describe the table here}
+%\ab{Jost said we need to describe the table here}
 
 The table below illustrates the effect of compounding at various frequencies. The nominal rate
 is the annualized interest rate, compounded once per year. As the frequency increases, the discrete
