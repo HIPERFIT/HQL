@@ -218,9 +218,9 @@ Figure ~\ref{fig:comp01} illustrates the effect of various interest during a per
 \end{minipage}
 
 \subsubsection{Discrete compounding}
-Discrete compounding refers to compounding with fixed and known intervals of compounding, typically annually, semi-annually or quartlery.
+Discrete compounding refers to compounding with fixed and known intervals of compounding, typically annually, semi-annually or quarterly.
 
-\subsubsection{Linear discrete compounding}
+\subsubsection{Linear compounding}
 $FV$, the future value in $T$ periods of a nominal $N$, is expressed as:
 
 \[
@@ -229,14 +229,22 @@ FV_T = N(1+R_TT)
 
 where $R_T$ is the interest rate.
 
-\subsubsection{Exponential discrete compounding}
+\subsubsection{Exponential compounding}
 
 Future value of a nominal cash flow $N$ under exponential compounding over
 $n$ periods:
 
 \[ FV_T = N(1+R_T)^n \]
 
-The present value of a nominal future cash flow $N$ is therefore
+%The present value of a nominal future cash flow $N$ is therefore
+
+We can create a compound factor in HQL using discrete exponential compounding as follows:
+
+\vskip 0.5\FrameSep
+\begin{lstlisting}
+HQL> TODO
+\end{lstlisting}
+\vskip 0.5\FrameSep
 
 \[ PV_T = \frac{N}{(1+R_T)^n} \]
 
@@ -251,6 +259,16 @@ Continuous compounding is defined as taking the limit of the discrete compoundin
 \[ 
 FV=\lim_{n \to \infty} N \left(1+\frac{R}{n}\right)^{nT}=Ne^{RT}
 \]
+
+The continous compounding factors in HQL is defined as follows:
+
+Example:
+
+\vskip 0.5\FrameSep
+\begin{lstlisting}
+HQL> TODO
+\end{lstlisting}
+\vskip 0.5\FrameSep
 
 %\begin{minipage}{\linewidth}
 %\begin{figure}[h]
@@ -299,6 +317,15 @@ doinside=\small
   \bottomrule
 }
 
+The table above was verified using HQL, below follows some some example of converting between
+different compounding methods:
+
+\vskip 0.5\FrameSep
+\begin{lstlisting}
+HQL> let discreteRate = InterestRate (Exponential Annually 5.0)
+\end{lstlisting}
+\vskip 0.5\FrameSep
+
 \subsection{Calculating present and future value}
 %To calculate the present value of a future cash flow we use the discount factor
 %to scale the amount:
@@ -331,6 +358,18 @@ p(t,T)=e^{-r(T-t)}; T>t
 \]
 Which equals the \textit{zero-coupon unit bond}, with face $N=1$. The discount factor
 can be seen as entities in a vector, the \textit{discount function},
+
+\vskip 0.5\FrameSep
+\begin{lstlisting}
+HQL> zipWith (*) (discountFactors (interestRate Continuous 5.0) 5 4 <*> pure 0) [1000,1500,1000,2000]
+\end{lstlisting}
+\vskip 0.5\FrameSep
+yields the following output:
+\vskip 0.5\FrameSep
+\begin{lstlisting}[style=Output]
+[951.229424500714,1357.2561270539393,860.7079764250578,1637.4615061559637]
+\end{lstlisting}
+\vskip 0.5\FrameSep
 
 \[
 \mathbf{df} = (p(t,T_1), ..., p(t,T_n))
@@ -384,8 +423,8 @@ yields the following output:
 
 \section{Interest rates}
 
-- annualized rate (nominal rate)
-- actual rate
+Interest rates determain the rate at which money is borrowed, and exist for various maturities. Typically interest rates are quoted on an annual basis, which means the interest rate specifies the annual growth on capital.
+
 
 \ctable[
 caption = The caption is centered by default,
@@ -406,7 +445,7 @@ center,
 
 \subsection{Spot rates}
 Spot rates refers to rates that are observable at present time in the market.
-Spot rates are quoted on an annualized basis.
+Spot rates are quoted on an annualized basis. Spot rates are for example LIBOR spot rates, see below. 
 
 \subsection{Forward rates}
 Forward rates indicate the interest rate between two future dates [S,T]
@@ -481,7 +520,7 @@ doinside=\small
 ]{ll}{
 }{
   \toprule
-    Period & LIBOR \\
+    Period & Annual rate \\
   \midrule
     1 month & 0.17\% \\ 
     3 month & 0.24\% \\
@@ -540,16 +579,36 @@ For example, the three-month forward LIBOR for the period $[S,T]$, where $T=S+\t
 L(t,T) = F(t;S,S+\tau) = F(t;S,T), T>S
 \]
 
-\subsubsection{Calculating LIBOR rates}
+\subsubsection{Using LIBOR rates}
+LIBOR rates are quoted intra daily, but sometimes it is of interest to convert between spot rates and forward rates if one or the
+other is not quoted or available.
+
 
 \section{Interest rate Swaps}
+Interest rate swaps are interest rate instruments what are priceable, and consist of two parts. Typically for a swap, the
+two parts, called legs, are the floating leg and the fixed leg. The floating leg is in fact, for a vanilla swap, the floating spot rate whereas the fixed leg is fixed interest rate specified in the contract. A swap pays an amount at predefined intervals, according to the fixed and floating leg. One party will receive the floating rate, and the other the fixed rate of the swap.
+
 \subsection{Theory and valuation}
+A swap is valuated as a portfolio of a zero coupon bond and a floating coupon bond. The amount (positive or negative) depends on the holds of the contract, hence the one valuating it. 
+
 \subsection{Cash flows}
+Illustrate cash flows of a swap using figure...
+
+\section{Portfolio}
+A portfolio, is as the name suggests, a collection of position in financial instruments. Typically stocks, bonds, options, futures and so on. In this section we'll mainly discuss the portfolio supported in HQL. The portfolio is in itself priceable, which means one can get the present and future value of a portfolio, consisting of various instruments from the HQL library.
+
+The portfolio is also used as the building block for swaps. (to be continued...)
+
 \section{Bonds}
+Bonds refers to one or more cash flows to be received in the future, and are thus dept instruments. One typically talk about the issuer and the holder of a bond. The issuer receives the intial payment of the bond, and the hold will receive one or more payments according to the predefined cash flows in the contract.
+
+(Several details about a bond is of interest: face, maturity, coupon rate, issue date etc...)
+
 \label{sec:fi}
 
 \subsection{Zero coupon bond}
-Zero coupon bond and the discount factor
+The simples form of a bond is the zero coupon bond. This bond has only one cash flow specified, which till take place at the maturity date of the bond. Zero coupon bonds are sometimes refered to as discount bonds, because they are in fact discount factors scaled by the face value N.
+
 
 \subsection{Fixed coupon bond}
 Series of payments called coupons and a nominal value N (face value)
