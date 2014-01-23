@@ -19,14 +19,14 @@
 \usepackage{listings,setspace,framed}
 \usepackage{pgfplots}
 %\usepackage{bashful}
-\usepackage{color} 
+\usepackage{color}
 \usepackage{tikz}
 \usetikzlibrary{decorations.pathreplacing}
 \usepackage{lmodern,inconsolata}
 \usepackage{array, xcolor, lipsum, bibentry, fancyhdr}
 \usepackage[absolute]{textpos}
 \usepackage[top=25mm, bottom=25mm, left=22mm, right=22mm]{geometry} %Layout of page
-\usepackage{lastpage} % number of last page 
+\usepackage{lastpage} % number of last page
 
 %\usepackage[table]{xcolor}
 %\usepackage[table]{xcolor}
@@ -34,7 +34,7 @@
 %\usepackage{filter}
 %\usepackage{vim}
 \usepackage{caption}
-\usepackage[compatibility=true]{caption} 
+\usepackage[compatibility=true]{caption}
 \usepackage{etex}
 \usepackage{ctable}
 \captionsetup[figure]{labelfont=bf}
@@ -76,13 +76,13 @@ stringstyle=\color{black},tabsize=2,backgroundcolor=\color{lightgray},language=H
 }
 
 \pagestyle{fancy}
-\fancyhf{} 
- 
+\fancyhf{}
+
 \lhead{\uppercase{Hiperfit Quant Library}}
 \rhead{\nouppercase{\rightmark}}
- 
+
 \cfoot{\thepage\ / \phantomsection\pageref*{LastPage}}
- 
+
 \lfoot{
 \begin{textblock*}{100mm}(30mm, 280mm )
 \end{textblock*}
@@ -123,7 +123,7 @@ stringstyle=\color{black},tabsize=2,backgroundcolor=\color{lightgray},language=H
   basicstyle=\fontsize{10}{12}\color{black}\ttfamily,
   frame=single,
   framesep=2pt,
-  framerule=0.6pt  
+  framerule=0.6pt
 }
 
 \lstdefinestyle{Output}{
@@ -179,7 +179,7 @@ stringstyle=\color{black},tabsize=2,backgroundcolor=\color{lightgray},language=H
 	\end{lstlisting}
 
 	\section{Terminology}
-	In this section you'll find a the most commonly used words in this document, which are specific to the domain of finance and fixed income valuation.
+	In this section you'll find the most commonly used words in this document, which are specific to the domain of finance and fixed income valuation.
 
 	\ctable[
 	caption = Terminology,
@@ -192,10 +192,10 @@ stringstyle=\color{black},tabsize=2,backgroundcolor=\color{lightgray},language=H
 	  \midrule
 		Settlement & Settlement date \\
 		Maturity & Maturity date \\
-		Period & Coupon payment period \\ 
-		Basis & Day-count basis \\ 
-		EndMonthRule & End-of-month payment rule \\ 
-		IssueDate & Bond issue date \\ 
+		Period & Coupon payment period \\
+		Basis & Day-count basis \\
+		EndMonthRule & End-of-month payment rule \\
+		IssueDate & Bond issue date \\
 		Term & - \\
 		Tenor & - \\
 		LIBOR & - \\
@@ -206,6 +206,8 @@ stringstyle=\color{black},tabsize=2,backgroundcolor=\color{lightgray},language=H
 		Annualized rate & - \\
 	  \bottomrule
 	}
+
+
 
 \begin{comment}
 %Move to report
@@ -223,7 +225,7 @@ Figure ~\ref{fig:comp01} illustrates the effect of various interest during a per
 \label{fig:comp01}
 \end{minipage}
 
-\subsubsection{Discrete compounding}
+\subsubsection{Exponential compounding}
 Discrete compounding refers to compounding with fixed and known intervals of compounding, typically annually, semi-annually or quarterly.
 
 \subsubsection{Linear compounding}
@@ -256,13 +258,13 @@ HQL> TODO
 
 Periodic compounding where $n$ is the number of times interest compounded per period
 
-\[ 
+\[
 FV_T=N\left( 1 + \frac{R}{n}  \right)^{nT}
 \]
 
 \subsection{Continuous compounding}
 Continuous compounding is defined as taking the limit of the discrete compounding as n goes to infinity,
-\[ 
+\[
 FV=\lim_{n \to \infty} N \left(1+\frac{R}{n}\right)^{nT}=Ne^{RT}
 \]
 
@@ -402,12 +404,18 @@ yields the following output:
 \end{lstlisting}
 \end{comment}
 
+% Motiovation
+        \section{Motivation}
+        The motive behind HQL is to support the workflow behind analysis and pricing of fixed income instruments.
+        Using a statically typed language with support for an explorative workflow using via the REPL, HQL aims to be a handy
+        library and tool.
+
 %% ============================================================================================
 %% Interest rate
 %% ============================================================================================
 
-	\section{Interest rates}
-	It seems natural to start by covering interest rates. They are part of the fixed income module covered in this documentation.
+	\section{Interest rates and compounding}
+	It seems natural to start by covering compounding and interest rates, when they together make up the fundamentsls of the concept: time value of money. They are part of the fixed income module covered in this documentation.
 	Interest rates determain the rate at which money is borrowed, and exist for various maturities. Typically interest rates are quoted on an annual basis, which means the 	interest rate specifies the annual growth on capital.
 
 	\ctable[
@@ -418,7 +426,7 @@ yields the following output:
 	}{
 	  \toprule
 		HQL & Meaning \\
-	  \midrule		
+	  \midrule
 		\ttfamily{Continuous} & Continuous compounding\\
 		\ttfamily{Exponential} & Discrete compounding\\
 		\ttfamily{Linear} & Linear or simple compounding\\
@@ -478,9 +486,9 @@ yields the following output:
 		15.0000      & 15.5625      & 15.8650    & 16.0755  & 16.1583 & 16.1798 & 16.1834     \\
 		20.0000      & 21.0000      & 21.5506    & 21.9391  & 22.0934 & 22.1336 & 22.1403     \\
 		25.0000      & 26.5625      & 27.4429    & 28.0732  & 28.3256 & 28.3916 & 28.4025     \\
-		50.0000      & 56.2500      & 60.1807    & 63.2094  & 64.4788 & 64.8157 & 64.8721     \\ 
+		50.0000      & 56.2500      & 60.1807    & 63.2094  & 64.4788 & 64.8157 & 64.8721     \\
 	  \bottomrule
-	}	
+	}
 
 	In this example the table below will be generated by HQL.
 
@@ -498,9 +506,9 @@ yields the following output:
 	Interest rate instruments refer to traded and listed interest rates, such as LIBOR spot and LIBOR forward rates.
 	Using the interface of HQL, it's possible to create arbitrary spot and forward rates. LIBOR is used here for illustrative purposes,
 	and because HQL provides an interface to work with LIBOR rates.
-	
+
 	\ctable[
-	caption = The caption is centered by default,
+	caption = Typicall market data
 	pos = h,
 	doinside=\small,
 	center,
@@ -518,10 +526,10 @@ yields the following output:
 
 	\subsection{Spot rates}
 	Spot rates refers to rates that are observable at present time in the market.
-	Spot rates are quoted on an annualized basis. Spot rates are for example LIBOR spot rates, see below. 
+	Spot rates are quoted on an annualized basis. Spot rates are for example LIBOR spot rates, see below.
 
 	\subsection{Forward rates}
-	Forward rates indicate the interest rate between two future dates [S,T]
+	Forward rates are used to price future cash flows and bonds, and to construct term structures. Forward rates indicate the interest rate between two future dates [S,T]
 	\[
 	(1+R_T)^T=(1+R_S)^S(1+R(t;S,T))^{T-S}; T>S
 	\]
@@ -551,7 +559,7 @@ yields the following output:
 	]{ll}{
 	}{
 	  \toprule
-		Parameter & Value \\ 
+		Parameter & Value \\
 	  \midrule
 		Compounding & Semi-annually ($n=2$)\\
 		$\tau_1$ & 0.25\\
@@ -572,11 +580,14 @@ yields the following output:
 	\end{lstlisting}
 
 	\subsection{LIBOR}
-	The LIBOR (London InterBank Offered Rate) interest rate is the most important interbank rate
+        The LIBOR is choosen as an example of a quoted rate because it's the most widespread reference rate today.
+        The LIBOR (London InterBank Offered Rate) interest rate is the most important interbank rate
 	used for fixed income valuation. LIBOR rates are quoted on a simple compounding basis with maturities
 	from overnight to 12 months.
 
-	The rate quoted is the annualized rate, to calculate the actual rate we do as follows...
+	The rate quoted is the annualized rate, to calculate the actual rate we do as follows.
+
+        (Insert formula and HQL example)
 
 	\begin{minipage}{\linewidth}
 	\makebox[\linewidth]{%
@@ -603,7 +614,7 @@ yields the following output:
 	  \toprule
 		Period & Annual rate \\
 	  \midrule
-		1 month & 0.17\% \\ 
+		1 month & 0.17\% \\
 		3 month & 0.24\% \\
 		6 month & 0.35\% \\
 		12 month & 0.59\% \\
@@ -614,10 +625,12 @@ yields the following output:
 	%$R$ is the annual rate
 	%The value after m compounding periods with n compounding periods per year
 
-	\[ 
+        The discount factor $p(t,S)$, is also called a nominal zero bond, is the fair value at time $t$ with maturity $S$.
+
+	\[
 	1+(T-S)L=\frac{p(t,S)}{p(t,T)}
 	\]
-	\[ 
+	\[
 	e^{r(T-S)}=\frac{p(t,S)}{p(t,T)}
 	\]
 	\\
@@ -669,7 +682,7 @@ yields the following output:
 
 	A \textbf{term structure of interest rates} refers to the general relation between yield and maturity that exists in a given bond market. If the term structure is derived from zero-coupon bonds it forms a good basis for pricing analysis of \emph{any} bond.\\
 
-	A \textbf{yield curve} is a plot of a specific set of bond yields as a function of their maturity. This is not good for general pricing or valuation purposes, except for the specific bonds plotted. The key difference between a term structure and a yield curve is that we discount \emph{any} cashflow by using former, while the latter is only applicable for bonds who's yields correspond. Figure SOMETHING 
+	A \textbf{yield curve} is a plot of a specific set of bond yields as a function of their maturity. This is not good for general pricing or valuation purposes, except for the specific bonds plotted. The key difference between a term structure and a yield curve is that we discount \emph{any} cashflow by using former, while the latter is only applicable for bonds who's yields correspond. Figure SOMETHING
 
 	The term structure or the yield curve.
 	Created from zero coupon bonds, zero yield curve
@@ -750,7 +763,7 @@ yields the following output:
 	Construct a term structure from bond prices, example
 
 	\subsubsection{Example - Treasury term structure}
-	In this example we are going to create a term structure form the data available for
+	In this example we are going to create a term structure from the data available for
 	US treasury bonds. Below is a table with data from 2013-12-26.
 
 	\ctable[
@@ -779,7 +792,7 @@ yields the following output:
 %% ============================================================================================
 
 	\section{Compounding}
-	Compounding refers to the method where money accumulates during the progess of time. The oppostite of compounding is discounting.
+	Compounding refers to the future value of a nominal amount. In other words money is worth more tomorrow due to interest and inflation. The effect of inflation is omitted in HQL. The oppostite of compounding is discounting.
 	When one talks about compounding, the interest rate or rate determines the rate at which the deposited amount of money will increase as a function of time.
 	Compounding is often separated into discrete and continous compounding.
 
@@ -813,7 +826,7 @@ yields the following output:
 
 	%The present value of a nominal future cash flow $N$ is therefore
 
-	We can create a compound factor in HQL using discrete exponential compounding as follows:
+	We can create a compound factor in HQL using  exponential compounding as follows:
 
 	\vskip 0.5\FrameSep
 	\begin{lstlisting}
@@ -825,13 +838,13 @@ yields the following output:
 
 	Periodic compounding where $n$ is the number of times interest compounded per period
 
-	\[ 
+	\[
 	FV_T=N\left( 1 + \frac{R}{n}  \right)^{nT}
 	\]
 
 	\subsection{Continuous compounding}
 	Continuous compounding is defined as taking the limit of the discrete compounding as n goes to infinity,
-	\[ 
+	\[
 	FV=\lim_{n \to \infty} N \left(1+\frac{R}{n}\right)^{nT}=Ne^{RT}
 	\]
 
@@ -995,7 +1008,7 @@ yields the following output:
 	]{llllll}{
 	}{
 	  \toprule
-		Maturity (years) & 1 & 2 & 3 & 4 & 5\\ 
+		Maturity (years) & 1 & 2 & 3 & 4 & 5\\
 	  \midrule
 		Interest rate & 3.00\% & 3.25\% & 3.50\% & 3.55\% & 3.30\%\\
 	  \bottomrule
@@ -1034,7 +1047,7 @@ yields the following output:
 
 	The yield of a bond is the discount rate that makes the future value of all future
 	cashflows equal to the present value. For coupon payments $C_i$, bond price $N_t^T$
-	at time $t$ with maturity $T$, the yield $y_t$ satisfies: 
+	at time $t$ with maturity $T$, the yield $y_t$ satisfies:
 
 	\[
 	N_t^T = \sum_{T_i > t} C_i (1+y_t)^{-(T_i - t)}, \hspace{2cm} \forall\; T_i < T
@@ -1061,7 +1074,7 @@ yields the following output:
 
 	We now present the bond types supported in HQL.
 
-	
+
 
 	%% ---------------------------------------------------------------
 	%% Annuity
@@ -1200,7 +1213,7 @@ yields the following output:
 	p(t) = N \cdot p(t,T_n)+\sum_{i=1}^{n} (c_i \cdot p(t,T_i))
 	\]
 	\[
-	\lim_{x \to \infty} p(t,\infty)=\left[r\delta\sum_{i=1}^{\infty} p(t,T_i)\right]\cdot N = 
+	\lim_{x \to \infty} p(t,\infty)=\left[r\delta\sum_{i=1}^{\infty} p(t,T_i)\right]\cdot N =
 	\sum_{i=0}^{\infty} p(t,T_i) \cdot \frac{\delta N}{e^{rT}} \cdot \to \frac{\delta N}{e^{rT}}\left[ \frac{e^{rT}}{r}\right] = \frac{\delta N}{r}
 	\]
 	Which means the present value of the consol bond is represented by the the following formula:
@@ -1321,7 +1334,7 @@ yields the following output:
 	two parts, called legs, are the floating leg and the fixed leg. The floating leg is in fact, for a vanilla swap, the floating spot rate whereas the fixed leg is fixed interest rate specified in the contract. A swap pays an amount at predefined intervals, according to the fixed and floating leg. One party will receive the floating rate, and the other the fixed rate of the swap.
 
 	\subsubsection{Theory and valuation}
-	A swap is valuated as a portfolio of a zero coupon bond and a floating coupon bond. The amount (positive or negative) depends on the holds of the contract, hence the one valuating it. 
+	A swap is valuated as a portfolio of a zero coupon bond and a floating coupon bond. The amount (positive or negative) depends on the holds of the contract, hence the one valuating it.
 
 	\subsubsection{Cash flows}
 	Illustrate cash flows of a swap using figure...
@@ -1344,10 +1357,12 @@ yields the following output:
 %% ============================================================================================
 %% The Portfolio
 %% ============================================================================================
+\begin{comment}
 	\section{The Portfolio}
 	A portfolio, is as the name suggests, a collection of position in financial instruments. Typically stocks, bonds, options, futures and so on. In this section we'll mainly discuss the portfolio supported in HQL. The portfolio is in itself priceable, which means one can get the present and future value of a portfolio, consisting of various instruments from the HQL library.
 
 	The portfolio is also used as the building block for swaps. (to be continued...)
+\end{comment}
 
 %% ============================================================================================
 %% Day-count conventions
@@ -1368,15 +1383,15 @@ yields the following output:
 	  \toprule
 		Convention & Time interval & $\delta$ \\
 	  \midrule
-		Actual/365 & Annually & 1.0 \\ 
-		180/360 & Semi-annually & 0.5 \\ 
-		90/360 & Quarterly & 0.25 \\ 
+		Actual/365 & Annually & 1.0 \\
+		180/360 & Semi-annually & 0.5 \\
+		90/360 & Quarterly & 0.25 \\
 		30/360 & Monthly & 1/12 \\
 	  \bottomrule
 	}
 
 	Time is measured in years. Day-count conventions describe the time measurement between two
-	dates t and T. Dates are expressed by (day, month, year). 
+	dates t and T. Dates are expressed by (day, month, year).
 
 	\[ \tau = \boldsymbol{T} - \boldsymbol{t};  \left\{
 	  \begin{array}{l l}
@@ -1402,7 +1417,7 @@ yields the following output:
 	\]
 
 	\subsection{Business day conventions}
-	A business day convention is a convention for adjustment of dates when a specified date is not a good business day. 
+	A business day convention is a convention for adjustment of dates when a specified date is not a good business day.
 	\begin{description}
 	  \item[Following] \hfill \\
 	The adjusted date is the following good business day \ldots
