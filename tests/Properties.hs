@@ -25,18 +25,18 @@ main = defaultMain tests
 
 ----------- Interest rates
 
-interestRate1 = continuousRate (SimpleSpotRate 1.0025 (1/2)) @=~? 1.005016718885754
-interestRate2 = continuousRate (SimpleSpotRate 5.0625 (1/2)) @=~? 5.127116313804603
-interestRate3 = continuousRate (CompoundedSpotRate 15.0000 1) @=~? 16.183424272828304
-interestRate4 = continuousRate (CompoundedSpotRate 21.5506 (1/4)) @=~? 22.14170314225603
-interestRate5 = continuousRate (ContinuousSpotRate 22.1403 0) @=~? 22.1403
+--interestRate1 = continuousRate (SimpleSpotRate 1.0025 (1/2)) @=~? 1.005016718885754
+--interestRate2 = continuousRate (SimpleSpotRate 5.0625 (1/2)) @=~? 5.127116313804603
+--interestRate3 = continuousRate (CompoundedSpotRate 15.0000 1) @=~? 16.183424272828304
+--interestRate4 = continuousRate (CompoundedSpotRate 21.5506 (1/4)) @=~? 22.14170314225603
+--interestRate5 = continuousRate (ContinuousSpotRate 22.1403 0) @=~? 22.1403
 
 ----------- Discount Factor
 
-discountFactor1 = df (discountFactor (ContinuousSpotRate 8.3 0.5) 0.5) @=~? 0.9593493353414723
-discountFactor2 = df (discountFactor (CompoundedSpotRate 8.5 0.5) 0.5) @=~? 0.9592326139088729
-discountFactor3 = df (discountFactor (CompoundedSpotRate 8.5 (1/12)) 3) @=~? 0.7756133702070988
-discountFactor4 = df (discountFactor (SimpleSpotRate 5.6124 (1/2)) 1.5) @=~? 0.9203268231254242
+--discountFactor1 = df (discountFactor (ContinuousSpotRate 8.3 0.5) 0.5) @=~? 0.9593493353414723
+--discountFactor2 = df (discountFactor (CompoundedSpotRate 8.5 0.5) 0.5) @=~? 0.9592326139088729
+--discountFactor3 = df (discountFactor (CompoundedSpotRate 8.5 (1/12)) 3) @=~? 0.7756133702070988
+--discountFactor4 = df (discountFactor (SimpleSpotRate 5.6124 (1/2)) 1.5) @=~? 0.9203268231254242
 
 {-
 -- FORWARD RATE
@@ -59,18 +59,18 @@ tests = [
 		--testCase "bondTest1" bondTest1
 	],
 	testGroup "InterestRate" [
-		testCase "interestRate1" interestRate1,
-		testCase "interestRate2" interestRate2,
-		testCase "interestRate3" interestRate3,
-		testCase "interestRate3" interestRate4,
-		testCase "interestRate3" interestRate5
+		--testCase "interestRate1" interestRate1,
+		--testCase "interestRate2" interestRate2,
+		--testCase "interestRate3" interestRate3,
+		--testCase "interestRate3" interestRate4,
+		--testCase "interestRate3" interestRate5
 		-- TODO: Add test cases
 	],
 	testGroup "Discounting" [
-		testCase  "discountFactor1" discountFactor1,
-		testCase  "discountFactor2" discountFactor2,
-		testCase  "discountFactor3" discountFactor3,
-		testCase  "discountFactor4" discountFactor4
+		--testCase  "discountFactor1" discountFactor1,
+		--testCase  "discountFactor2" discountFactor2,
+		--testCase  "discountFactor3" discountFactor3,
+		--testCase  "discountFactor4" discountFactor4
 		--testCase  "discountFactor5" discountFactor5
 	],
 	testGroup "TermStructure" [

@@ -39,7 +39,7 @@ convertFreq freq = case freq of
     Other d      -> fromIntegral d
 
 newtype ContinuousRate = ContinuousRate Rate deriving (Show)
-newtype FlatRate       = FlatRate Rate deriving (Show)
+newtype SimpleRate       = SimpleRate Rate deriving (Show)
 data ExponentialRate   = ExponentialRate Rate Frequency deriving (Show)
 
 class InterestRate a where
@@ -51,6 +51,7 @@ class InterestRate a where
 
   -- | Annuallize the rate
   --annuallize :: a -> a TODO
+  --annuallize :: a -> SimpleRate    
 
   -- | Get the intrinsic rate
   rate :: a -> Rate
@@ -58,20 +59,20 @@ class InterestRate a where
 
 instance InterestRate ContinuousRate where
   continuousRate = id
-  discountFactor (ContinuousRate r) offset = exp (-r*offset)
+  discountFactor (ContinuousRate r) offset = exp (-rr*offset) where rr = r / 100.0
   rate (ContinuousRate r) = r
 
 instance InterestRate ExponentialRate where	 
-  continuousRate (ExponentialRate r n) = ContinuousRate $ (exp(r*nn) - 1)/nn 
-		where nn = convertFreq n
-  discountFactor (ExponentialRate r n) offset = (1/(1+r*nn))**(offset/nn) 
-		where nn = convertFreq n
-  rate (ExponentialRate r _) = r
+  continuousRate (ExponentialRate r n) = ContinuousRate $ (exp((r/100.0)*nn) - 1)/nn*100.0 
+		where nn = convertFreq n;
+  discountFactor (ExponentialRate r n) offset = 1/((1+(r/100.0)*nn)**(offset/nn)) 
+		where nn = convertFreq n;
+  rate (ExponentialRate r _) = r*100.0
 	
-instance InterestRate FlatRate where
-  continuousRate (FlatRate r) = ContinuousRate $ exp r
-  discountFactor (FlatRate r) = const $ recip r+1
-  rate (FlatRate r) = r
+instance InterestRate SimpleRate where
+  continuousRate (SimpleRate r) = ContinuousRate $ (exp (r/100.0) - 1) * 100.0
+  discountFactor (SimpleRate r) = const $ 1/(1+r/100.0)
+  rate (SimpleRate r) = r
 
 -- | A term structure is a yield curve constructed of
 --- solely of zero rates.
