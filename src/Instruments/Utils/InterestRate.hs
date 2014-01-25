@@ -30,13 +30,12 @@ data Frequency = Annually
 		         deriving (Show, Eq)
 
 convertFreq :: Frequency -> Double
-convertFreq freq = case freq of
-    Annually     -> 1
-    SemiAnnually -> 2
-    Quarterly    -> 4
-    Monthly      -> 12
-    Daily        -> 365
-    Other d      -> fromIntegral d
+convertFreq Annually     = 1
+convertFreq SemiAnnually = 2
+convertFreq Quarterly    = 4
+convertFreq Monthly      = 12
+convertFreq Daily        = 365
+convertFreq (Other d)    = fromIntegral d
 
 newtype ContinuousRate = ContinuousRate Rate deriving (Show)
 newtype SimpleRate       = SimpleRate Rate deriving (Show)
