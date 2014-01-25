@@ -1,3 +1,4 @@
+
 -- |
 -- Module:      Instruments.FixedIncome.Bonds.Bonds
 -- Copyright:   (c) 2013 HIPERFIT
@@ -7,8 +8,9 @@
 -- Portability: portable
 --
 -- Types and functions for working with interest rates
-
 module Visualize where
+{--
+
 import Graphics.EasyPlot
 import Utils.Calendar
 import Utils.Currency
@@ -50,3 +52,57 @@ pms = zip points cashes
 coords = toPlotData pms
 
 testPlot = plot X11 $ Data2D [Title "Cashflow Diagram"] [] coords
+
+--}
+
+import qualified Graphics.Gnuplot.Advanced as GP
+
+import qualified Graphics.Gnuplot.MultiPlot as MultiPlot
+
+import qualified Graphics.Gnuplot.Frame as Frame
+import qualified Graphics.Gnuplot.Frame.OptionSet as Opts
+import qualified Graphics.Gnuplot.Frame.OptionSet.Style as OptsStyle
+import qualified Graphics.Gnuplot.Frame.OptionSet.Histogram as Histogram
+
+import qualified Graphics.Gnuplot.Graph as Graph
+
+import qualified Graphics.Gnuplot.Plot.ThreeDimensional as Plot3D
+import qualified Graphics.Gnuplot.Graph.ThreeDimensional as Graph3D
+
+import qualified Graphics.Gnuplot.Plot.TwoDimensional as Plot2D
+import qualified Graphics.Gnuplot.Graph.TwoDimensional as Graph2D
+import Graphics.Gnuplot.Plot.TwoDimensional (linearScale, )
+
+import qualified Graphics.Gnuplot.LineSpecification as LineSpec
+
+import qualified Data.Time as Time
+
+import Control.Monad (liftM2, )
+import Data.Array (listArray, )
+import Data.Foldable (foldMap, )
+import Data.Monoid (mappend, mconcat, )
+
+
+cashflowDiagram :: [Double] -> Frame.T (Graph2D.T Int Double)
+cashflowDiagram values = 
+   Frame.cons (
+      Opts.title "HQL Cashflow Diagram" $
+      Histogram.clusteredGap 3 $
+      --Opts.boxwidthAbsolute 0.9 $
+      Opts.yRange2d (0,(maximum values)+(minimum values)) $
+      OptsStyle.fillBorderLineType (-1) $
+      OptsStyle.fillSolid $
+      Opts.keyOutside $
+      --Opts.xTicks2d
+         --[("0", 0), ("1", 1), ("2", 2), ("3", 3), ("4", 4), ("5", 5)] $
+      Opts.deflt) $
+   foldMap (\(title,dat) ->
+      fmap (Graph2D.lineSpec (LineSpec.title title LineSpec.deflt)) $
+      Plot2D.list Graph2D.histograms dat) $
+   ("Cashflow", values) :
+   []
+
+--test1 :: IO ()
+--test1 = sequence_ $ GP.plotDefault $ cashflowDiagram [100,100,100,100,1100] : []
+
+testPlot = GP.plotDefault $ cashflowDiagram [500,500,500,500,1000]
