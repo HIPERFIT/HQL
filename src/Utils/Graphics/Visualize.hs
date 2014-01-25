@@ -3,7 +3,7 @@
 -- Module:      Instruments.FixedIncome.Bonds.Bonds
 -- Copyright:   (c) 2013 HIPERFIT
 -- License:     BSD-3
--- Maintainer:  Andreas Bock <bock@andreasbock.dk>
+-- Maintainer:  Johan Astborg, Andreas Bock <bock@andreasbock.dk>
 -- Stability:   experimental
 -- Portability: portable
 --
@@ -86,17 +86,18 @@ import Data.Monoid (mappend, mconcat, )
 cashflowDiagram :: [Double] -> Frame.T (Graph2D.T Int Double)
 cashflowDiagram values = 
    Frame.cons (
-      Opts.title "HQL Cashflow Diagram" $
+      Opts.title "HQL Cashflow Diagram" $      
       Histogram.clusteredGap 3 $
       --Opts.boxwidthAbsolute 0.9 $
       Opts.yRange2d (0,(maximum values)+(minimum values)) $
       OptsStyle.fillBorderLineType (-1) $
+      
       OptsStyle.fillSolid $
       Opts.keyOutside $
-      --Opts.xTicks2d
-         --[("0", 0), ("1", 1), ("2", 2), ("3", 3), ("4", 4), ("5", 5)] $
+      Opts.xTicks2d
+         [("0", 0), ("1", 1), ("2", 2), ("3", 3), ("4", 4), ("5", 5)] $
       Opts.deflt) $
-   foldMap (\(title,dat) ->
+      foldMap (\(title,dat) ->
       fmap (Graph2D.lineSpec (LineSpec.title title LineSpec.deflt)) $
       Plot2D.list Graph2D.histograms dat) $
    ("Cashflow", values) :
