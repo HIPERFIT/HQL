@@ -23,7 +23,8 @@ library
     --Utils.DayCount,
     Instruments.Utils.InterestRate,
     Instruments.Utils.TermStructure,
-    Instruments.Utils.Discounting
+    Instruments.Utils.Discounting,
+    Utils.Graphics.Visualize
     --Instruments.FixedIncome.Bonds.Bonds
   other-modules:
 --   Instruments.Utils.TermStructure,
@@ -38,7 +39,9 @@ library
     old-locale,
     template-haskell >= 2.4,
     text >= 0.11.1.0,
-    time
+    time,
+    array >= 0.4.0.1,
+    gnuplot >= 0.5.2
   
   ghc-options: -O2 -Wall
 

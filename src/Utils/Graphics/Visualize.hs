@@ -1,6 +1,6 @@
 
 -- |
--- Module:      Instruments.FixedIncome.Bonds.Bonds
+-- Module:      Utils.Graphics.Visualize
 -- Copyright:   (c) 2013 HIPERFIT
 -- License:     BSD-3
 -- Maintainer:  Johan Astborg, Andreas Bock <bock@andreasbock.dk>
@@ -8,7 +8,7 @@
 -- Portability: portable
 --
 -- Types and functions for working with interest rates
-module Visualize where
+module Utils.Graphics.Visualize where
 {--
 
 import Graphics.EasyPlot
