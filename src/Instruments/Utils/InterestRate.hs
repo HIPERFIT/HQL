@@ -15,18 +15,19 @@ type Rate = Double
 type Maturity = Double
 type DiscountFactor = Double
 type Offset = Double
---type Frequency = Double
 
 data Compounding = Continuous 
-        	 | Exponential
-		 | Linear deriving (Show)
+        	     | Exponential
+		         | Linear 
+                 deriving (Show)
 
 data Frequency = Annually
                  | SemiAnnually
                  | Quarterly
                  | Monthly
-                 | Daily | Other Double 
-		deriving (Show, Eq)
+                 | Daily 
+                 | Other Int 
+		         deriving (Show, Eq)
 
 convertFreq :: Frequency -> Double
 convertFreq freq = case freq of
@@ -35,7 +36,7 @@ convertFreq freq = case freq of
     Quarterly    -> 4
     Monthly      -> 12
     Daily        -> 365
-    Other d      -> d
+    Other d      -> fromIntegral d
 
 newtype ContinuousRate = ContinuousRate Rate deriving (Show)
 newtype FlatRate       = FlatRate Rate deriving (Show)
@@ -58,12 +59,12 @@ class InterestRate a where
 instance InterestRate ContinuousRate where
   continuousRate = id
   discountFactor (ContinuousRate r) offset = exp (-r*offset)
-  rate (ContinuousRate r) = 1.0
+  rate (ContinuousRate r) = r
 
 instance InterestRate ExponentialRate where	 
   continuousRate (ExponentialRate r n) = ContinuousRate $ (exp(r*nn) - 1)/nn 
 		where nn = convertFreq n
-  discountFactor (ExponentialRate r n) offset = (1/(1+r*nn))**(offset/(nn :: Double)) 
+  discountFactor (ExponentialRate r n) offset = (1/(1+r*nn))**(offset/nn) 
 		where nn = convertFreq n
   rate (ExponentialRate r _) = r
 	
