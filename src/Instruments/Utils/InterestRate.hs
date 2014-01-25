@@ -13,6 +13,7 @@ type Maturity = Double
 type DiscountFactor = Double
 type Offset = Double
 type Frequency = Double
+-- data Frequency = Annual | Month | Semi | Quarter -- | Daily -- Problem!
 
 data Compounding = Continuous 
         		 | Exponential
@@ -35,7 +36,11 @@ instance InterestRate ContinuousRate where
 
 instance InterestRate ExponentialRate where
   continuousRate (ExponentialRate r n) = ContinuousRate $ (exp(r*n) - 1)/n
-  discountFactor (ExponentialRate r n) offset = (1/(1+r*n))**(offset/n)
+  discountFactor _ = undefined
+--   discountFactor (ExponentialRate r n) conv d0 d1 = (1/(1+(r*dcf)/n))**((diffTime d1 d0)*n) -- fromIntegral
+--     where dcf = modifier n d0 d1
+        -- n has to be the Frequence _data_ type, which combined with a dc convention , use dates instead of offset
+        -- Report fodder!!!
 
 instance InterestRate FlatRate where
   continuousRate (FlatRate r) = ContinuousRate $ exp r
@@ -43,8 +48,9 @@ instance InterestRate FlatRate where
 
 -- | A term structure is a yield curve constructed of
 --- solely of zero rates.
-newtype InterpolatedTermStructure = InterpolatedTermStructure (M.Map Maturity Rate)
-newtype AnalyticalTermStructure = AnalyticalTermStructure (Offset -> Rate)
+newtype DiscreteTermStructure     = DiscreteTermStructure (M.Map Maturity Rate)
+newtype LinearInterpolatedTermStructure = LinearInterpolatedTermStructure (M.Map Maturity Rate)
+newtype AnalyticalTermStructure   = AnalyticalTermStructure (Offset -> Rate)
 
 class TermStructure a where
   -- | Returns the yield for a maturity
@@ -57,9 +63,21 @@ class TermStructure a where
   -- | Returns the discount factor at an offset
   fwdRate :: a -> Maturity -> Maturity -> Maybe DiscountFactor
   fwdRate a m0 m1 = (/) <$> dfAt a m1 <*> dfAt a m0
+  
+  -- | Returns the discount factors given a list of offsets
+  dfsAt :: a -> [Maturity] -> [Maybe Rate]
+  dfsAt a ms = map (dfAt a) ms
 
-instance TermStructure InterpolatedTermStructure where
-  yieldAt (InterpolatedTermStructure ts) m = M.lookup m ts
+instance TermStructure DiscreteTermStructure where
+  yieldAt (DiscreteTermStructure ts) m = M.lookup m ts
 
+instance TermStructure LinearInterpolatedTermStructure where
+  yieldAt (LinearInterpolatedTermStructure ts) m = fndIdx m (M.assocs ts) >>= linear
+    where fndIdx b (k:l:ns)
+            | fst k < b && b < fst l = Just (k, l)
+            | otherwise = fndIdx b (l:ns)
+          fndIdx _ _ = Nothing
+          linear ((x0, y0), (x1, y1)) = return $ y0 + (y1-y0)*((m-x0)/(x1-x0))
+          
 instance TermStructure AnalyticalTermStructure where
   yieldAt (AnalyticalTermStructure f) m = return $ f m
