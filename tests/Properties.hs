@@ -23,7 +23,11 @@ main = defaultMain tests
       assertionMsg = "Expected : " ++ show expected ++
                      "\nActual   : " ++ show actual
 
------------ Interest rates
+----------- Interest rates (values from Table 3 in documentation)
+interestRate1 = (rate $ continuousRate $ ExponentialRate 1.0000 Annually) @=~? 1.005016708416795
+interestRate2 = (rate $ continuousRate $ ExponentialRate 1.0025 SemiAnnually) @=~? 1.005016718885754
+interestRate3 = (rate $ continuousRate $ ExponentialRate 1.0025 Quarterly) @=~? 1.0050605722981665
+interestRate4 = (rate $ continuousRate $ ExponentialRate 1.0046 Monthly) @=~? 1.0050206261866812
 
 --interestRate1 = continuousRate (SimpleSpotRate 1.0025 (1/2)) @=~? 1.005016718885754
 --interestRate2 = continuousRate (SimpleSpotRate 5.0625 (1/2)) @=~? 5.127116313804603
@@ -59,10 +63,10 @@ tests = [
 		--testCase "bondTest1" bondTest1
 	],
 	testGroup "InterestRate" [
-		--testCase "interestRate1" interestRate1,
-		--testCase "interestRate2" interestRate2,
-		--testCase "interestRate3" interestRate3,
-		--testCase "interestRate3" interestRate4,
+		testCase "interestRate1" interestRate1,
+		testCase "interestRate2" interestRate2,
+		testCase "interestRate3" interestRate3,
+		testCase "interestRate3" interestRate4
 		--testCase "interestRate3" interestRate5
 		-- TODO: Add test cases
 	],

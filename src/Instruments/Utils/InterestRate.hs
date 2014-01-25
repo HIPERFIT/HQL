@@ -61,12 +61,14 @@ instance InterestRate ContinuousRate where
   discountFactor (ContinuousRate r) offset = exp (-rr*offset) where rr = r / 100.0
   rate (ContinuousRate r) = r
 
+
+
 instance InterestRate ExponentialRate where	 
-  continuousRate (ExponentialRate r n) = ContinuousRate $ (exp((r/100.0)*nn) - 1)/nn*100.0 
+  continuousRate (ExponentialRate r n) = ContinuousRate $ (exp(r/(100*nn)) - 1)*nn*100
 		where nn = convertFreq n;
   discountFactor (ExponentialRate r n) offset = 1/((1+(r/100.0)*nn)**(offset/nn)) 
 		where nn = convertFreq n;
-  rate (ExponentialRate r _) = r*100.0
+  rate (ExponentialRate r _) = r
 	
 instance InterestRate SimpleRate where
   continuousRate (SimpleRate r) = ContinuousRate $ (exp (r/100.0) - 1) * 100.0
