@@ -207,204 +207,9 @@ stringstyle=\color{black},tabsize=2,backgroundcolor=\color{lightgray},language=H
 	  \bottomrule
 	}
 
-
-
-\begin{comment}
-%Move to report
-\section{Compounding}
-Compounding refers to the method where money accumulates during the progess of time. The oppostite of compounding is discounting.
-When one talks about compounding, the interest rate or rate determines the rate at which the deposited amount of money will increase as a function of time.
-Compounding is often separated into discrete and continous compounding.
-
-Figure ~\ref{fig:comp01} illustrates the effect of various interest during a period of ten years.
-
-\begin{minipage}{\linewidth}
-\makebox[\linewidth]{%
-  \includegraphics[keepaspectratio=true,scale=1.0]{gnuplot/comp02.eps}}
-\captionof{figure}{Continuous compounding with various rates}
-\label{fig:comp01}
-\end{minipage}
-
-\subsubsection{Exponential compounding}
-Discrete compounding refers to compounding with fixed and known intervals of compounding, typically annually, semi-annually or quarterly.
-
-\subsubsection{Linear compounding}
-$FV$, the future value in $T$ periods of a nominal $N$, is expressed as:
-
-\[
-FV_T = N(1+R_TT)
-\]
-
-where $R_T$ is the interest rate.
-
-\subsubsection{Exponential compounding}
-
-Future value of a nominal cash flow $N$ under exponential compounding over
-$n$ periods:
-
-\[ FV_T = N(1+R_T)^n \]
-
-%The present value of a nominal future cash flow $N$ is therefore
-
-We can create a compound factor in HQL using discrete exponential compounding as follows:
-
-\vskip 0.5\FrameSep
-\begin{lstlisting}
-HQL> TODO
-\end{lstlisting}
-\vskip 0.5\FrameSep
-
-\[ PV_T = \frac{N}{(1+R_T)^n} \]
-
-Periodic compounding where $n$ is the number of times interest compounded per period
-
-\[
-FV_T=N\left( 1 + \frac{R}{n}  \right)^{nT}
-\]
-
-\subsection{Continuous compounding}
-Continuous compounding is defined as taking the limit of the discrete compounding as n goes to infinity,
-\[
-FV=\lim_{n \to \infty} N \left(1+\frac{R}{n}\right)^{nT}=Ne^{RT}
-\]
-
-The continous compounding factors in HQL is defined as follows:
-
-Example:
-
-\vskip 0.5\FrameSep
-\begin{lstlisting}
-HQL> TODO
-\end{lstlisting}
-\vskip 0.5\FrameSep
-
-%\begin{minipage}{\linewidth}
-%\begin{figure}[h]
-%\centering
-%\includegraphics[scale=.50]{gnuplot/comp01.eps}
-%\caption{Continuous compounding with various rates}
-%\label{fig:digraph}
-%\end{figure}
-%\end{minipage}
-
-Figure ~\ref{fig:comp01} illustrates the effect of various interest during a period of ten years.
-
-\begin{minipage}{\linewidth}
-\makebox[\linewidth]{%
-  \includegraphics[keepaspectratio=true,scale=1.0]{gnuplot/comp01.eps}}
-\captionof{figure}{Continuous compounding with various rates}
-\label{fig:comp01}
-\end{minipage}
-
-\subsection{Transition between discrete and continuous}
-%Table of interest rates at various compounding frequencies.
-
-%\ab{Jost said we need to describe the table here}
-
-
-
-\vskip 0.5\FrameSep
-\begin{lstlisting}
-HQL> let discreteRate = InterestRate (Exponential Annually 5.0)
-\end{lstlisting}
-\vskip 0.5\FrameSep
-
-\subsection{Calculating present and future value}
-%To calculate the present value of a future cash flow we use the discount factor
-%to scale the amount:
-
-%We can calculate the future value by using the inverse of the discount factor above:
-
-To calculate present and future value in HQL, two objects are of particular interest:
-the DiscountFactor and the CompoundFactor. Let's start by using the DiscountFactor in an example
-where we have a monthly compounded interest rate of 8.5\% during a period of 3 years:
-\vskip 0.5\FrameSep
-\begin{lstlisting}
-HQL> let df = discountFactor (InterestRate (Periodic 12) 8.5) 3.0 0.0
-\end{lstlisting}
-We can use the previously defined DiscountFactor to discount an arbitrary amount. Let's say
-\$1000.00:
-\vskip 0.5\FrameSep
-\begin{lstlisting}
-HQL> df*1000.0
-\end{lstlisting}
-yields the following output:
-\vskip 0.5\FrameSep
-\begin{lstlisting}[style=Output]
-775.6133702070988
-\end{lstlisting}
-
-\subsection{The continuous discount factor}
-The \textit{continuous discount factor} with maturity $T$ at time $t$ is defined as,
-\[
-p(t,T)=e^{-r(T-t)}; T>t
-\]
-Which equals the \textit{zero-coupon unit bond}, with face $N=1$. The discount factor
-can be seen as entities in a vector, the \textit{discount function},
-
-\vskip 0.5\FrameSep
-\begin{lstlisting}
-HQL> zipWith (*) (discountFactors (interestRate Continuous 5.0) 5 4 <*> pure 0) [1000,1500,1000,2000]
-\end{lstlisting}
-\vskip 0.5\FrameSep
-yields the following output:
-\vskip 0.5\FrameSep
-\begin{lstlisting}[style=Output]
-[951.229424500714,1357.2561270539393,860.7079764250578,1637.4615061559637]
-\end{lstlisting}
-\vskip 0.5\FrameSep
-
-\[
-\mathbf{df} = (p(t,T_1), ..., p(t,T_n))
-\]
-
-In the same way, cash flows can be considered entities in a vector,
-
-\[
-\mathbf{cf} = (c_1, ..., c_i)
-\]
-
-For example, if we were to calculate the present value of a series of future cash flows,
-\[
-\mathbf{cf} = (\$1000.00,\$1500.00,\$1000.00,\$2000.00)
-\]
-We can multiply by the discount function with $T_n=n$ years and the rate at 5.00\% continuously compounded,
-\[
-p(0) = \mathbf{df}\cdot\mathbf{cf} = (e^{-rT_1},...,e^{-rT_n})\cdot(p(0,T_1), ...,p(0,T_4))=
-\]
-\[
-(e^{-0.05\cdot1},e^{-0.05\cdot2},e^{-0.05\cdot3},e^{-0.05\cdot4}) \cdot (\$1000.00,\$1500.00,\$1000.00,\$2000.00)=
-\]
-\[
-(\$951.23,\$1357.26,\$860.71,\$1637.46)
-\]
-
-The above calculation is done in HQL using the function \textit{zipWith} taking the discount function and the list of future cash flows as arguments.
-\vskip 0.5\FrameSep
-\begin{lstlisting}
-HQL> zipWith (*) (discountFactors (interestRate Continuous 5.0) 5 4 <*> pure 0) [1000,1500,1000,2000]
-\end{lstlisting}
-\vskip 0.5\FrameSep
-yields the following output:
-\vskip 0.5\FrameSep
-\begin{lstlisting}[style=Output]
-[951.229424500714,1357.2561270539393,860.7079764250578,1637.4615061559637]
-\end{lstlisting}
-\vskip 0.5\FrameSep
-A slightly modified version will return the sum of the cash flows. This is the basis of bond pricing, which is covered in section \nameref{sec:fi}.
-\vskip 0.5\FrameSep
-\begin{lstlisting}
-HQL> sum $ zipWith (*) (discountFactors (interestRate Continuous 5.0) 5 4 <*> pure 0) [1000,1500,1000,2000]
-\end{lstlisting}
-\vskip 0.5\FrameSep
-yields the following output:
-\vskip 0.5\FrameSep
-\begin{lstlisting}[style=Output]
-4806.655034135675
-\end{lstlisting}
-\end{comment}
-
+%% ============================================================================================
 % Motiovation
+%% ============================================================================================
         \section{Motivation}
         The motive behind HQL is to support the workflow behind analysis and pricing of fixed income instruments.
         Using a statically typed language with support for an explorative workflow using via the REPL, HQL aims to be a handy
@@ -435,7 +240,12 @@ yields the following output:
 
 	\vskip 0.5\FrameSep
 	\begin{lstlisting}
-	data Compounding = Continuous | Exponential | Linear deriving (Show)
+data Frequency = Annually
+                 | SemiAnnually
+                 | Quarterly
+                 | Monthly
+                 | Daily 
+                 | Other Int 
 	\end{lstlisting}
 	\vskip 0.5\FrameSep
 
@@ -451,9 +261,16 @@ yields the following output:
 	\subsection{Example 1 - The compounding methods}
 	\vskip 0.5\FrameSep
 	\begin{lstlisting}
-	HQL> TODO
+	ContinuousRate Rate deriving (Show)
 	\end{lstlisting}
 	\vskip 0.5\FrameSep
+	\begin{lstlisting}
+	SimpleRate Rate deriving (Show)
+	\end{lstlisting}
+	\vskip 0.5\FrameSep
+	\begin{lstlisting}
+	ExponentialRate Rate Frequency
+	\end{lstlisting}
 
 	Figure ~\ref{fig:comp01} illustrates the effect of various interest during a period of ten years.
 
@@ -464,7 +281,37 @@ yields the following output:
 	\label{fig:comp01}
 	\end{minipage}
 
-	\subsection{Example 2 - Compounding frequencies}
+	\subsection{Example 2 - The effect of the interest rate}
+
+	Let's look at an example how to calculate the compound factor using an interest rate of 10\% during 10 years:
+
+	\vskip 0.5\FrameSep
+	\begin{lstlisting}
+	compoundFactor (ExponentialRate 10 Annually) 10	
+	\end{lstlisting}
+	\vskip 0.5\FrameSep
+
+	yields the following output:
+	\vskip 0.5\FrameSep
+	\begin{lstlisting}[style=Output]
+	2.714080846608224
+	\end{lstlisting}
+
+	It's rather easy to make HQL produce a list of compound factors using a list of years:
+
+	\vskip 0.5\FrameSep
+	\begin{lstlisting}
+	map (\r -> compoundFactor (ExponentialRate r Annually) 10) [3,5,10]
+	\end{lstlisting}
+	\vskip 0.5\FrameSep
+
+	yields the following output:
+	\vskip 0.5\FrameSep
+	\begin{lstlisting}[style=Output]
+	[1.3439163793441222,1.6288946267774422,2.5937424601000023]
+	\end{lstlisting}
+
+	\subsection{Example 3 - Compounding frequencies}
 
 	The table below illustrates the effect of compounding at various frequencies. The nominal rate
 	is the annualized interest rate, compounded once per year. As the frequency increases, the discrete
@@ -494,9 +341,32 @@ yields the following output:
 
 	\vskip 0.5\FrameSep
 	\begin{lstlisting}
-	HQL> TODO
+	continuousRate $ ExponentialRate 1.0000 Annually
 	\end{lstlisting}
 	\vskip 0.5\FrameSep
+	\begin{lstlisting}[style=Output]
+	2.714080846608224
+	\end{lstlisting}
+
+	Instead, using a semi annual compounding with a value from table 3:
+
+	\begin{lstlisting}
+	continuousRate $ ExponentialRate 1.0025 SemiAnnually
+	\end{lstlisting}
+	\vskip 0.5\FrameSep
+	\begin{lstlisting}[style=Output]
+	2.714080846608224
+	\end{lstlisting}
+
+	Instead, using a quarterly compounding with a value from table 3:
+
+	\begin{lstlisting}
+	continuousRate $ ExponentialRate 1.0025 Quarterly
+	\end{lstlisting}
+	\vskip 0.5\FrameSep
+	\begin{lstlisting}[style=Output]
+	2.714080846608224
+	\end{lstlisting}
 
 
 %% ============================================================================================

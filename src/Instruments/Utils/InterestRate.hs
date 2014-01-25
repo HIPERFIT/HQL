@@ -48,6 +48,8 @@ class InterestRate a where
   -- | Returns the discount factor at an offset
   discountFactor :: a -> Offset -> DiscountFactor 
 
+  compoundFactor :: a -> Offset -> DiscountFactor 
+
   -- | Annuallize the rate
   --annuallize :: a -> a TODO
   --annuallize :: a -> SimpleRate    
@@ -59,6 +61,7 @@ class InterestRate a where
 instance InterestRate ContinuousRate where
   continuousRate = id
   discountFactor (ContinuousRate r) offset = exp (-rr*offset) where rr = r / 100.0
+  compoundFactor rate offset = 1 / (discountFactor rate offset)
   rate (ContinuousRate r) = r
 
 
@@ -68,11 +71,13 @@ instance InterestRate ExponentialRate where
 		where nn = convertFreq n;
   discountFactor (ExponentialRate r n) offset = 1/((1+(r/100.0)*nn)**(offset/nn)) 
 		where nn = convertFreq n;
+  compoundFactor rate offset = 1 / (discountFactor rate offset)
   rate (ExponentialRate r _) = r
 	
 instance InterestRate SimpleRate where
   continuousRate (SimpleRate r) = ContinuousRate $ (exp (r/100.0) - 1) * 100.0
   discountFactor (SimpleRate r) = const $ 1/(1+r/100.0)
+  compoundFactor rate offset = 1 / (discountFactor rate offset)
   rate (SimpleRate r) = r
 
 -- | A term structure is a yield curve constructed of

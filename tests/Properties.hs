@@ -23,7 +23,7 @@ main = defaultMain tests
       assertionMsg = "Expected : " ++ show expected ++
                      "\nActual   : " ++ show actual
 
------------ Interest rates (values from Table 3 in documentation)
+----------- Interest rates (values from Table 3 in documentation -- In percentage)
 interestRate1 = (rate $ continuousRate $ ExponentialRate 1.0000 Annually) @=~? 1.005016708416795
 interestRate2 = (rate $ continuousRate $ ExponentialRate 1.0025 SemiAnnually) @=~? 1.005016718885754
 interestRate3 = (rate $ continuousRate $ ExponentialRate 1.0025 Quarterly) @=~? 1.0050605722981665
