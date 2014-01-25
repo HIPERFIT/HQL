@@ -17,6 +17,7 @@ import qualified Data.List as L
 import Utils.Calendar
 import Utils.Currency
 import Utils.DayCount
+import Instruments.Utils.TermStructure
 import Instruments.Utils.InterestRate
 import Prelude hiding (sum)
 

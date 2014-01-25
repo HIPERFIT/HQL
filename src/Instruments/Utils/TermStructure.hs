@@ -1,64 +1,49 @@
-{-# LANGUAGE RankNTypes #-}
-module Instruments.Utils.TermStructure
-    (
-    Compounding(..),
-    InterestRate,
-    InterestRates(..),
-    TermStructure(..),
-    Rate,
-    Rates,
-    makeContinuous,
-    mc,
-    ) where
+-- Module:      Instruments.Utils.InterestRate
+-- Copyright:   (c) 2013 HIPERFIT
+-- License:     BSD-3
+-- Maintainer:  Johan Astborg, Andreas Bock <bock@andreasbock.dk>
+-- Portability: portable
+--
+-- Types and functions for working with interest rates.
+module Instruments.Utils.TermStructure where
+import Instruments.Utils.InterestRate
+import Control.Applicative
+import Data.Tuple
+import Data.Maybe
 import qualified Data.Map as M
-import Utils.Calendar
 
-type Rate = Double
-type Rates = [Double]
+-- | A term structure is a yield curve constructed of
+--- solely of zero rates.
+newtype DiscreteTermStructure     = DiscreteTermStructure (M.Map Maturity Rate)
+newtype LinearInterpolatedTermStructure = LinearInterpolatedTermStructure (M.Map Maturity Rate)
+newtype AnalyticalTermStructure   = AnalyticalTermStructure (Offset -> Rate)
 
--- TODO: LinearExponential
-data Compounding = Continuous
-                 | Linear Int 
-                 | Exponential Int deriving (Show) 
+class TermStructure a where
+  -- | Returns the yield for a maturity
+  yieldAt :: a -> Maturity -> Maybe Rate
 
-type InterestRate = Rate
+  -- | Returns the discount factor at an offset
+  dfAt :: a -> Maturity -> Maybe Rate
+  dfAt a m = fmap recip $ yieldAt a m
+ 
+  -- | Returns the discount factor at an offset
+  fwdRate :: a -> Maturity -> Maturity -> Maybe DiscountFactor
+  fwdRate a m0 m1 = (/) <$> dfAt a m1 <*> dfAt a m0
+  
+  -- | Returns the discount factors given a list of offsets
+  dfsAt :: a -> [Maturity] -> [Maybe Rate]
+  dfsAt a ms = map (dfAt a) ms
 
-data InterestRates = InterestRate Compounding Rate
-                   | InterestRates Compounding Rates
-                   | TermStructureRates Compounding TermStructure
+instance TermStructure DiscreteTermStructure where
+  yieldAt (DiscreteTermStructure ts) m = M.lookup m ts
 
------ New type for Interest rates (from QuantLib)
-
-mc :: Int -> Rate -> Rate
--- TODO: Check this
---mc 1 r = log(1+r)
---mc p r = log((1.0+r/(100*pp))**pp) where pp = fromIntegral p
-
-mc 1 r = log(1+r/100.0)*100.0
-mc p r = (log((1.0+r/(100.0*pp))**pp))*100 where pp = fromIntegral p
-
--- |Convert discrete compounding to continous
-makeContinuous :: Compounding -> Rate -> Rate
-makeContinuous Continuous r = r
-makeContinuous (Exponential n) r = mc n r
-makeContinuous (Linear n) r = log $ r*n'  ** recip n' where n' = fromIntegral n
-
-makePeriodic :: Compounding -> Rate -> Int -> Rate
-makePeriodic Continuous r n = (exp(r/(nn*100))-1)*100*nn where nn = fromIntegral n
-
--- Better to return interest rate, otherwise we don't know for sure what it is... ie Rate is what?
-
-type Points = M.Map Date Rate -- Assumes zero rates
-type InterpolatedTermStructure = Points
-type AnalyticalTermStructure = Double -> Double
-
-data TermStructure = Interpolated InterpolatedTermStructure
-                   | Analytical AnalyticalTermStructure
-
-instance Show TermStructure where
-    show (Interpolated _) = "InterpolatedTermStructure"
-    show (Analytical _) = "AnalyticalTermStructure"
-            
--- |Create an analytic term structure
-termStructure :: AnalyticalTermStructure -> TermStructure
-termStructure = Analytical
+instance TermStructure LinearInterpolatedTermStructure where
+  yieldAt (LinearInterpolatedTermStructure ts) m = fndIdx m (M.assocs ts) >>= linear
+    where fndIdx b (k:l:ns)
+            | fst k < b && b < fst l = Just (k, l)
+            | otherwise = fndIdx b (l:ns)
+          fndIdx _ _ = Nothing
+          linear ((x0, y0), (x1, y1)) = return $ y0 + (y1-y0)*((m-x0)/(x1-x0))
+          
+instance TermStructure AnalyticalTermStructure where
+  yieldAt (AnalyticalTermStructure f) m = return $ f m
