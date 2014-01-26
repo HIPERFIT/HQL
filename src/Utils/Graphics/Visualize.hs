@@ -36,12 +36,17 @@ import Data.Array (listArray, )
 import Data.Foldable (foldMap, )
 import Data.Monoid (mappend, mconcat, )
 
-cashflowDiagram :: [(String, Double)] -> Frame.T (Graph2D.T Int Double)
+-- HQL
+import Utils.Currency
+
+getAmount (Cash amount _) = amount
+
+cashflowDiagram :: [(String, Cash)] -> Frame.T (Graph2D.T Int Double)
 cashflowDiagram values = 
    Frame.cons (
-      Opts.title "HQL Cashflow Diagram" $      
+      Opts.title "HQL Cashflow Diagram" $
       Histogram.clusteredGap 3 $
-      Opts.yRange2d (0,(maximum $ map snd values)+(minimum $ map snd values)) $
+      Opts.yRange2d (0,(maximum $ map (getAmount . snd) values)+(minimum $ map (getAmount . snd) values)) $
       OptsStyle.fillBorderLineType (-1) $      
       OptsStyle.fillSolid $
       Opts.keyInside $
@@ -51,7 +56,9 @@ cashflowDiagram values =
       foldMap (\(title,dat) ->
       fmap (Graph2D.lineSpec (LineSpec.title title LineSpec.deflt)) $
       Plot2D.list Graph2D.histograms dat) $
-      [("Cashflow", (map snd values))] 
+      [("Cashflow", (map (getAmount . snd) values))] 
 
-testData = [("2014-06-01", 500),("2015-01-01", 500),("2015-06-01", 500),("2016-01-01", 500),("2016-06-01", 1500)]
+cash1 = Cash 500 USD
+cash2 = Cash 1500 USD
+testData = [("2014-06-01", cash1),("2015-01-01", cash1),("2015-06-01", cash1),("2016-01-01", cash1),("2016-06-01", cash2)]
 testPlot = GP.plotDefault $ cashflowDiagram testData

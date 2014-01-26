@@ -1,10 +1,12 @@
 -- Module:      Instruments.Utils.InterestRate
 -- Copyright:   (c) 2013 HIPERFIT
 -- License:     BSD-3
--- Maintainer:  Johan Astborg, Andreas Bock <bock@andreasbock.dk>
+-- Maintainer:  Johan Astborg <joastbg@gmail.com>
 -- Portability: portable
 --
--- Types and functions for working with interest rates.
+-- Types and functions for working with interest rates,
+-- compoudning and discounting.
+
 module Instruments.Utils.InterestRate where
 import Control.Applicative
 import Data.Tuple
@@ -14,13 +16,23 @@ import qualified Data.Map as M
 type Rate = Double
 type Maturity = Double
 type DiscountFactor = Double
+type CompoundFactor = Double
 type Offset = Double
 
+-- | Represents the type of compounding
+--
+-- For discrete exponential compounding, use Exponential.
+-- For discrete simple compounding use Simple.
+-- Continuous compounding is the default used in HQL internally.
 data Compounding = Continuous 
-        	     | Exponential
-		         | Linear 
+        	 | Exponential
+		 | Linear 
                  deriving (Show)
 
+-- | Represents the compounding frequency
+-- 
+-- An interest rate can have different compounding frequencies.
+-- For other frequencies than specified, use Other.
 data Frequency = Annually
                  | SemiAnnually
                  | Quarterly
@@ -38,7 +50,7 @@ convertFreq Daily        = 365
 convertFreq (Other d)    = fromIntegral d
 
 newtype ContinuousRate = ContinuousRate Rate deriving (Show)
-newtype SimpleRate       = SimpleRate Rate deriving (Show)
+newtype SimpleRate     = SimpleRate Rate deriving (Show)
 data ExponentialRate   = ExponentialRate Rate Frequency deriving (Show)
 
 class InterestRate a where
@@ -48,23 +60,17 @@ class InterestRate a where
   -- | Returns the discount factor at an offset
   discountFactor :: a -> Offset -> DiscountFactor 
 
-  compoundFactor :: a -> Offset -> DiscountFactor 
-
-  -- | Annuallize the rate
-  --annuallize :: a -> a TODO
-  --annuallize :: a -> SimpleRate    
+  -- | Returns the compound factor at an offset
+  compoundFactor :: a -> Offset -> CompoundFactor 
 
   -- | Get the intrinsic rate
   rate :: a -> Rate
-
 
 instance InterestRate ContinuousRate where
   continuousRate = id
   discountFactor (ContinuousRate r) offset = exp (-rr*offset) where rr = r / 100.0
   compoundFactor rate offset = 1 / discountFactor rate offset
   rate (ContinuousRate r) = r
-
-
 
 instance InterestRate ExponentialRate where	 
   continuousRate (ExponentialRate r n) = ContinuousRate $ (exp(r/(100*nn)) - 1)*nn*100
@@ -79,3 +85,5 @@ instance InterestRate SimpleRate where
   discountFactor (SimpleRate r) = const $ 1/(1+r/100.0)
   compoundFactor rate offset = 1 / discountFactor rate offset
   rate (SimpleRate r) = r
+
+
