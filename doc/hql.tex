@@ -181,6 +181,8 @@ stringstyle=\color{black},tabsize=2,backgroundcolor=\color{lightgray},language=H
 	\section{Terminology}
 	In this section you'll find the most commonly used words in this document, which are specific to the domain of finance and fixed income valuation.
 
+	\framebox{TODO!}
+
 	\ctable[
 	caption = Terminology,
 	pos = !ht,
@@ -218,7 +220,34 @@ stringstyle=\color{black},tabsize=2,backgroundcolor=\color{lightgray},language=H
         The motive behind HQL is to support the workflow behind analysis and pricing of fixed income instruments.
         Using a statically typed language with support for an explorative workflow using via the REPL, HQL aims to be a handy
         library and tool. Suppose we want to obtain the price of a bullet bond, or vanilla bond, with coupons and a repayment of the face at maturity.
-	We'll illustrate the usage of HQL using an example to do this.
+	We'll illustrate the usage of HQL using an example where we obtain the present value of a bullet bond (seen in the figure below).
+	\\\\
+	The bullet bond is created through the interface with the constructor Bullet:
+
+	\begin{lstlisting}
+	HQL> settle = (read "2010-01-01")::Date
+	HQL> maturity1 = (read "2015-01-02")::Date
+	HQL> bullet  = Bullet settle maturity (Cash 100 USD) 0.1 1 Following
+	\end{lstlisting}
+	
+	Next, we'll calculate the present value of the previously defined bullet object. First we need a term structure. For more information about term structures in HQL see section xx below. The term structure below is a flat one, with a fixed rate of 5.0\%.
+	
+	\begin{lstlisting}
+	HQL> ts  = AnalyticalTermStructure (x = 5.0)	
+	\end{lstlisting}
+
+	\begin{lstlisting}	
+	HQL> pv bullet ts
+	\end{lstlisting}
+	
+	yields the following output:
+	\vskip 0.5\FrameSep
+	\begin{lstlisting}[style=Output]
+	100.00
+	\end{lstlisting}
+	
+	\framebox{TODO!}
+	
 
 \begin{figure}[h!]
 	\begin{center}
@@ -300,7 +329,7 @@ stringstyle=\color{black},tabsize=2,backgroundcolor=\color{lightgray},language=H
 
 	\vskip 0.5\FrameSep
 	\begin{lstlisting}
-	HQL> TODO
+	HQL> cf = compoundFactor (ExponentialRate 8.5 SemiAnnually) 2
 	\end{lstlisting}
 	\vskip 0.5\FrameSep
 
@@ -572,8 +601,14 @@ stringstyle=\color{black},tabsize=2,backgroundcolor=\color{lightgray},language=H
 	the discounting of a compounding with the same interest rate and time to maturity will be equal to the initial amount.
 
 	\subsection{Discount factors}
-	\subsection{The simple discount factor}
+	Discount factors in HQL are dealt with in the same way as compound factors, they take interest rates and a time offset as arguments.
+
 	\subsection{The exponential discount factor}
+
+	\begin{lstlisting}
+	HQL> discountFactor (ExponentialRate 8.5 SemiAnnually) 2
+	\end{lstlisting}
+
 	\subsection{The continuous discount factor}
 	The \textit{continuous discount factor} with maturity $T$ at time $t$ is defined as,
 	\[
@@ -889,22 +924,21 @@ stringstyle=\color{black},tabsize=2,backgroundcolor=\color{lightgray},language=H
 
 
 	\subsection{Flat term structure}
+	The flat term structure is nothing more than a flat yield curve, with a fixed yield for all maturities.
+
 	\begin{lstlisting}
-	HQL> let termStructure x = 5 + (1/2)*sqrt(x)
-	HQL> discountFactor (InterestRate (Periodic 2) (termStructure 1.5)) 1.5 0.0
-	\end{lstlisting}
-
-	yields the following output:
-	\vskip 0.5\FrameSep
-
-	\begin{lstlisting}[style=Output]
-	0.9203271932613013
+	HQL> let flatTerm x = 5.0
 	\end{lstlisting}
 
 	\subsection{Analytic term structure}
+	The analytical term structure describes the yield as an analytical function. Consider the example below:
+
+	\begin{lstlisting}
+	HQL> let AnalyticTerm x = 5 + (1/2)*sqrt(x)
+	\end{lstlisting}
 
 	\subsection{Interpolated term structure}
-	Construct a term structure from bond prices, example
+	The interpolated term structure is not supperted yet by HQL.
 
 	\subsubsection{Example - Treasury term structure}
 	In this example we are going to create a term structure from the data available for
@@ -1051,11 +1085,11 @@ stringstyle=\color{black},tabsize=2,backgroundcolor=\color{lightgray},language=H
 
 	\ab{Note on perpetual bonds}
 
-	\subsection{Duration and convexity}
+	%\subsection{Duration and convexity}
 
 	\section{Standard bond types}
 
-	We now present the bond types supported in HQL.
+	We now present the bond types supported in HQL. The bond types are found the module Instruments.FixedIncome.Bonds.
 
 
 
@@ -1186,6 +1220,12 @@ stringstyle=\color{black},tabsize=2,backgroundcolor=\color{lightgray},language=H
 	\end{center}
 	\end{figure}
 
+	\begin{lstlisting}
+	HQL> settle = (read "2010-01-01")::Date
+	HQL> maturity1 = (read "2015-01-02")::Date
+	HQL> bullet  = Bullet settle maturity (Cash 100 USD) 0.1 1 Following
+	\end{lstlisting}
+
 
 	\subsection{Consol}
 	Consol has a fixed rate coupon and never terminates and there is no payments at any
@@ -1243,6 +1283,12 @@ stringstyle=\color{black},tabsize=2,backgroundcolor=\color{lightgray},language=H
 	\end{center}
 	\end{figure}
 
+	\begin{lstlisting}
+	HQL> settle = (read "2010-01-01")::Date
+	HQL> maturity1 = (read "2015-01-02")::Date
+	HQL> bullet  = Consol settle maturity (Cash 100 USD) 0.1 1 Following
+	\end{lstlisting}
+
 	\subsection{Serial}
 
 	Serial is an amortized bond with a fixed rate coupon, the repayments are spread evenly over all remaining settlements and the coupon payments, $C_t$ decline over time as depicted in figure
@@ -1298,11 +1344,11 @@ stringstyle=\color{black},tabsize=2,backgroundcolor=\color{lightgray},language=H
 	\end{center}
 	\end{figure}
 
-	\vskip 0.5\FrameSep
 	\begin{lstlisting}
-	Serial settle maturity (Cash 100 USD) rate1 stms1 Following
+	HQL> settle = (read "2010-01-01")::Date
+	HQL> maturity1 = (read "2015-01-02")::Date
+	HQL> bullet  = Serial settle maturity (Cash 100 USD) 0.1 1 Following
 	\end{lstlisting}
-	\vskip 0.5\FrameSep
 
 	\section{US Treasury Bonds}
 	Treasury securities are the debt financing instruments of the United States federal government, and they are often referred to simply as Treasuries.
@@ -1361,7 +1407,8 @@ stringstyle=\color{black},tabsize=2,backgroundcolor=\color{lightgray},language=H
 %% Day-count conventions
 %% ============================================================================================
 	\section{Day-count conventions}
-	Day-count convention or year fraction, time between two dates t and T.
+
+	Day-count convention or year fraction, time between two dates t and T. Daycount conventions are defined in the module Utils.DayCount.
 
 	\framebox{HQL example usage goes here}
 
@@ -1398,16 +1445,24 @@ stringstyle=\color{black},tabsize=2,backgroundcolor=\color{lightgray},language=H
 	\[
 	\delta = \frac{\Delta \tau_D}{365} = \frac{D_2-D_1}{365} = \frac{\text{actual days between } \boldsymbol{t} \text{ and } \boldsymbol{T}}{365}
 	\]
+
+	\framebox{TODO: Add example}
+
 	\subsection{Actual/360}
 	Same as above except one year is said to be 360 days. Standard for US dollars
 	\[
 	\delta = \frac{\Delta \tau_D}{360} =\frac{D_2-D_1}{360} = \frac{\text{actual days between } \boldsymbol{t} \text{ and } \boldsymbol{T}}{360}
 	\]
+
+	\framebox{TODO: Add example}
+
 	\subsection{30/360}
 	Month are 30 days long, a year is 360 days long
 	\[
 	\delta = \frac{360 \cdot \Delta \tau_Y + 30 \cdot \Delta \tau_M + \Delta \tau_D}{360} =\frac{360(Y_2-Y_2)+30(M_2-M_1)+(D_2-D_1)}{360}
 	\]
+
+	\framebox{TODO: Add example}
 
 	\subsection{Business day conventions}
 	A business day convention is a convention for adjustment of dates when a specified date is not a good business day.
