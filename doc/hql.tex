@@ -1478,6 +1478,18 @@ stringstyle=\color{black},tabsize=2,backgroundcolor=\color{lightgray},language=H
 	\end{description}
 
 
+	\section{Visualization}
+	As an extra feature, HQL supports visualization of cash flows in much the same fashion as the diagrams seen above for the various bond types.
+	The visualization module is defined in Utils.Graphics.Visualize module.
+
+	\begin{lstlisting}	
+	HQL> cash1 = Cash 500 USD
+	HQL> cash2 = Cash 1500 USD
+	HQL> sampleData = [("2014-06-01", cash1),("2015-01-01", cash1),("2015-06-01", cash1),("2016-01-01", cash1),("2016-06-01", cash2)]
+	HQL> GP.plotDefault $ cashflowDiagram testData	
+	\end{lstlisting}
+
+	\framebox{TODO: Add output and add example where we use a bond}
 
 \newpage
 
