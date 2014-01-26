@@ -7,7 +7,6 @@
 -- Types and functions for working with interest rates.
 module Instruments.Utils.TermStructure where
 
-{-
 import Instruments.Utils.InterestRate
 import Control.Applicative
 import Data.Tuple
@@ -49,4 +48,3 @@ instance TermStructure LinearInterpolatedTermStructure where
           
 instance TermStructure AnalyticalTermStructure where
   yieldAt (AnalyticalTermStructure f) m = return $ f m
--}
