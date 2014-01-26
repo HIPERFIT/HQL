@@ -3,7 +3,7 @@
 -- Module:      Utils.Graphics.Visualize
 -- Copyright:   (c) 2013 HIPERFIT
 -- License:     BSD-3
--- Maintainer:  Johan Astborg, Andreas Bock <bock@andreasbock.dk>
+-- Maintainer:  Johan Astborg <joastbg@gmail.com>
 -- Stability:   experimental
 -- Portability: portable
 --
