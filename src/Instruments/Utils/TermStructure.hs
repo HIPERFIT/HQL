@@ -33,7 +33,7 @@ class TermStructure a where
   
   -- | Returns the discount factors given a list of offsets
   dfsAt :: a -> [Maturity] -> [Maybe Rate]
-  dfsAt a ms = map (dfAt a) ms
+  dfsAt a = map (dfAt a)
 
 instance TermStructure DiscreteTermStructure where
   yieldAt (DiscreteTermStructure ts) m = M.lookup m ts

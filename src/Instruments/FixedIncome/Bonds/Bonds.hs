@@ -39,36 +39,36 @@ class Instrument i where
 
 -- | Bond class specifies common denominator for all bond types 
 class Instrument b => Bond b where
-  pv :: TermStructure ts => b -> ts -> IO Cash
-  pv bond ts = liftM (dirty bond ts) getDay
+  pv           :: TermStructure ts => b -> ts -> IO Cash
   clean, dirty :: TermStructure ts => b -> ts -> Date -> Cash
-  clean bond ts now = dirty bond ts now - ai bond now
-  -- Assumption: If we cannot price a given cashflow, it has no 
-  -- theoretical value
-  dirty bond ts now = sum $ zipWith discount ds cs 
-    where (ds,cs) = unzip $ cashflow bond
-          discount d c = case dfAt ts (diffTime d now) of
-                           Just df -> scale df c
-                           Nothing -> scale 0 c
-
   ytm          :: TermStructure ts => b -> ts -> Double
-  ytm = undefined
   ai           :: b -> Date -> Cash
-  ai = undefined
   principal    :: b -> Cash
   outstanding  :: b -> Payments
   cashflow     :: b -> Payments
   coupons      :: b -> Payments
   paymentDates :: b -> [Date]
-  duration  :: b -> Payment
-  convexity :: b -> Payment
+  duration     :: b -> Double
+  convexity    :: b -> Payment
+  
+  pv bond ts = liftM (dirty bond ts) getDay
+  clean bond ts now = dirty bond ts now - ai bond now
+  -- If we cannot discount a given cashflow
+  -- it has no theoretical value
+  dirty bond ts now = sum $ zipWith discount ds cs 
+    where (ds,cs) = unzip $ cashflow bond
+          discount d c = case dfAt ts (diffTime d now) of
+                           Just df -> scale df c
+                           Nothing -> scale 0 c
+  ytm = undefined
+  ai = undefined
 
 -- | Class declaration for amortized bonds
 class Bond a => Amortized a where
   repayments :: a -> Payments
   repayments a = zipWith3 (\d cf cp -> (d,cf-cp)) ds cfs cps
     where (ds, cfs) = unzip $ cashflow a
-          (_, cps)  = unzip $ cashflow a
+          (_, cps)  = unzip $ coupons a
 
 -- | Class for mortage-backed obligations
 class Instrument m => MBO m where
@@ -151,8 +151,15 @@ instance Bond FixedCouponBond where
   paymentDates Zero{..} = fmatu : []
   paymentDates Bullet{..} = interpolateDates fmatu froll fstms fsett
   paymentDates Consol{..} = extrapolateDates froll fstms fsett
-  duration = undefined
+  
   convexity = undefined
+  duration  = undefined
+
+  ytm z@Zero{..} ts = face ** (negate $ recip t) - 1
+    where zpv  = pv z ts
+          t    = duration z
+          (Cash face _) = fface
+  ytm _ _ = error "Not implemented (Newton-Raphson method)."
 
 instance Bond FixedAmortizedBond where
   principal Serial{..} = aface
@@ -189,10 +196,6 @@ instance Bond FixedAmortizedBond where
     in
       snd $ L.mapAccumL (\o d -> (o-repayment, (d, scale arate o))) aface dates
   coupons Annuity{..} = undefined
---   ytm z@Zero{..} ts cmp = face ** (negate $ recip t) - 1
---     where zpv  = pv z ts cmp
---           t    = getYearOffset asett amatu
---           (Cash face _) = aface
   paymentDates Serial{..} = interpolateDates amatu aroll astms asett
   paymentDates Annuity{..} = interpolateDates amatu aroll astms asett
   duration = undefined
@@ -228,6 +231,7 @@ bullet  = Bullet settle maturity1 (Cash 100 USD) rate1 stms2 Following
 consol  = Consol settle (Cash 100 USD) rate1 stms2 Following
 serial  = Serial settle maturity (Cash 100 USD) rate1 stms1 Following
 annuity = Annuity settle maturity2 (Cash 100 GBP) rate2 stms2 ACTACT ModifiedFollowing
+
 annuity' = Annuity settle maturity2 (Cash 100 GBP) rate2 stms2 ModifiedFollowing
 -- Actual tests
 -- analyticalFun1 (getYearOffset settle maturity) == 6.0608215993999295
