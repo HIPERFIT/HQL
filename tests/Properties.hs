@@ -29,18 +29,11 @@ interestRate2 = (rate $ continuousRate $ ExponentialRate 1.0025 SemiAnnually) @=
 interestRate3 = (rate $ continuousRate $ ExponentialRate 1.0038 Quarterly) @=~? 1.0050605722981665
 interestRate4 = (rate $ continuousRate $ ExponentialRate 1.0046 Monthly) @=~? 1.0050206261866812
 
---interestRate1 = continuousRate (SimpleSpotRate 1.0025 (1/2)) @=~? 1.005016718885754
---interestRate2 = continuousRate (SimpleSpotRate 5.0625 (1/2)) @=~? 5.127116313804603
---interestRate3 = continuousRate (CompoundedSpotRate 15.0000 1) @=~? 16.183424272828304
---interestRate4 = continuousRate (CompoundedSpotRate 21.5506 (1/4)) @=~? 22.14170314225603
---interestRate5 = continuousRate (ContinuousSpotRate 22.1403 0) @=~? 22.1403
-
 ----------- Discount Factor
 
---discountFactor1 = df (discountFactor (ContinuousSpotRate 8.3 0.5) 0.5) @=~? 0.9593493353414723
---discountFactor2 = df (discountFactor (CompoundedSpotRate 8.5 0.5) 0.5) @=~? 0.9592326139088729
---discountFactor3 = df (discountFactor (CompoundedSpotRate 8.5 (1/12)) 3) @=~? 0.7756133702070988
---discountFactor4 = df (discountFactor (SimpleSpotRate 5.6124 (1/2)) 1.5) @=~? 0.9203268231254242
+discountFactor1 = (discountFactor (ContinuousRate 8.3) 0.5) @=~? 0.9593493353414723
+discountFactor2 = (discountFactor (ExponentialRate 8.5 SemiAnnually) 2) @=~? 0.9592326139088729
+discountFactor3 = (discountFactor (ContinuousRate 8.3) 0.5) @=~? 0.9593493353414723
 
 {-
 -- FORWARD RATE
@@ -55,8 +48,8 @@ Out[8]= 7.99473
 > (((discountFactor (InterestRate (Periodic 2) 6.65) 0.25 0.0)/(discountFactor (InterestRate (Periodic 2) 7.77) 1.5))**(1/(2*1.25))-1)*2*100 == 7.994727369824384
 -}
 
--- Tests goes here
--- TODO: Update test cases...
+-- Daycount convention tests -- TODO
+
 tests :: [Test]
 tests = [
 	testGroup "Bonds" [
@@ -71,9 +64,9 @@ tests = [
 		-- TODO: Add test cases
 	],
 	testGroup "Discounting" [
-		--testCase  "discountFactor1" discountFactor1,
-		--testCase  "discountFactor2" discountFactor2,
-		--testCase  "discountFactor3" discountFactor3,
+		testCase  "discountFactor1" discountFactor1,
+		testCase  "discountFactor2" discountFactor2,
+		testCase  "discountFactor3" discountFactor3
 		--testCase  "discountFactor4" discountFactor4
 		--testCase  "discountFactor5" discountFactor5
 	],

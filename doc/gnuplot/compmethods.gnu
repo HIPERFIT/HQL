@@ -6,6 +6,8 @@ set key left noreverse enhanced autotitles box linetype -1 linewidth 1.000
 # Line types
 #set style func linespoints
 
+set xtics 1
+
 # Plot specific variables
 r0 = 0.03
 r1 = 0.05
