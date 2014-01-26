@@ -26,7 +26,7 @@ main = defaultMain tests
 ----------- Interest rates (values from Table 3 in documentation -- In percentage)
 interestRate1 = (rate $ continuousRate $ ExponentialRate 1.0000 Annually) @=~? 1.005016708416795
 interestRate2 = (rate $ continuousRate $ ExponentialRate 1.0025 SemiAnnually) @=~? 1.005016718885754
-interestRate3 = (rate $ continuousRate $ ExponentialRate 1.0025 Quarterly) @=~? 1.0050605722981665
+interestRate3 = (rate $ continuousRate $ ExponentialRate 1.0038 Quarterly) @=~? 1.0050605722981665
 interestRate4 = (rate $ continuousRate $ ExponentialRate 1.0046 Monthly) @=~? 1.0050206261866812
 
 --interestRate1 = continuousRate (SimpleSpotRate 1.0025 (1/2)) @=~? 1.005016718885754
