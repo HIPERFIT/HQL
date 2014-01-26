@@ -946,6 +946,12 @@ stringstyle=\color{black},tabsize=2,backgroundcolor=\color{lightgray},language=H
 	\subsection{Zero coupon bond}
 	The simples form of a bond is the zero coupon bond. This bond has only one cash flow specified, which till take place at the maturity date of the bond. Zero coupon bonds are sometimes refered to as discount bonds, because they are in fact discount factors scaled by the face value N.
 
+	\vskip 0.5\FrameSep
+	\begin{lstlisting}
+	Zero settle maturity (Cash 100 SEK) rate1 Preceding ModifiedFollowing
+	\end{lstlisting}
+	\vskip 0.5\FrameSep
+
 
 	\subsection{Fixed coupon bond}
 	Series of payments called coupons and a nominal value N (face value)
@@ -1122,7 +1128,7 @@ stringstyle=\color{black},tabsize=2,backgroundcolor=\color{lightgray},language=H
 	p(0)=\frac{\$1000.00}{0.05}(1-e^{-\log(1+0.005)\cdot 5})\approx \$4329.48
 	\]
 	\begin{lstlisting}
-	HQL> df*1000.0
+	Annuity settle maturity2 (Cash 100 GBP) rate2 stms2 ACTACT ModifiedFollowing
 	\end{lstlisting}
 	yields the following output:
 	\vskip 0.5\FrameSep
@@ -1292,8 +1298,11 @@ stringstyle=\color{black},tabsize=2,backgroundcolor=\color{lightgray},language=H
 	\end{center}
 	\end{figure}
 
-
-	\framebox{TODO: Continous time and HQL}
+	\vskip 0.5\FrameSep
+	\begin{lstlisting}
+	Serial settle maturity (Cash 100 USD) rate1 stms1 Following
+	\end{lstlisting}
+	\vskip 0.5\FrameSep
 
 	\section{US Treasury Bonds}
 	Treasury securities are the debt financing instruments of the United States federal government, and they are often referred to simply as Treasuries.

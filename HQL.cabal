@@ -4,7 +4,6 @@ license:          BSD3
 license-file:     LICENSE
 category:         Finance
 author:           Johan Astborg <joastbg@gmail.com>
-                  Andreas Bock <bock@andreasbock.dk>
 maintainer:       Johan Astborg <joastbg@gmail.com>
                   Andreas Bock <bock@andreasbock.dk>
 copyright:        (c) Sinan Gabel, all rights reserved.
