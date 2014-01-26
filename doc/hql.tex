@@ -188,7 +188,7 @@ stringstyle=\color{black},tabsize=2,backgroundcolor=\color{lightgray},language=H
 	]{ll}{
 	}{
 	  \toprule
-		Input & Meaning \\
+		Word & Meaning \\
 	  \midrule
 		Settlement & Settlement date \\
 		Maturity & Maturity date \\
@@ -200,10 +200,14 @@ stringstyle=\color{black},tabsize=2,backgroundcolor=\color{lightgray},language=H
 		Tenor & - \\
 		LIBOR & - \\
 		Annuity & - \\
-		Bond & - \\
 		Compounding & - \\
-		Actual rate & - \\
 		Annualized rate & - \\
+		Amortized bond & - \\
+		Coupon bond  & - \\
+		Zero coupon bond & - \\
+		Serial & - \\
+		Annuity & - \\
+		Bullet & - \\		
 	  \bottomrule
 	}
 
@@ -213,15 +217,125 @@ stringstyle=\color{black},tabsize=2,backgroundcolor=\color{lightgray},language=H
         \section{Motivation}
         The motive behind HQL is to support the workflow behind analysis and pricing of fixed income instruments.
         Using a statically typed language with support for an explorative workflow using via the REPL, HQL aims to be a handy
-        library and tool.
+        library and tool. Suppose we want to obtain the price of a bullet bond, or vanilla bond, with coupons and a repayment of the face at maturity.
+	We'll illustrate the usage of HQL using an example to do this.
+
+\begin{figure}[h!]
+	\begin{center}
+	\begin{tikzpicture}[-,shorten >=1pt,auto,node distance=1.5cm,thick,minimum size=0.8cm,main node/.style={circle,draw=red,very thick}]
+	\tikzstyle{selected edge} = [draw,line width=6pt,-,blue!30]
+
+	\coordinate (belowstart) at (0,-1);
+	\coordinate (start) at (0,0);
+	\coordinate (stop) at (10.2,0);
+	\coordinate (abovestop) at (10.2,2);
+	\draw (start) -- (stop);
+	\draw (start) -- (belowstart);
+	\draw (stop) -- (abovestop);
+
+	\node at (0, -1.5) () {$t=0$};
+
+	\filldraw[draw=black, fill=lightgray]  (2,0) rectangle node {} +(0.2,0.25);
+	\node at (2, 2.5) () {$t=2$};
+
+	\filldraw[draw=black, fill=lightgray]  (4,0) rectangle node {} +(0.2,0.25);
+	\node at (4, 2.5) () {$t=4$};
+
+	\filldraw[draw=black, fill=lightgray]  (6,0) rectangle node {} +(0.2,0.25);
+	\node at (6, 2.5) () {$t=6$};
+
+	\filldraw[draw=black, fill=lightgray]  (8,0) rectangle node {} +(0.2,0.25);
+	\node at (8, 2.5) () {$t=8$};
+
+	\filldraw[draw=black, fill=blue] (10,0) rectangle node {} +(0.2,1);
+	\filldraw[draw=black, fill=lightgray]  (10,1) rectangle node {} +(0.2,0.25);
+	\node at (10, 2.5) () {$t=10$};
+
+	% Legend
+	\filldraw[draw=black, fill=blue] (7,-1) rectangle node {} +(0.2,0.2);
+	\node at (8.3, -0.92) () {repayment};
+
+	\filldraw[draw=black, fill=lightgray] (7,-1.5) rectangle node {} +(0.2,0.2);
+	\node at (8, -1.44) () {coupon};
+
+	\end{tikzpicture}
+	\caption{Cashflow of a bullet.}
+	\label{fig:bulletcf}
+	\end{center}
+	\end{figure}
 
 %% ============================================================================================
-%% Interest rate
+%% Interest rates
 %% ============================================================================================
 
 	\section{Interest rates and compounding}
 	It seems natural to start by covering compounding and interest rates, when they together make up the fundamentsls of the concept: time value of money. They are part of the fixed income module covered in this documentation.
 	Interest rates determain the rate at which money is borrowed, and exist for various maturities. Typically interest rates are quoted on an annual basis, which means the 	interest rate specifies the annual growth on capital.
+
+\subsection{Compounding}
+	Compounding refers to the future value of a nominal amount. In other words money is worth more tomorrow due to interest and inflation. The effect of inflation is omitted in HQL. The oppostite of compounding is discounting.
+	When one talks about compounding, the interest rate or rate determines the rate at which the deposited amount of money will increase as a function of time.
+	Compounding is often separated into discrete and continous compounding.
+
+
+	\subsubsection{Simple compounding}
+	$FV$, the future value in $T$ periods of a nominal $N$, is expressed as:
+
+	\[
+	FV_T = N(1+R_TT)
+	\]
+
+	where $R_T$ is the interest rate.
+
+	\subsubsection{Exponential compounding}
+
+	Future value of a nominal cash flow $N$ under exponential compounding over
+	$n$ periods:
+
+	\[ FV_T = N(1+R_T)^n \]
+
+	%The present value of a nominal future cash flow $N$ is therefore
+
+	We can create a compound factor in HQL using  exponential compounding as follows:
+
+	\vskip 0.5\FrameSep
+	\begin{lstlisting}
+	HQL> TODO
+	\end{lstlisting}
+	\vskip 0.5\FrameSep
+
+	\[ PV_T = \frac{N}{(1+R_T)^n} \]
+
+	Periodic compounding where $n$ is the number of times interest compounded per period
+
+	\[
+	FV_T=N\left( 1 + \frac{R}{n}  \right)^{nT}
+	\]
+
+	\subsubsection{Continuous compounding}
+	Continuous compounding is defined as taking the limit of the discrete compounding as n goes to infinity,
+	\[
+	FV=\lim_{n \to \infty} N \left(1+\frac{R}{n}\right)^{nT}=Ne^{RT}
+	\]
+
+	\ctable[
+	caption = Supported frequencies
+	pos = !ht,
+	doinside=\small
+	]{llr}{
+	}{
+	  \toprule
+		HQL & Meaning & Frequency \\
+	  \midrule
+		\ttfamily{Annually} & Annually compounding & 1 \\
+		\ttfamily{SemiAnnually} & SemiAnnually compounding & 2 \\
+		\ttfamily{Quarterly} & Quarterly compounding & 4 \\
+		\ttfamily{Monthly} & Monthly compounding & 12 \\
+		\ttfamily{Daily} & Daily compounding & 365 \\
+		\ttfamily{Other} & Other compounding & n \\
+	  \bottomrule
+	}
+
 
 	\ctable[
 	caption = Supported compounding methods,
@@ -232,22 +346,11 @@ stringstyle=\color{black},tabsize=2,backgroundcolor=\color{lightgray},language=H
 	  \toprule
 		HQL & Meaning \\
 	  \midrule
-		\ttfamily{Continuous} & Continuous compounding\\
-		\ttfamily{Exponential} & Discrete compounding\\
-		\ttfamily{Linear} & Linear or simple compounding\\
+		\ttfamily{ContinuousRate} & Continuous compounding\\
+		\ttfamily{ExponentialRate} & Exponential compounding\\
+		\ttfamily{SimpleRate} & Simple compounding\\
 	  \bottomrule
 	}
-
-	\vskip 0.5\FrameSep
-	\begin{lstlisting}
-data Frequency = Annually
-                 | SemiAnnually
-                 | Quarterly
-                 | Monthly
-                 | Daily 
-                 | Other Int 
-	\end{lstlisting}
-	\vskip 0.5\FrameSep
 
 	Figure ~\ref{fig:comp01} illustrates the effect of various interest during a period of ten years.
 
@@ -308,7 +411,7 @@ data Frequency = Annually
 	yields the following output:
 	\vskip 0.5\FrameSep
 	\begin{lstlisting}[style=Output]
-	[1.3439163793441222,1.6288946267774422,2.5937424601000023]
+	[1.3439163793441222, 1.6288946267774422, 2.5937424601000023]
 	\end{lstlisting}
 
 	\subsection{Example 3 - Compounding frequencies}
@@ -370,16 +473,187 @@ data Frequency = Annually
 
 
 %% ============================================================================================
-%% Interest Rate Instruments
+%% Compounding
 %% ============================================================================================
-	\section{Interest Rate Instruments}
+\begin{comment}
+	\section{Compounding}
+	Compounding refers to the future value of a nominal amount. In other words money is worth more tomorrow due to interest and inflation. The effect of inflation is omitted in HQL. The oppostite of compounding is discounting.
+	When one talks about compounding, the interest rate or rate determines the rate at which the deposited amount of money will increase as a function of time.
+	Compounding is often separated into discrete and continous compounding.
+
+
+	\subsubsection{Linear compounding}
+	$FV$, the future value in $T$ periods of a nominal $N$, is expressed as:
+
+	\[
+	FV_T = N(1+R_TT)
+	\]
+
+	where $R_T$ is the interest rate.
+
+	\subsubsection{Discrete compounding}
+	Discrete compounding refers to compounding with fixed and known intervals of compounding, typically annually, semi-annually or quarterly.
+
+	\vskip 0.5\FrameSep
+	\begin{lstlisting}
+	HQL> TODO
+	\end{lstlisting}
+	\vskip 0.5\FrameSep
+
+
+
+	\subsubsection{Exponential compounding}
+
+	Future value of a nominal cash flow $N$ under exponential compounding over
+	$n$ periods:
+
+	\[ FV_T = N(1+R_T)^n \]
+
+	%The present value of a nominal future cash flow $N$ is therefore
+
+	We can create a compound factor in HQL using  exponential compounding as follows:
+
+	\vskip 0.5\FrameSep
+	\begin{lstlisting}
+	HQL> TODO
+	\end{lstlisting}
+	\vskip 0.5\FrameSep
+
+	\[ PV_T = \frac{N}{(1+R_T)^n} \]
+
+	Periodic compounding where $n$ is the number of times interest compounded per period
+
+	\[
+	FV_T=N\left( 1 + \frac{R}{n}  \right)^{nT}
+	\]
+
+	\subsection{Continuous compounding}
+	Continuous compounding is defined as taking the limit of the discrete compounding as n goes to infinity,
+	\[
+	FV=\lim_{n \to \infty} N \left(1+\frac{R}{n}\right)^{nT}=Ne^{RT}
+	\]
+
+	The continous compounding factors in HQL is defined as follows:
+
+	Example:
+
+	\subsection{Calculating present and future value}
+	%To calculate the present value of a future cash flow we use the discount factor
+	%to scale the amount:
+
+	%We can calculate the future value by using the inverse of the discount factor above:
+
+	To calculate present and future value in HQL, two objects are of particular interest:
+	the DiscountFactor and the CompoundFactor. Let's start by using the DiscountFactor in an example
+	where we have a monthly compounded interest rate of 8.5\% during a period of 3 years:
+	\vskip 0.5\FrameSep
+	\begin{lstlisting}
+	HQL> let df = discountFactor (InterestRate (Periodic 12) 8.5) 3.0 0.0
+	\end{lstlisting}
+	We can use the previously defined DiscountFactor to discount an arbitrary amount. Let's say
+	\$1000.00:
+	\vskip 0.5\FrameSep
+	\begin{lstlisting}
+	HQL> df*1000.0
+	\end{lstlisting}
+	yields the following output:
+	\vskip 0.5\FrameSep
+	\begin{lstlisting}[style=Output]
+	775.6133702070988
+	\end{lstlisting}
+\end{comment}
+
+%% ============================================================================================
+%% Discounting
+%% ============================================================================================
+
+	\section{Discounting}
+	Discounting is the present value of a future cash flow, in other words. Discounting relates to compounding and are each others inverse. This means
+	the discounting of a compounding with the same interest rate and time to maturity will be equal to the initial amount.
+
+	\subsection{Discount factors}
+	\subsection{The simple discount factor}
+	\subsection{The exponential discount factor}
+	\subsection{The continuous discount factor}
+	The \textit{continuous discount factor} with maturity $T$ at time $t$ is defined as,
+	\[
+	p(t,T)=e^{-r(T-t)}; T>t
+	\]
+	Which equals the \textit{zero-coupon unit bond}, with face $N=1$. The discount factor
+	can be seen as entities in a vector, the \textit{discount function},
+
+	\vskip 0.5\FrameSep
+	\begin{lstlisting}
+	HQL> zipWith (*) (discountFactors (interestRate Continuous 5.0) 5 4 <*> pure 0) [1000,1500,1000,2000]
+	\end{lstlisting}
+	\vskip 0.5\FrameSep
+	yields the following output:
+	\vskip 0.5\FrameSep
+	\begin{lstlisting}[style=Output]
+	[951.229424500714,1357.2561270539393,860.7079764250578,1637.4615061559637]
+	\end{lstlisting}
+	\vskip 0.5\FrameSep
+
+	\[
+	\mathbf{df} = (p(t,T_1), ..., p(t,T_n))
+	\]
+
+	In the same way, cash flows can be considered entities in a vector,
+
+	\[
+	\mathbf{cf} = (c_1, ..., c_i)
+	\]
+
+	For example, if we were to calculate the present value of a series of future cash flows,
+	\[
+	\mathbf{cf} = (\$1000.00,\$1500.00,\$1000.00,\$2000.00)
+	\]
+	We can multiply by the discount function with $T_n=n$ years and the rate at 5.00\% continuously compounded,
+	\[
+	p(0) = \mathbf{df}\cdot\mathbf{cf} = (e^{-rT_1},...,e^{-rT_n})\cdot(p(0,T_1), ...,p(0,T_4))=
+	\]
+	\[
+	(e^{-0.05\cdot1},e^{-0.05\cdot2},e^{-0.05\cdot3},e^{-0.05\cdot4}) \cdot (\$1000.00,\$1500.00,\$1000.00,\$2000.00)=
+	\]
+	\[
+	(\$951.23,\$1357.26,\$860.71,\$1637.46)
+	\]
+
+	The above calculation is done in HQL using the function \textit{zipWith} taking the discount function and the list of future cash flows as arguments.
+	\vskip 0.5\FrameSep
+	\begin{lstlisting}
+	HQL> zipWith (*) (discountFactors (interestRate Continuous 5.0) 5 4 <*> pure 0) [1000,1500,1000,2000]
+	\end{lstlisting}
+	\vskip 0.5\FrameSep
+	yields the following output:
+	\vskip 0.5\FrameSep
+	\begin{lstlisting}[style=Output]
+	[951.229424500714,1357.2561270539393,860.7079764250578,1637.4615061559637]
+	\end{lstlisting}
+	\vskip 0.5\FrameSep
+	A slightly modified version will return the sum of the cash flows. This is the basis of bond pricing, which is covered in section \nameref{sec:fi}.
+	\vskip 0.5\FrameSep
+	\begin{lstlisting}
+	HQL> sum $ zipWith (*) (discountFactors (interestRate Continuous 5.0) 5 4 <*> pure 0) [1000,1500,1000,2000]
+	\end{lstlisting}
+	\vskip 0.5\FrameSep
+	yields the following output:
+	\vskip 0.5\FrameSep
+	\begin{lstlisting}[style=Output]
+	4806.655034135675
+	\end{lstlisting}
+
+%% ============================================================================================
+%% More about interest rates
+%% ============================================================================================
+	\section{More about interest rates}
 	Interest rate instruments refer to traded and listed interest rates, such as LIBOR spot and LIBOR forward rates.
 	Using the interface of HQL, it's possible to create arbitrary spot and forward rates. LIBOR is used here for illustrative purposes,
 	and because HQL provides an interface to work with LIBOR rates.
 
 	\ctable[
 	caption = Typicall market data
-	pos = h,
+	pos = ht,
 	doinside=\small,
 	center,
 	]{llll}{
@@ -657,173 +931,6 @@ data Frequency = Annually
 	}
 
 
-%% ============================================================================================
-%% Compounding
-%% ============================================================================================
-
-	\section{Compounding}
-	Compounding refers to the future value of a nominal amount. In other words money is worth more tomorrow due to interest and inflation. The effect of inflation is omitted in HQL. The oppostite of compounding is discounting.
-	When one talks about compounding, the interest rate or rate determines the rate at which the deposited amount of money will increase as a function of time.
-	Compounding is often separated into discrete and continous compounding.
-
-
-	\subsubsection{Linear compounding}
-	$FV$, the future value in $T$ periods of a nominal $N$, is expressed as:
-
-	\[
-	FV_T = N(1+R_TT)
-	\]
-
-	where $R_T$ is the interest rate.
-
-	\subsubsection{Discrete compounding}
-	Discrete compounding refers to compounding with fixed and known intervals of compounding, typically annually, semi-annually or quarterly.
-
-	\vskip 0.5\FrameSep
-	\begin{lstlisting}
-	HQL> TODO
-	\end{lstlisting}
-	\vskip 0.5\FrameSep
-
-
-
-	\subsubsection{Exponential compounding}
-
-	Future value of a nominal cash flow $N$ under exponential compounding over
-	$n$ periods:
-
-	\[ FV_T = N(1+R_T)^n \]
-
-	%The present value of a nominal future cash flow $N$ is therefore
-
-	We can create a compound factor in HQL using  exponential compounding as follows:
-
-	\vskip 0.5\FrameSep
-	\begin{lstlisting}
-	HQL> TODO
-	\end{lstlisting}
-	\vskip 0.5\FrameSep
-
-	\[ PV_T = \frac{N}{(1+R_T)^n} \]
-
-	Periodic compounding where $n$ is the number of times interest compounded per period
-
-	\[
-	FV_T=N\left( 1 + \frac{R}{n}  \right)^{nT}
-	\]
-
-	\subsection{Continuous compounding}
-	Continuous compounding is defined as taking the limit of the discrete compounding as n goes to infinity,
-	\[
-	FV=\lim_{n \to \infty} N \left(1+\frac{R}{n}\right)^{nT}=Ne^{RT}
-	\]
-
-	The continous compounding factors in HQL is defined as follows:
-
-	Example:
-
-	\subsection{Calculating present and future value}
-	%To calculate the present value of a future cash flow we use the discount factor
-	%to scale the amount:
-
-	%We can calculate the future value by using the inverse of the discount factor above:
-
-	To calculate present and future value in HQL, two objects are of particular interest:
-	the DiscountFactor and the CompoundFactor. Let's start by using the DiscountFactor in an example
-	where we have a monthly compounded interest rate of 8.5\% during a period of 3 years:
-	\vskip 0.5\FrameSep
-	\begin{lstlisting}
-	HQL> let df = discountFactor (InterestRate (Periodic 12) 8.5) 3.0 0.0
-	\end{lstlisting}
-	We can use the previously defined DiscountFactor to discount an arbitrary amount. Let's say
-	\$1000.00:
-	\vskip 0.5\FrameSep
-	\begin{lstlisting}
-	HQL> df*1000.0
-	\end{lstlisting}
-	yields the following output:
-	\vskip 0.5\FrameSep
-	\begin{lstlisting}[style=Output]
-	775.6133702070988
-	\end{lstlisting}
-
-
-%% ============================================================================================
-%% Discounting
-%% ============================================================================================
-
-	\section{Discounting}
-	Discounting is the present value of a future cash flow, in other words. Discounting relates to compounding and are each others inverse. This means
-	the discounting of a compounding with the same interest rate and time to maturity will be equal to the initial amount.
-
-	\subsection{The continuous discount factor}
-	The \textit{continuous discount factor} with maturity $T$ at time $t$ is defined as,
-	\[
-	p(t,T)=e^{-r(T-t)}; T>t
-	\]
-	Which equals the \textit{zero-coupon unit bond}, with face $N=1$. The discount factor
-	can be seen as entities in a vector, the \textit{discount function},
-
-	\vskip 0.5\FrameSep
-	\begin{lstlisting}
-	HQL> zipWith (*) (discountFactors (interestRate Continuous 5.0) 5 4 <*> pure 0) [1000,1500,1000,2000]
-	\end{lstlisting}
-	\vskip 0.5\FrameSep
-	yields the following output:
-	\vskip 0.5\FrameSep
-	\begin{lstlisting}[style=Output]
-	[951.229424500714,1357.2561270539393,860.7079764250578,1637.4615061559637]
-	\end{lstlisting}
-	\vskip 0.5\FrameSep
-
-	\[
-	\mathbf{df} = (p(t,T_1), ..., p(t,T_n))
-	\]
-
-	In the same way, cash flows can be considered entities in a vector,
-
-	\[
-	\mathbf{cf} = (c_1, ..., c_i)
-	\]
-
-	For example, if we were to calculate the present value of a series of future cash flows,
-	\[
-	\mathbf{cf} = (\$1000.00,\$1500.00,\$1000.00,\$2000.00)
-	\]
-	We can multiply by the discount function with $T_n=n$ years and the rate at 5.00\% continuously compounded,
-	\[
-	p(0) = \mathbf{df}\cdot\mathbf{cf} = (e^{-rT_1},...,e^{-rT_n})\cdot(p(0,T_1), ...,p(0,T_4))=
-	\]
-	\[
-	(e^{-0.05\cdot1},e^{-0.05\cdot2},e^{-0.05\cdot3},e^{-0.05\cdot4}) \cdot (\$1000.00,\$1500.00,\$1000.00,\$2000.00)=
-	\]
-	\[
-	(\$951.23,\$1357.26,\$860.71,\$1637.46)
-	\]
-
-	The above calculation is done in HQL using the function \textit{zipWith} taking the discount function and the list of future cash flows as arguments.
-	\vskip 0.5\FrameSep
-	\begin{lstlisting}
-	HQL> zipWith (*) (discountFactors (interestRate Continuous 5.0) 5 4 <*> pure 0) [1000,1500,1000,2000]
-	\end{lstlisting}
-	\vskip 0.5\FrameSep
-	yields the following output:
-	\vskip 0.5\FrameSep
-	\begin{lstlisting}[style=Output]
-	[951.229424500714,1357.2561270539393,860.7079764250578,1637.4615061559637]
-	\end{lstlisting}
-	\vskip 0.5\FrameSep
-	A slightly modified version will return the sum of the cash flows. This is the basis of bond pricing, which is covered in section \nameref{sec:fi}.
-	\vskip 0.5\FrameSep
-	\begin{lstlisting}
-	HQL> sum $ zipWith (*) (discountFactors (interestRate Continuous 5.0) 5 4 <*> pure 0) [1000,1500,1000,2000]
-	\end{lstlisting}
-	\vskip 0.5\FrameSep
-	yields the following output:
-	\vskip 0.5\FrameSep
-	\begin{lstlisting}[style=Output]
-	4806.655034135675
-	\end{lstlisting}
 
 %% ============================================================================================
 %% Bonds and cash flows
@@ -1199,6 +1306,10 @@ data Frequency = Annually
 
 	\subsection{Example using HQL}
 
+%% ============================================================================================
+%% Interest rate Swaps
+%% ============================================================================================
+\begin{comment}
 	\subsection{Interest rate Swaps}
 	Interest rate swaps are interest rate instruments what are priceable, and consist of two parts. Typically for a swap, the
 	two parts, called legs, are the floating leg and the fixed leg. The floating leg is in fact, for a vanilla swap, the floating spot rate whereas the fixed leg is fixed interest rate specified in the contract. A swap pays an amount at predefined intervals, according to the fixed and floating leg. One party will receive the floating rate, and the other the fixed rate of the swap.
@@ -1209,9 +1320,12 @@ data Frequency = Annually
 	\subsubsection{Cash flows}
 	Illustrate cash flows of a swap using figure...
 
+\end{comment}
+
 %% ============================================================================================
 %% Fitting the termstructure
 %% ============================================================================================
+\begin{comment}
 	\section{Fitting the termstructure}
 	Various methods of fitting a termstructure to market data (LIBOR, forex futures, bonds).
 
@@ -1223,7 +1337,7 @@ data Frequency = Annually
 	\begin{lstlisting}[style=Output]
 	775.6133702070988
 	\end{lstlisting}
-
+\end{comment}
 %% ============================================================================================
 %% The Portfolio
 %% ============================================================================================
