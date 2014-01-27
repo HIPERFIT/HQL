@@ -17,6 +17,7 @@ import qualified Data.List as L
 import Utils.Calendar
 import Utils.Currency
 import Utils.DayCount
+import Instruments.Instrument
 import Instruments.Utils.TermStructure
 import Instruments.Utils.InterestRate
 import Prelude hiding (sum)
@@ -32,10 +33,6 @@ type Payments = [Payment]
 --
 -- Classes
 -- 
-
--- | Instrument is a high-level class for financial instruments
-class Instrument i where
-  expired :: i -> IO Bool
 
 -- | Bond class specifies common denominator for all bond types 
 class Instrument b => Bond b where
