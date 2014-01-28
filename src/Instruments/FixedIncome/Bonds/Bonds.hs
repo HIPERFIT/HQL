@@ -1,5 +1,4 @@
-{-# LANGUAGE TypeFamilies, GADTs, RecordWildCards, RankNTypes #-}
-{-# LANGUAGE LambdaCase #-}
+{-# LANGUAGE TypeFamilies, GADTs, RecordWildCards, RankNTypes, LambdaCase #-}
 -- |
 -- Module:      Instruments.FixedIncome.Bonds.Bonds
 -- Copyright:   (c) 2013 HIPERFIT
@@ -36,14 +35,24 @@ type Payments = [Payment]
 
 -- | Bond class specifies common denominator for all bond types 
 class Instrument b => Bond b where
+  -- | Returns the present value of the bond
   pv           :: TermStructure ts => b -> ts -> IO Cash
+  -- | Returns clean or dirty price on a given date
   clean, dirty :: TermStructure ts => b -> ts -> Date -> Cash
+  -- | Yield to maturity
   ytm          :: TermStructure ts => b -> ts -> Double
+  -- | Accrued interest
   ai           :: b -> Date -> Cash
+  -- | Principal (or face value) of a bond
   principal    :: b -> Cash
+  -- | A list of Payments indicating remaining cashflow
   outstanding  :: b -> Payments
+  -- | Returns a list of Payments representing the cashflow
+  -- over the bond over its lifetime
   cashflow     :: b -> Payments
+  -- | Returns the coupon part of the cashflow
   coupons      :: b -> Payments
+  -- | Returns the dates at which cashflow is exchanged
   paymentDates :: b -> [Date]
   duration     :: b -> Double
   convexity    :: b -> Payment
@@ -142,8 +151,11 @@ instance Bond FixedCouponBond where
   coupons b@Bullet{..} = init $ cashflow b
   cashflow Zero{..} = (fmatu, fface) : []
   cashflow c@Consol{..} = coupons c
-  cashflow Bullet{..} = map (mkPayment (frate/stms) fface) dates
+  cashflow Bullet{..}
+    | dates == [] = [(fmatu,fface)]
+    | otherwise   = map (\d -> (d,cpn)) (init dates) ++ [(fmatu,cpn+fface)]
     where dates = interpolateDates fmatu froll fstms fsett
+          cpn = scale (frate/stms) fface
           stms  = fromIntegral fstms
   paymentDates Zero{..} = fmatu : []
   paymentDates Bullet{..} = interpolateDates fmatu froll fstms fsett
@@ -169,7 +181,7 @@ instance Bond FixedAmortizedBond where
     in
       zip (asett : dates) (outstds ++ [(aface-aface)])
   outstanding Annuity{..} = undefined
-  cashflow Serial{..} = 
+  cashflow Serial{..} =
     let
       dates = interpolateDates amatu aroll astms asett
       repayment = scale (recip . fromIntegral $ length dates) aface
@@ -183,7 +195,8 @@ instance Bond FixedAmortizedBond where
       dates = interpolateDates amatu aroll astms asett
       yield = annualCash arate
       annualCash r = scale (recip factor) aface
-        where factor = (((1+r)^(length dates)) - 1)/r
+        where factor = (((1+r*stms)^(floor $ getYearOffset asett amatu)) - 1)/(r*stms)
+              stms = fromIntegral astms
     in
       map (flip (,) yield) dates
   coupons Serial{..} = 
@@ -192,13 +205,31 @@ instance Bond FixedAmortizedBond where
       repayment = scale (recip . fromIntegral $ length dates) aface
     in
       snd $ L.mapAccumL (\o d -> (o-repayment, (d, scale arate o))) aface dates
-  coupons Annuity{..} = undefined
+  coupons a@Annuity{..} = zipWith3 mkCoupon ds os rp
+    where (ds, os) = unzip $ outstanding a
+          (_ , rp) = unzip $ repayments a
+          mkCoupon d outstd rpy = (d, outstd - rpy)
   paymentDates Serial{..} = interpolateDates amatu aroll astms asett
   paymentDates Annuity{..} = interpolateDates amatu aroll astms asett
   duration = undefined
   convexity = undefined
 
 instance Amortized FixedAmortizedBond where
+  repayments Annuity{..} = snd $ L.mapAccumL accOutstd aface dates
+    where sni = ((1+perPeriodRate)^n - 1)/perPeriodRate
+          perPeriodRate = arate / fromIntegral astms
+          n = length dates
+          dates = interpolateDates amatu aroll astms asett
+          accOutstd outstd date = (outstd - repayment, (date, repayment))
+            where repayment = scale sni outstd
+
+rp Annuity{..} = scale sni aface -- snd $ L.mapAccumL accOutstd aface dates
+  where sni = recip $ ((1+perPeriodRate)^n - 1)/perPeriodRate
+        perPeriodRate = arate / fromIntegral astms
+        n = length dates
+        dates = interpolateDates amatu aroll astms asett
+        accOutstd outstd date = (outstd - repayment, (date, repayment))
+          where repayment = scale sni outstd
 
 mkPayment :: Rate -> Cash -> Date -> Payment
 mkPayment rate face date = (date, scale rate face)
@@ -223,16 +254,40 @@ stms2 = 2 :: Settlements
 present = settle
 
 -- Example instruments
-zero    = Zero settle maturity (Cash 100 SEK) rate1 Preceding ModifiedFollowing
-bullet  = Bullet settle maturity1 (Cash 100 USD) rate1 stms2 Following
-consol  = Consol settle (Cash 100 USD) rate1 stms2 Following
-serial  = Serial settle maturity (Cash 100 USD) rate1 stms1 Following
+zero    = Zero settle maturity (Cash 100 SEK) rate1 ACTACT ModifiedFollowing
+bullet  = Bullet settle maturity1 (Cash 100 USD) rate1 stms2 ACTACT Following
+consol  = Consol settle (Cash 100 USD) rate1 stms2 ACTACT Following
+serial  = Serial settle maturity (Cash 100 USD) rate1 stms1 ACTACT Following
 annuity = Annuity settle maturity2 (Cash 100 GBP) rate2 stms2 ACTACT ModifiedFollowing
 
-annuity' = Annuity settle maturity2 (Cash 100 GBP) rate2 stms2 ModifiedFollowing
--- Actual tests
--- analyticalFun1 (getYearOffset settle maturity) == 6.0608215993999295
--- discountFactor' (analyticalFun1 (getYearOffset settle maturity)) (getYearOffset settle maturity) 0 == 0.7612297990008563
--- discountFactor' 6.0608215993999295 (getYearOffset settle maturity) 0 -- 0.7612297990008563
--- test0 = [(dirty zero ts1 Continuous present) == (Cash 70.56481405950817 SEK)] -- fails, Discounting.hs bug
--- tests = [test0]
+-- CASHFLOW TEST
+cfa = cashflow annuity
+
+--------------------
+---- PV TEST 0  ----
+--------------------
+tz0 = \x -> (1/15)*sqrt x
+ts0 = AnalyticalTermStructure tz0
+s0  = (read "2010-01-01")::Date 
+m0  = (read "2017-07-01")::Date
+r0  = 0.7
+-- Zero PASSED
+z0     = Zero s0 m0 (Cash 147 SEK) r0 ACTACT ModifiedFollowing
+cf_z0  = cashflow z0
+cps_z0 = coupons z0
+pv_z0  = pv z0 ts0
+-- Annuity
+a0     = Annuity s0 m0 (Cash 100 GBP) r0 4 ACTACT ModifiedFollowing
+cf_a0  = cashflow a0 -- FAILS
+cps_a0 = coupons a0 -- FAILS
+pv_a0  = pv a0 ts0 -- FAILS
+-- Bullet
+b0     = Bullet s0 m0 (Cash 100 USD) r0 4 ACTACT Following
+cf_b0  = cashflow b0
+cps_b0 = coupons b0
+pv_b0  = pv b0 ts0 -- FAILS
+-- Serial
+sr0     = Serial s0 m0 (Cash 100 USD) r0 4 ACTACT Preceding
+cf_sr0  = cashflow sr0 -- FAILS
+cps_sr0 = coupons sr0  -- FAILS
+pv_sr0  = pv sr0 ts0   -- FAILS
