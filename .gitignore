@@ -9,3 +9,7 @@ cabal-dev
 *.log
 *.pdf
 *.ptb
+*.glo
+*.ist
+*.out
+*.toc
