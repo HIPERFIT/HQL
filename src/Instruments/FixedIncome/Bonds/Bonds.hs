@@ -61,11 +61,11 @@ class Instrument b => Bond b where
   clean bond ts now = dirty bond ts now - ai bond now
   -- If we cannot discount a given cashflow
   -- it has no theoretical value
-  dirty bond ts now = sum $ zipWith discount ds cs 
+  dirty bond ts now = sum $ zipWith discount dfs cs
     where (ds,cs) = unzip $ cashflow bond
-          discount d c = case dfAt ts (diffTime d now) of
-                           Just df -> scale df c
-                           Nothing -> scale 0 c
+          dfs = dfsAt ts $ map (flip diffTime now) ds
+          discount (Just df) = scale df
+          discount Nothing   = scale 0 
   ytm = undefined
   ai = undefined
 
@@ -157,6 +157,7 @@ instance Bond FixedCouponBond where
     where dates = interpolateDates fmatu froll fstms fsett
           cpn = scale (frate/stms) fface
           stms  = fromIntegral fstms
+  pv c@Consol{..} = const . return $ scale frate fface
   paymentDates Zero{..} = fmatu : []
   paymentDates Bullet{..} = interpolateDates fmatu froll fstms fsett
   paymentDates Consol{..} = extrapolateDates froll fstms fsett
@@ -263,31 +264,37 @@ annuity = Annuity settle maturity2 (Cash 100 GBP) rate2 stms2 ACTACT ModifiedFol
 -- CASHFLOW TEST
 cfa = cashflow annuity
 
---------------------
----- PV TEST 0  ----
---------------------
-tz0 = \x -> (1/15)*sqrt x
+---------------
+---- TESTS ----
+---------------
+tz0 = \x -> (5 + (1/4)*sqrt x)/100
 ts0 = AnalyticalTermStructure tz0
-s0  = (read "2010-01-01")::Date 
-m0  = (read "2017-07-01")::Date
+s0  = (read "2015-01-01")::Date 
+m0  = (read "2022-07-01")::Date
 r0  = 0.7
--- Zero PASSED
+stms0 = 2
+-- Zero
 z0     = Zero s0 m0 (Cash 147 SEK) r0 ACTACT ModifiedFollowing
 cf_z0  = cashflow z0
 cps_z0 = coupons z0
 pv_z0  = pv z0 ts0
 -- Annuity
-a0     = Annuity s0 m0 (Cash 100 GBP) r0 4 ACTACT ModifiedFollowing
+a0     = Annuity s0 m0 (Cash 100 GBP) r0 stms0 ACTACT ModifiedFollowing
 cf_a0  = cashflow a0 -- FAILS
-cps_a0 = coupons a0 -- FAILS
-pv_a0  = pv a0 ts0 -- FAILS
+cps_a0 = coupons a0  -- FAILS
+pv_a0  = pv a0 ts0   -- FAILS
 -- Bullet
-b0     = Bullet s0 m0 (Cash 100 USD) r0 4 ACTACT Following
+b0     = Bullet s0 m0 (Cash 100 USD) r0 stms0 ACTACT Following
 cf_b0  = cashflow b0
 cps_b0 = coupons b0
-pv_b0  = pv b0 ts0 -- FAILS
+pv_b0  = pv b0 ts0
+-- Consol
+c0     = Consol s0 (Cash 100 USD) r0 stms0 ACTACT Following
+cf_c0  = cashflow c0
+cps_c0 = coupons c0
+pv_c0  = pv c0 ts0
 -- Serial
-sr0     = Serial s0 m0 (Cash 100 USD) r0 4 ACTACT Preceding
-cf_sr0  = cashflow sr0 -- FAILS
+sr0     = Serial s0 m0 (Cash 100 USD) r0 stms0 ACTACT Preceding
+cf_sr0  = cashflow sr0
 cps_sr0 = coupons sr0  -- FAILS
 pv_sr0  = pv sr0 ts0   -- FAILS

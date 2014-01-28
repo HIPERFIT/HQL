@@ -25,7 +25,7 @@ class TermStructure a where
 
   -- | Returns the discount factor at an offset
   dfAt :: a -> Maturity -> Maybe Rate
-  dfAt a m = fmap recip $ yieldAt a m
+  dfAt a m = return (1-) <*> yieldAt a m
  
   -- | Returns the discount factor at an offset
   fwdRate :: a -> Maturity -> Maturity -> Maybe DiscountFactor
