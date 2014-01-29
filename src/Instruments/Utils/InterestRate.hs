@@ -25,8 +25,8 @@ type Offset = Double
 -- For discrete simple compounding use Simple.
 -- Continuous compounding is the default used in HQL internally.
 data Compounding = Continuous 
-        	 | Exponential
-		 | Linear 
+        	     | Exponential
+		         | Linear 
                  deriving (Show)
 
 -- | Represents the compounding frequency
@@ -85,5 +85,3 @@ instance InterestRate SimpleRate where
   discountFactor (SimpleRate r) = const $ 1/(1+r/100.0)
   compoundFactor rate offset = 1 / discountFactor rate offset
   rate (SimpleRate r) = r
-
-

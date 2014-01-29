@@ -34,7 +34,7 @@ yieldAt (AnalyticalTermStructure f) m = return $ f m
 dfAt :: TermStructure -> Maturity -> Maybe Rate
 dfAt a m = recip <$> (\y -> (1+y)**m) <$> yieldAt a m
  
--- | Returns the discount factor at an offset
+-- | Returns the forward rate given two offsets
 fwdRate :: TermStructure -> Maturity -> Maturity -> Maybe DiscountFactor
 fwdRate t m0 m1 = (/) <$> dfAt t m1 <*> dfAt t m0
   
