@@ -1,4 +1,4 @@
-{-# LANGUAGE TypeFamilies, GADTs, RecordWildCards, RankNTypes, LambdaCase #-}
+{-# LANGUAGE TypeFamilies, GADTs, RecordWildCards, RankNTypes #-}
 -- |
 -- Module:      Instruments.FixedIncome.Bonds.Bonds
 -- Copyright:   (c) 2013 HIPERFIT
@@ -35,12 +35,9 @@ type Payments = [Payment]
 
 -- | Bond class specifies common denominator for all bond types 
 class Instrument b => Bond b where
-  -- | Returns the present value of the bond
-  pv           :: TermStructure ts => b -> ts -> IO Cash
-  -- | Returns clean or dirty price on a given date
-  clean, dirty :: TermStructure ts => b -> ts -> Date -> Cash
+  clean, dirty :: b -> TermStructure -> Date -> Cash
   -- | Yield to maturity
-  ytm          :: TermStructure ts => b -> ts -> Double
+  ytm          :: b -> TermStructure -> Double
   -- | Accrued interest
   ai           :: b -> Date -> Cash
   -- | Principal (or face value) of a bond
@@ -57,13 +54,12 @@ class Instrument b => Bond b where
   duration     :: b -> Double
   convexity    :: b -> Payment
   
-  pv bond ts = liftM (dirty bond ts) getDay
   clean bond ts now = dirty bond ts now - ai bond now
   -- If we cannot discount a given cashflow
   -- it has no theoretical value
   dirty bond ts now = sum $ zipWith discount dfs cs
     where (ds,cs) = unzip $ cashflow bond
-          dfs = dfsAt ts $ map (flip diffTime now) ds
+          dfs = dfsAt ts $ map (getYearOffset now) ds
           discount (Just df) = scale df
           discount Nothing   = scale 0 
   ytm = undefined
@@ -126,14 +122,18 @@ data FixedCouponBond where
               froll :: RollConvention } -> FixedCouponBond
 --
 -- Instances
---
 
 instance Instrument FixedCouponBond where
+  type PricingEngine = TermStructure
+  pv c@Consol{..} _ = return $ scale frate fface
+  pv bond ts = liftM (dirty bond ts) getDay
   expired Zero{..} = isExpired fmatu
   expired Consol{..} = return False
   expired Bullet{..} = isExpired fmatu
 
 instance Instrument FixedAmortizedBond where
+  type PricingEngine = TermStructure
+  pv bond ts = liftM (dirty bond ts) getDay
   expired Serial{..} = isExpired amatu
   expired Annuity{..} = isExpired amatu
 
@@ -157,7 +157,6 @@ instance Bond FixedCouponBond where
     where dates = interpolateDates fmatu froll fstms fsett
           cpn = scale (frate/stms) fface
           stms  = fromIntegral fstms
-  pv c@Consol{..} = const . return $ scale frate fface
   paymentDates Zero{..} = fmatu : []
   paymentDates Bullet{..} = interpolateDates fmatu froll fstms fsett
   paymentDates Consol{..} = extrapolateDates froll fstms fsett
@@ -191,15 +190,11 @@ instance Bond FixedAmortizedBond where
         where payment = repayment + scale arate outstd
     in
       snd $ L.mapAccumL accPymts aface dates
-  cashflow Annuity{..} =
-    let
-      dates = interpolateDates amatu aroll astms asett
-      yield = annualCash arate
-      annualCash r = scale (recip factor) aface
-        where factor = (((1+r*stms)^(floor $ getYearOffset asett amatu)) - 1)/(r*stms)
-              stms = fromIntegral astms
-    in
-      map (flip (,) yield) dates
+  cashflow Annuity{..} = map (flip (,) yield) dates
+    where dates = interpolateDates amatu aroll astms asett
+          yield = scale (recip $ (1-(1+r)**(-n))/r) aface
+          n = fromIntegral $ length dates -1 -- Subtract settle
+          r = arate / fromIntegral astms
   coupons Serial{..} = 
     let
       dates = interpolateDates amatu aroll astms asett
@@ -224,25 +219,12 @@ instance Amortized FixedAmortizedBond where
           accOutstd outstd date = (outstd - repayment, (date, repayment))
             where repayment = scale sni outstd
 
-rp Annuity{..} = scale sni aface -- snd $ L.mapAccumL accOutstd aface dates
-  where sni = recip $ ((1+perPeriodRate)^n - 1)/perPeriodRate
-        perPeriodRate = arate / fromIntegral astms
-        n = length dates
-        dates = interpolateDates amatu aroll astms asett
-        accOutstd outstd date = (outstd - repayment, (date, repayment))
-          where repayment = scale sni outstd
-
 mkPayment :: Rate -> Cash -> Date -> Payment
 mkPayment rate face date = (date, scale rate face)
 
 --
 -- Tests
 --
-
-ts1  = AnalyticalTermStructure analyticalFun1
-analyticalFun1 x = 5 + (1/2)*sqrt x
-
--- Tests
 settle = (read "2010-01-01")::Date 
 -- maturity = (read "2014-07-02")::Date
 maturity = (read "2016-01-01")::Date
@@ -260,9 +242,6 @@ bullet  = Bullet settle maturity1 (Cash 100 USD) rate1 stms2 ACTACT Following
 consol  = Consol settle (Cash 100 USD) rate1 stms2 ACTACT Following
 serial  = Serial settle maturity (Cash 100 USD) rate1 stms1 ACTACT Following
 annuity = Annuity settle maturity2 (Cash 100 GBP) rate2 stms2 ACTACT ModifiedFollowing
-
--- CASHFLOW TEST
-cfa = cashflow annuity
 
 ---------------
 ---- TESTS ----
@@ -296,5 +275,5 @@ pv_c0  = pv c0 ts0
 -- Serial
 sr0     = Serial s0 m0 (Cash 100 USD) r0 stms0 ACTACT Preceding
 cf_sr0  = cashflow sr0
-cps_sr0 = coupons sr0  -- FAILS
-pv_sr0  = pv sr0 ts0   -- FAILS
+cps_sr0 = coupons sr0
+pv_sr0  = pv sr0 ts0 -- FAILS
