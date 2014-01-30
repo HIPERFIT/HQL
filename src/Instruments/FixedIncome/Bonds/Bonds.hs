@@ -180,7 +180,10 @@ instance Bond FixedAmortizedBond where
       outstds = take (length dates) $ iterate (\p -> p-repayment) aface
     in
       zip (asett : dates) (outstds ++ [(aface-aface)])
-  outstanding Annuity{..} = undefined
+  outstanding a@Annuity{..} = zip ds $ snd $ L.mapAccumL accOutstd aface rpys
+    where (ds, rpys) = unzip $ repayments a
+          accOutstd outstd rpy = (newOutstd, outstd)
+            where newOutstd = outstd - rpy
   cashflow Serial{..} =
     let
       dates = interpolateDates amatu aroll astms asett
@@ -201,7 +204,7 @@ instance Bond FixedAmortizedBond where
       repayment = scale (recip . fromIntegral $ length dates) aface
     in
       snd $ L.mapAccumL (\o d -> (o-repayment, (d, scale arate o))) aface dates
-  coupons a@Annuity{..} = zip (tail ds) $ snd $ L.mapAccumL mkCpns aface $ tail cfs
+  coupons a@Annuity{..} = zip ds $ snd $ L.mapAccumL mkCpns aface cfs
     where (ds, cfs) = unzip $ cashflow a
           repayment = scale (recip $ (1-(1+perPeriodRate)**(-n))/perPeriodRate) aface
           mkCpns outstd cf = (outstd - repayment, coupon)
