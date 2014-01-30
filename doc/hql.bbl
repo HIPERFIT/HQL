@@ -1,26 +1,20 @@
 \begin{thebibliography}{1}
 
-\bibitem{LitHaskell}
-\newblock Literate programming - http://www.haskell.org/haskellwiki/Literate\_programming.
+\bibitem{astborg:fsharp}
+{\sc Astborg, J.}
+\newblock {\em F\# in Quantitative Finance}.
+\newblock Packt Publishing, 2013.
 
-\bibitem{hiperfit2010}
-J.~Berthold, A.~Filinski, F.~Henglein, K.~F. Larsen, M.~Steffensen, and
-  B.~Vinter.
-\newblock Functional high performance financial it: The hiperfit research
-  center in copenhagen.
-\newblock In {\em Proceedings of the 12th International Conference on Trends in
-  Functional Programming}, TFP'11, pages 98--113, Berlin, Heidelberg, 2012.
-  Springer-Verlag.
+\bibitem{bachelier}
+{\sc Bachelier, L.}
+\newblock Théorie de la spéculation, 1900.
 
-\bibitem{hughes:matters-cj}
-J.~Hughes.
-\newblock {Why Functional Programming Matters}.
-\newblock {\em Computer Journal}, 32(2):98--107, 1989.
+\bibitem{blackscholes}
+{\sc Black, F., and Scholes, M.}
+\newblock The pricing of options and corporate liabilities, 1973.
 
-\bibitem{composingcontracts}
-S.~Peyton~Jones, J.-M. Eber, and J.~Seward.
-\newblock Composing contracts: An adventure in financial engineering
-  (functional pearl).
-\newblock {\em SIGPLAN Not.}, 35(9):280--292, Sept. 2000.
+\bibitem{williamfsharp}
+{\sc Sharp, F.~W.}
+\newblock Interest rates and bond yields.
 
 \end{thebibliography}
