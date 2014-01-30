@@ -14,7 +14,7 @@ import Prelude hiding (sum)
 data Currency = USD | EUR | GBP | CHF | JPY | DKK | SEK deriving (Show,Eq)
 
 -- redesign, see discounting
-data Cash = Cash Double Currency | InvalidCash
+data Cash = Cash Double Currency
   
 -- Format cash using currency symbol
 -- TODO: Format with ***##.## decimals etc
@@ -26,7 +26,6 @@ instance Show Cash where
   show (Cash v CHF) = show v ++ " CHF"
   show (Cash v DKK) = show v ++ " kr"
   show (Cash v SEK) = show v ++ " kr"
-  show InvalidCash = "InvalidCash"
 
 instance Num Cash where
   (Cash v USD) + (Cash w USD) = Cash (v + w) USD
@@ -36,7 +35,7 @@ instance Num Cash where
   (Cash v JPY) + (Cash w JPY) = Cash (v + w) JPY
   (Cash v DKK) + (Cash w DKK) = Cash (v + w) DKK
   (Cash v SEK) + (Cash w SEK) = Cash (v + w) SEK
-  _ + _ = InvalidCash
+  _ + _ = error "Currency mismatch!"
 
   (Cash v USD) - (Cash w USD) = Cash (v - w) USD
   (Cash v EUR) - (Cash w EUR) = Cash (v - w) EUR
@@ -45,7 +44,7 @@ instance Num Cash where
   (Cash v JPY) - (Cash w JPY) = Cash (v - w) JPY
   (Cash v DKK) - (Cash w DKK) = Cash (v - w) DKK
   (Cash v SEK) - (Cash w SEK) = Cash (v - w) SEK
-  _ - _ = InvalidCash
+  _ - _ = error "Currency mismatch!"
     
   (Cash v USD) * (Cash w USD) = Cash (v * w) USD
   (Cash v EUR) * (Cash w EUR) = Cash (v * w) EUR
@@ -54,10 +53,10 @@ instance Num Cash where
   (Cash v JPY) * (Cash w JPY) = Cash (v * w) JPY
   (Cash v DKK) * (Cash w DKK) = Cash (v * w) DKK
   (Cash v SEK) * (Cash w SEK) = Cash (v * w) SEK
-  _ * _ = InvalidCash
+  _ * _ = error "Currency mismatch!"
 
     -- TODOs: Ajust for negative cash?
-  fromInteger v = InvalidCash
+  fromInteger = undefined
   abs c = c
   signum c = c
 
@@ -69,8 +68,8 @@ instance Fractional Cash where
   (Cash v JPY) / (Cash w JPY) = Cash (v / w) JPY
   (Cash v DKK) / (Cash w DKK) = Cash (v / w) DKK
   (Cash v SEK) / (Cash w SEK) = Cash (v / w) SEK
-  _ / _ = InvalidCash
-  fromRational c = undefined
+  _ / _ = error "Currency mismatch!"
+  fromRational = undefined
 
 instance Eq Cash where
   (Cash v c) == (Cash v' c') = v == v' && c == c'
