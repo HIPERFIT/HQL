@@ -21,13 +21,10 @@ type Years = Double
 data RollConvention = Following | Preceding | ModifiedFollowing
 type Settlements = Int
 
-data EndMonthRule = Ignore | Apply
-
 class Calendar c where
   isLegalDay :: c -> Date -> Bool
   isHoliday  :: c -> Date -> Bool
 
--- TODO: refactor extrapolate/interpolate
 -- This uses interpolation 
 extrapolateDates :: RollConvention -> Settlements -> Date -> [Date]
 extrapolateDates conv stms from = map (rollDay conv) $ iterate (T.addDays between) from
@@ -40,15 +37,6 @@ interpolateDates mat conv stms from = iterateEnd from
            | T.diffDays mat date' < 0 = [mat]
            | otherwise = date' : iterateEnd date'
            where date' = rollDay conv $ T.addDays between date
-
-{-
--- Tests
-d1 = (read "2001-01-01")::Date
-d2 = (read "2006-01-01")::Date
-interpolateDates d2 Following (Periodic 1) d1 
-> [2002-01-01,2003-01-01,2004-01-01,2004-12-31,2006-01-02]
--}
-
 daysBetweenSettlements :: Date -> Settlements -> Days
 daysBetweenSettlements d sts 
   | T.isLeapYear y = floor $ 366.0 / fromIntegral sts -- floor or ceil?
@@ -71,7 +59,8 @@ doRoll ModifiedFollowing date
         (_, mn , _) = Cal.toGregorian date
         fwdDate = rollForward date
 
-legalDay :: Date -> Bool -- TODO: Add argument so users may specify holidays 
+-- TODO: Compute holidays from Easter Sunday
+legalDay :: Date -> Bool
 legalDay date
   | 1 <= day && day <= 5 = True
   | otherwise = False
