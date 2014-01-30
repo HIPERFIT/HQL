@@ -68,9 +68,9 @@ class Instrument b => Bond b where
 -- | Class declaration for amortized bonds
 class Bond a => Amortized a where
   repayments :: a -> Payments
-  repayments a = zipWith3 (\d cf cp -> (d,cf-cp)) ds cfs cps
-    where (ds, cfs) = unzip $ cashflow a
-          (_, cps)  = unzip $ coupons a
+  repayments a = zip ds $ zipWith (-) cf cps
+    where (ds,cf) = unzip $ cashflow a
+          cps = snd $ unzip $ coupons a
 
 -- | Class for mortage-backed obligations
 class Instrument m => MBO m where
@@ -193,7 +193,7 @@ instance Bond FixedAmortizedBond where
   cashflow Annuity{..} = map (flip (,) yield) dates
     where dates = interpolateDates amatu aroll astms asett
           yield = scale (recip $ (1-(1+r)**(-n))/r) aface
-          n = fromIntegral $ length dates -1 -- Subtract settle
+          n = fromIntegral $ length dates - 1 -- Subtract settlement
           r = arate / fromIntegral astms
   coupons Serial{..} = 
     let
@@ -201,23 +201,20 @@ instance Bond FixedAmortizedBond where
       repayment = scale (recip . fromIntegral $ length dates) aface
     in
       snd $ L.mapAccumL (\o d -> (o-repayment, (d, scale arate o))) aface dates
-  coupons a@Annuity{..} = zipWith3 mkCoupon ds os rp
-    where (ds, os) = unzip $ outstanding a
-          (_ , rp) = unzip $ repayments a
-          mkCoupon d outstd rpy = (d, outstd - rpy)
+  coupons a@Annuity{..} = zip (tail ds) $ snd $ L.mapAccumL mkCpns aface $ tail cfs
+    where (ds, cfs) = unzip $ cashflow a
+          repayment = scale (recip $ (1-(1+perPeriodRate)**(-n))/perPeriodRate) aface
+          mkCpns outstd cf = (outstd - repayment, coupon)
+            where coupon = scale perPeriodRate outstd
+          n = fromIntegral $ length ds
+          perPeriodRate = arate / fromIntegral astms
+
   paymentDates Serial{..} = interpolateDates amatu aroll astms asett
   paymentDates Annuity{..} = interpolateDates amatu aroll astms asett
   duration = undefined
   convexity = undefined
 
-instance Amortized FixedAmortizedBond where
-  repayments Annuity{..} = snd $ L.mapAccumL accOutstd aface dates
-    where sni = ((1+perPeriodRate)^n - 1)/perPeriodRate
-          perPeriodRate = arate / fromIntegral astms
-          n = length dates
-          dates = interpolateDates amatu aroll astms asett
-          accOutstd outstd date = (outstd - repayment, (date, repayment))
-            where repayment = scale sni outstd
+instance Amortized FixedAmortizedBond
 
 mkPayment :: Rate -> Cash -> Date -> Payment
 mkPayment rate face date = (date, scale rate face)
@@ -250,7 +247,7 @@ tz0 = \x -> (5 + (1/4)*sqrt x)/100
 ts0 = AnalyticalTermStructure tz0
 s0  = (read "2015-01-01")::Date 
 m0  = (read "2022-07-01")::Date
-r0  = 0.7
+r0  = 0.07
 stms0 = 2
 -- Zero
 z0     = Zero s0 m0 (Cash 147 SEK) r0 ACTACT ModifiedFollowing
@@ -259,8 +256,8 @@ cps_z0 = coupons z0
 pv_z0  = pv z0 ts0
 -- Annuity
 a0     = Annuity s0 m0 (Cash 100 GBP) r0 stms0 ACTACT ModifiedFollowing
-cf_a0  = cashflow a0 -- FAILS
-cps_a0 = coupons a0  -- FAILS
+cf_a0  = cashflow a0
+cps_a0 = coupons a0
 pv_a0  = pv a0 ts0   -- FAILS
 -- Bullet
 b0     = Bullet s0 m0 (Cash 100 USD) r0 stms0 ACTACT Following
