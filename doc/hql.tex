@@ -4,7 +4,7 @@
 \def\Author{
 \bf https://github.com/HIPERFIT/HQL
 }
-\def\Title{\bf HQL Documentation \sf- Fixed Income Module}
+\def\Title{\bf HQL Documentation}
 
 \usepackage{tikz}
 \usepackage{gnuplottex}
@@ -16,6 +16,7 @@
 \usepackage{moreverb}
 \usepackage{hyperref}
 \usepackage{color}
+\usepackage{framed}
 \usepackage{listings,setspace,framed}
 \usepackage{pgfplots}
 %\usepackage{bashful}
@@ -23,25 +24,90 @@
 \usepackage{tikz}
 \usetikzlibrary{decorations.pathreplacing}
 \usepackage{lmodern,inconsolata}
+%\usepackage{float}
 \usepackage{array, xcolor, lipsum, bibentry, fancyhdr}
 \usepackage[absolute]{textpos}
 \usepackage[top=25mm, bottom=25mm, left=22mm, right=22mm]{geometry} %Layout of page
 \usepackage{lastpage} % number of last page
-
+\usepackage[titletoc,toc,title]{appendix}
 %\usepackage[table]{xcolor}
 %\usepackage[table]{xcolor}
 %\usepackage{xcolor}
 %\usepackage{filter}
 %\usepackage{vim}
+%\usepackage{mdframed}
 \usepackage{caption}
 \usepackage[compatibility=true]{caption}
 \usepackage{etex}
 \usepackage{ctable}
+\usepackage{minted}
+\usepackage{setspace}
+\usepackage{etoolbox}
+\usepackage[section]{placeins}
+\usepackage{makeidx}
+\usepackage{float}
+%\usepackage[toc]{glossaries}
+\usepackage[toc,acronym]{glossaries} 
+%\usepackage[xindy]{glossaries}
+%\usepackage[nomain,acronym,toc]{glossaries} 
+\usepackage{nomencl}
+
+\newcommand\Loadedframemethod{default}
+\usepackage[framemethod=\Loadedframemethod]{mdframed}
+
+\surroundwithmdframed[middlelinecolor=ltxmdfblue,middlelinewidth=1pt,%
+                      roundcorner=10pt,innertopmargin=0pt,%
+                      leftmargin=1cm,rightmargin=1cm,%
+                      innerleftmargin=-15pt,innerrightmargin=-15pt,%
+                      ignorelastdescenders,%
+                      settings={\lstset{resetmargins}},%
+                      skipbelow=\topskip,skipabove=\topskip,%
+                      innerbottommargin=0pt,backgroundcolor=gray!10]%
+                     {tltxmdfexample}
+
+\newmdenv[middlelinecolor=ltxmdfblue,middlelinewidth=1pt,%
+                      roundcorner=10pt,innertopmargin=0pt,%
+                      leftmargin=1cm,rightmargin=1cm,%
+                      innerleftmargin=-15pt,innerrightmargin=-15pt,%
+                      ignorelastdescenders,%
+                      settings={\lstset{resetmargins}},%
+                      skipbelow=\topskip,skipabove=\topskip,%
+                      innerbottommargin=0pt,backgroundcolor=gray!10]%
+                     {tltxmdfhighlight}
+\def\highlightinputenv{tltxmdfhighlight}
+
+
 \captionsetup[figure]{labelfont=bf}
 \captionsetup[table]{labelfont=bf,position=below}
-
+%\usepackage[bottom]{footmisc}
 \numberwithin{equation}{section}
 
+\makeindex 
+\makeglossaries
+
+%%% GLOSSARY
+
+\newglossaryentry{Settlement}{name={Settlement}, description={Settlement date}}
+\newglossaryentry{Maturity}{name={Maturity}, description={Maturity date}}
+\newglossaryentry{Period}{name={Period}, description={Coupon payment period}}
+\newglossaryentry{Basis}{name={Basis}, description={Day-count basis}}
+\newglossaryentry{EndMonthRule}{name={EndMonthRule}, description={End-of-month payment rule}}
+\newglossaryentry{IssueDate}{name={IssueDate}, description={Bond issue date}}
+\newglossaryentry{Term}{name={Term}, description={\ldots}}
+\newglossaryentry{Tenor}{name={Tenor}, description={\ldots}}
+%\newglossaryentry{Annuity}{name={Annuity}, description={\ldots}}
+\newglossaryentry{Compounding}{name={Compounding}, description={\ldots}}
+\newglossaryentry{Annualized_rate}{name={Annualized rate}, description={\ldots}}
+\newglossaryentry{Amortized_bond}{name={Amortized bond}, description={\ldots}}
+\newglossaryentry{Coupon_bond}{name={Coupon bond}, description={\ldots}}
+\newglossaryentry{Zero_coupon_bond}{name={Zero coupon bond}, description={\ldots}}
+\newglossaryentry{Serial}{name={Serial}, description={\ldots}}
+\newglossaryentry{Annuity}{name={Annuity}, description={\ldots}}
+\newglossaryentry{Bullet}{name={Bullet}, description={\ldots}}
+
+%\newacronym{foobar}{foobar}{\ldots}
+
+%\usepackage{marginnote}
 %---- settings ----
 % Comments
 \newcommand{\comm}[2]{{\sf \(\spadesuit\){\bf #1: }{\rm \sf #2}\(\spadesuit\)}}
@@ -53,6 +119,9 @@
 
 \renewcommand{\headrulewidth}{0.5pt}
 \renewcommand{\footrulewidth}{1pt}
+
+\AtBeginEnvironment{minted}{\singlespacing%
+    \fontsize{10}{10}\selectfont}
 
 %% Font size of tables
 %\let\oldtabular\tabular
@@ -91,6 +160,27 @@ stringstyle=\color{black},tabsize=2,backgroundcolor=\color{lightgray},language=H
 %\newcolumntype{C}{>{\small}c}
 
 %-------------------
+\definecolor{listinggray}{gray}{0.98}
+\definecolor{lbcolor}{rgb}{0.98,0.98,0.98}
+
+\DeclareCaptionFont{white}{\color{white}}
+\DeclareCaptionFormat{listing}{\colorbox[cmyk]{0.43, 0.35, 0.35,0.01}{\parbox{\dimexpr\textwidth-2\fboxsep\relax}{#1#2#3}}}
+\captionsetup[code]{format=listing,labelfont=white,textfont=white, singlelinecheck=false, margin=0pt, font={bf,footnotesize}}
+
+
+\lstnewenvironment{code}[1][]%
+    {\noindent\minipage{\linewidth}%
+            \lstset{#1}%
+            \captionsetup{options=code}% execute options set with \captionsetup[code]{...}
+    }
+  {\endminipage} 
+
+\newcommand{\fancyfootnotetext}[2]{%
+  \fancypagestyle{dingens}{%
+    \fancyfoot[LO,RE]{\parbox{12cm}{\footnotemark[#1]\footnotesize #2}}%
+  }%
+  \thispagestyle{dingens}%
+}
 
 \newcommand{\tikzmark}[1]{\tikz[overlay,remember picture] \node (#1) {};}
 \newcommand{\DrawBox}[1][]{%
@@ -115,15 +205,16 @@ stringstyle=\color{black},tabsize=2,backgroundcolor=\color{lightgray},language=H
   columns=fullflexible,
   backgroundcolor=\color{gray!10},
   linewidth=1.0\linewidth,
-  xleftmargin=0.1\linewidth,
+  xleftmargin=0.0\linewidth,
+  xrightmargin=0.0\linewidth,
   keywordstyle= \color{keywords},
   identifierstyle=\color{identifier},
   stringstyle=\color{strings},
   commentstyle=\color{comments},
-  basicstyle=\fontsize{10}{12}\color{black}\ttfamily,
+  basicstyle=\fontsize{9}{12}\color{black}\ttfamily,
   frame=single,
-  framesep=2pt,
-  framerule=0.6pt
+  framesep=0pt,
+  framerule=0.0pt
 }
 
 \lstdefinestyle{Output}{
@@ -134,16 +225,35 @@ stringstyle=\color{black},tabsize=2,backgroundcolor=\color{lightgray},language=H
   columns=fullflexible,
   backgroundcolor=\color{gray!10},
   linewidth=1.0\linewidth,
-  xleftmargin=0.1\linewidth,
+  xleftmargin=0.0\linewidth,
+  xrightmargin=0.0\linewidth,
   keywordstyle= \color{keywords},
   identifierstyle=\color{identifier},
   stringstyle=\color{strings},
   commentstyle=\color{comments},
-  basicstyle=\fontsize{10}{12}\color{black}\bfseries,
+  basicstyle=\fontsize{9}{12}\color{black}\bfseries\ttfamily,
   frame=single,
-  framesep=2pt,
-  framerule=0.9pt,
-  %rulecolor=\color{gray}
+  framesep=0pt,
+  framerule=0.0pt
+}
+
+\lstdefinestyle{Temp}{
+  breaklines=true,
+  breakatwhitespace=true,
+  frame=tblr,
+  columns=fullflexible,
+  backgroundcolor=\color{gray!10},
+  linewidth=1.0\linewidth,
+  xleftmargin=0.0\linewidth,
+  xrightmargin=0.0\linewidth,
+  keywordstyle= \color{keywords},
+  identifierstyle=\color{identifier},
+  stringstyle=\color{strings},
+  commentstyle=\color{comments},
+  basicstyle=\fontsize{9}{12}\color{black}\bfseries\ttfamily,
+  frame=single,
+  framesep=0pt,
+  framerule=0.0pt
 }
 
 \lstset{escapechar=@,style=BashInputStyle}
@@ -171,47 +281,18 @@ stringstyle=\color{black},tabsize=2,backgroundcolor=\color{lightgray},language=H
 	This is the documentation of the Hiperfit Quant Library, HQL. As a reader you will
 	find valuable information about the theory behind the implementation together with
 	illustrative examples of real world use cases. The documentation itself is \textit{Literate Haskell}\cite{LitHaskell},
-	which means you can load this file into GHCi:
+	which means you can load this file into \index{GHCi}:
 
 	\vskip 0.5\FrameSep
 	\begin{lstlisting}
 	~/HQL$ ghci docs/hql.lhs
 	\end{lstlisting}
 
-	\section{Terminology}
-	In this section you'll find the most commonly used words in this document, which are specific to the domain of finance and fixed income valuation.
+%	\section{Terminology}
+%	In this section you'll find the most commonly used words in this document, which are specific to the domain of finance and fixed income valuation.
 
-	\framebox{TODO!}
+%	\framebox{TODO!}
 
-	\ctable[
-	caption = Terminology,
-	pos = !ht,
-	doinside=\small
-	]{ll}{
-	}{
-	  \toprule
-		Word & Meaning \\
-	  \midrule
-		Settlement & Settlement date \\
-		Maturity & Maturity date \\
-		Period & Coupon payment period \\
-		Basis & Day-count basis \\
-		EndMonthRule & End-of-month payment rule \\
-		IssueDate & Bond issue date \\
-		Term & - \\
-		Tenor & - \\
-		LIBOR & - \\
-		Annuity & - \\
-		Compounding & - \\
-		Annualized rate & - \\
-		Amortized bond & - \\
-		Coupon bond  & - \\
-		Zero coupon bond & - \\
-		Serial & - \\
-		Annuity & - \\
-		Bullet & - \\		
-	  \bottomrule
-	}
 
 %% ============================================================================================
 % Motiovation
@@ -219,37 +300,11 @@ stringstyle=\color{black},tabsize=2,backgroundcolor=\color{lightgray},language=H
         \section{Motivation}
         The motive behind HQL is to support the workflow behind analysis and pricing of fixed income instruments.
         Using a statically typed language with support for an explorative workflow using via the REPL, HQL aims to be a handy
-        library and tool. Suppose we want to obtain the price of a bullet bond, or vanilla bond, with coupons and a repayment of the face at maturity.
-	We'll illustrate the usage of HQL using an example where we obtain the present value of a bullet bond (seen in the figure below).
-	\\\\
-	The bullet bond is created through the interface with the constructor Bullet:
+        library and tool. Suppose we want to obtain the price of a bullet bond, or vanilla bond, with coupons and a repayment of the face value at maturity.
 
-	\begin{lstlisting}
-	HQL> settle = (read "2010-01-01")::Date
-	HQL> maturity1 = (read "2015-01-02")::Date
-	HQL> bullet  = Bullet settle maturity (Cash 100 USD) 0.1 1 Following
-	\end{lstlisting}
-	
-	Next, we'll calculate the present value of the previously defined bullet object. First we need a term structure. For more information about term structures in HQL see section xx below. The term structure below is a flat one, with a fixed rate of 5.0\%.
-	
-	\begin{lstlisting}
-	HQL> ts  = AnalyticalTermStructure (x = 5.0)	
-	\end{lstlisting}
 
-	\begin{lstlisting}	
-	HQL> pv bullet ts
-	\end{lstlisting}
-	
-	yields the following output:
-	\vskip 0.5\FrameSep
-	\begin{lstlisting}[style=Output]
-	100.00
-	\end{lstlisting}
-	
-	\framebox{TODO!}
-	
 
-\begin{figure}[h!]
+	\begin{figure}[h!]
 	\begin{center}
 	\begin{tikzpicture}[-,shorten >=1pt,auto,node distance=1.5cm,thick,minimum size=0.8cm,main node/.style={circle,draw=red,very thick}]
 	\tikzstyle{selected edge} = [draw,line width=6pt,-,blue!30]
@@ -293,18 +348,70 @@ stringstyle=\color{black},tabsize=2,backgroundcolor=\color{lightgray},language=H
 	\end{center}
 	\end{figure}
 
+
+
+	We'll illustrate the usage of HQL using an example where we obtain the present value of a bullet bond (seen in the figure below).
+	\\\\
+	The bullet bond is created through the interface with the constructor Bullet:
+
+        \ctable[
+	caption = Bullet parameters,
+	pos = ht,
+	doinside=\small,
+	center,
+	]{llll}{
+	}{
+	\toprule
+		Paramter & Type \\
+	  \midrule
+          \emph{Settlement} & \texttt{Date} \\
+          \emph{Maturity} & \texttt{Date} \\
+          \emph{Face} & \texttt{Cash} \\
+          \emph{Coupon rate} & \texttt{Double} \\
+          \emph{Settlements} & \texttt{Settements} \\
+          \emph{Day count convention} & \texttt{(Daycount d) => d} \\
+          \emph{Business day convention} & \texttt{RollConvention} \\
+	  \bottomrule
+	}
+
+	\begin{code}[caption=Pricing a Bullet]
+  HQL> let settle = (read "2010-01-01")::Date
+  HQL> let maturity1 = (read "2015-01-02")::Date
+  HQL> let bullet  = Bullet settle maturity (Cash 100 USD) 0.1 1 Following
+	\end{code}
+		\vskip 0.5\FrameSep
+	Next, we'll calculate the present value of the previously defined bullet object. First we need a term structure. For more information about term structures in HQL see section xx below. The term structure below is a flat one, with a fixed rate of 5.0\%.
+		\vskip 0.5\FrameSep
+	\begin{lstlisting}
+	HQL> let ts  = AnalyticalTermStructure (x = 5.0)	
+	\end{lstlisting}
+
+	\begin{lstlisting}	
+	HQL> pv bullet ts
+	\end{lstlisting}
+	
+	yields the following output:
+	\vskip 0.5\FrameSep
+	\begin{lstlisting}[style=Output]
+	100.00
+	\end{lstlisting}
+	
+	\framebox{TODO!}
+	
+	
+
 %% ============================================================================================
 %% Interest rates
 %% ============================================================================================
 
 	\section{Interest rates and compounding}
 	It seems natural to start by covering compounding and interest rates, when they together make up the fundamentsls of the concept: time value of money. They are part of the fixed income module covered in this documentation.
-	Interest rates determain the rate at which money is borrowed, and exist for various maturities. Typically interest rates are quoted on an annual basis, which means the 	interest rate specifies the annual growth on capital.
+	Interest rates determine the rate at which money is borrowed, and exist for various maturities. Typically interest rates are quoted on an annual basis, which means the 	interest rate specifies the annual growth on capital.
 
 \subsection{Compounding}
-	Compounding refers to the future value of a nominal amount. In other words money is worth more tomorrow due to interest and inflation. The effect of inflation is omitted in HQL. The oppostite of compounding is discounting.
+	Compounding refers to the future value of a nominal amount. In other words money is worth more tomorrow due to interest. The oppostite of compounding is discounting.
 	When one talks about compounding, the interest rate or rate determines the rate at which the deposited amount of money will increase as a function of time.
-	Compounding is often separated into discrete and continous compounding.
+	Compounding can be done in discrete or continous compounding fashion.
 
 
 	\subsubsection{Simple compounding}
@@ -318,10 +425,10 @@ stringstyle=\color{black},tabsize=2,backgroundcolor=\color{lightgray},language=H
 
 	\subsubsection{Exponential compounding}
 
-	Future value of a nominal cash flow $N$ under exponential compounding over
-	$n$ periods:
+	Future value of a nominal cash flow $N$ under exponential compounding over a period of
+	$T$ years:
 
-	\[ FV_T = N(1+R_T)^n \]
+	\[ FV_T = N(1+R_T)^T \]
 
 	%The present value of a nominal future cash flow $N$ is therefore
 
@@ -329,7 +436,7 @@ stringstyle=\color{black},tabsize=2,backgroundcolor=\color{lightgray},language=H
 
 	\vskip 0.5\FrameSep
 	\begin{lstlisting}
-	HQL> cf = compoundFactor (ExponentialRate 8.5 SemiAnnually) 2
+	HQL> let cf = compoundFactor (ExponentialRate 8.5 SemiAnnually) 2
 	\end{lstlisting}
 	\vskip 0.5\FrameSep
 
@@ -351,17 +458,17 @@ stringstyle=\color{black},tabsize=2,backgroundcolor=\color{lightgray},language=H
 	caption = Supported frequencies
 	pos = !ht,
 	doinside=\small
-	]{llr}{
+	]{llll}{
 	}{
 	  \toprule
-		HQL & Meaning & Frequency \\
+		HQL & Meaning & Frequency &  $\delta$ \\
 	  \midrule
-		\ttfamily{Annually} & Annually compounding & 1 \\
-		\ttfamily{SemiAnnually} & SemiAnnually compounding & 2 \\
-		\ttfamily{Quarterly} & Quarterly compounding & 4 \\
-		\ttfamily{Monthly} & Monthly compounding & 12 \\
-		\ttfamily{Daily} & Daily compounding & 365 \\
-		\ttfamily{Other} & Other compounding & n \\
+		\ttfamily{Annually} & Annually compounding & 1 & 1.0\\
+		\ttfamily{SemiAnnually} & SemiAnnually compounding & 2 & 0.5 \\
+		\ttfamily{Quarterly} & Quarterly compounding & 4 & 0.25\\
+		\ttfamily{Monthly} & Monthly compounding & 12 & 1/12\\
+		\ttfamily{Daily} & Daily compounding & 365 & 1/365\\
+		\ttfamily{Other} & Other compounding & n & 1/n\\
 	  \bottomrule
 	}
 
@@ -525,7 +632,7 @@ stringstyle=\color{black},tabsize=2,backgroundcolor=\color{lightgray},language=H
 
 	\vskip 0.5\FrameSep
 	\begin{lstlisting}
-	HQL> TODO
+	HQL> let TODO
 	\end{lstlisting}
 	\vskip 0.5\FrameSep
 
@@ -544,7 +651,7 @@ stringstyle=\color{black},tabsize=2,backgroundcolor=\color{lightgray},language=H
 
 	\vskip 0.5\FrameSep
 	\begin{lstlisting}
-	HQL> TODO
+	HQL> let TODO
 	\end{lstlisting}
 	\vskip 0.5\FrameSep
 
@@ -577,13 +684,13 @@ stringstyle=\color{black},tabsize=2,backgroundcolor=\color{lightgray},language=H
 	where we have a monthly compounded interest rate of 8.5\% during a period of 3 years:
 	\vskip 0.5\FrameSep
 	\begin{lstlisting}
-	HQL> let df = discountFactor (InterestRate (Periodic 12) 8.5) 3.0 0.0
+	HQL> let let df = discountFactor (InterestRate (Periodic 12) 8.5) 3.0 0.0
 	\end{lstlisting}
 	We can use the previously defined DiscountFactor to discount an arbitrary amount. Let's say
 	\$1000.00:
 	\vskip 0.5\FrameSep
 	\begin{lstlisting}
-	HQL> df*1000.0
+	HQL> let df*1000.0
 	\end{lstlisting}
 	yields the following output:
 	\vskip 0.5\FrameSep
@@ -597,7 +704,7 @@ stringstyle=\color{black},tabsize=2,backgroundcolor=\color{lightgray},language=H
 %% ============================================================================================
 
 	\section{Discounting}
-	Discounting is the present value of a future cash flow, in other words. Discounting relates to compounding and are each others inverse. This means
+	Discounting is the present value of a future cash flow, threfore discounting and compounding and are each others inverse. This means
 	the discounting of a compounding with the same interest rate and time to maturity will be equal to the initial amount.
 
 	\subsection{Discount factors}
@@ -606,7 +713,7 @@ stringstyle=\color{black},tabsize=2,backgroundcolor=\color{lightgray},language=H
 	\subsection{The exponential discount factor}
 
 	\begin{lstlisting}
-	HQL> discountFactor (ExponentialRate 8.5 SemiAnnually) 2
+	HQL> let discountFactor (ExponentialRate 8.5 SemiAnnually) 2
 	\end{lstlisting}
 
 	\subsection{The continuous discount factor}
@@ -617,9 +724,10 @@ stringstyle=\color{black},tabsize=2,backgroundcolor=\color{lightgray},language=H
 	Which equals the \textit{zero-coupon unit bond}, with face $N=1$. The discount factor
 	can be seen as entities in a vector, the \textit{discount function},
 
+\begin{comment}
 	\vskip 0.5\FrameSep
 	\begin{lstlisting}
-	HQL> zipWith (*) (discountFactors (interestRate Continuous 5.0) 5 4 <*> pure 0) [1000,1500,1000,2000]
+	HQL> let zipWith (*) (discountFactors (interestRate Continuous 5.0) 5 4 <*> pure 0) [1000,1500,1000,2000]
 	\end{lstlisting}
 	\vskip 0.5\FrameSep
 	yields the following output:
@@ -628,12 +736,12 @@ stringstyle=\color{black},tabsize=2,backgroundcolor=\color{lightgray},language=H
 	[951.229424500714,1357.2561270539393,860.7079764250578,1637.4615061559637]
 	\end{lstlisting}
 	\vskip 0.5\FrameSep
-
+\end{comment}
 	\[
 	\mathbf{df} = (p(t,T_1), ..., p(t,T_n))
 	\]
 
-	In the same way, cash flows can be considered entities in a vector,
+	In the same way, cash flows can be considered entities in a vector \cite{williamfsharp},
 
 	\[
 	\mathbf{cf} = (c_1, ..., c_i)
@@ -657,7 +765,7 @@ stringstyle=\color{black},tabsize=2,backgroundcolor=\color{lightgray},language=H
 	The above calculation is done in HQL using the function \textit{zipWith} taking the discount function and the list of future cash flows as arguments.
 	\vskip 0.5\FrameSep
 	\begin{lstlisting}
-	HQL> zipWith (*) (discountFactors (interestRate Continuous 5.0) 5 4 <*> pure 0) [1000,1500,1000,2000]
+	HQL> let zipWith (*) (discountFactors (interestRate Continuous 5.0) 5 4 <*> pure 0) [1000,1500,1000,2000]
 	\end{lstlisting}
 	\vskip 0.5\FrameSep
 	yields the following output:
@@ -667,9 +775,10 @@ stringstyle=\color{black},tabsize=2,backgroundcolor=\color{lightgray},language=H
 	\end{lstlisting}
 	\vskip 0.5\FrameSep
 	A slightly modified version will return the sum of the cash flows. This is the basis of bond pricing, which is covered in section \nameref{sec:fi}.
+        In the example below, the function \texttt{<*>} is used to initialize the discount factors with an offset of 0.
 	\vskip 0.5\FrameSep
 	\begin{lstlisting}
-	HQL> sum $ zipWith (*) (discountFactors (interestRate Continuous 5.0) 5 4 <*> pure 0) [1000,1500,1000,2000]
+	HQL> let sum $ zipWith (*) (discountFactors (interestRate Continuous 5.0) 5 4 <*> pure 0) [1000,1500,1000,2000]
 	\end{lstlisting}
 	\vskip 0.5\FrameSep
 	yields the following output:
@@ -687,7 +796,7 @@ stringstyle=\color{black},tabsize=2,backgroundcolor=\color{lightgray},language=H
 	and because HQL provides an interface to work with LIBOR rates.
 
 	\ctable[
-	caption = Typicall market data
+	caption = Typical market data
 	pos = ht,
 	doinside=\small,
 	center,
@@ -708,6 +817,7 @@ stringstyle=\color{black},tabsize=2,backgroundcolor=\color{lightgray},language=H
 	Spot rates are quoted on an annualized basis. Spot rates are for example LIBOR spot rates, see below.
 
 	\subsection{Forward rates}
+	\framebox{TODO: Add figure to illustrate the concept}
 	Forward rates are used to price future cash flows and bonds, and to construct term structures. Forward rates indicate the interest rate between two future dates [S,T]
 	\[
 	(1+R_T)^T=(1+R_S)^S(1+R(t;S,T))^{T-S}; T>S
@@ -750,7 +860,7 @@ stringstyle=\color{black},tabsize=2,backgroundcolor=\color{lightgray},language=H
 
 	\vskip 0.5\FrameSep
 	\begin{lstlisting}
-	HQL> (((discountFactor (InterestRate (Periodic 2) 6.65) 0.25 0.0)/(discountFactor (InterestRate (Periodic 2) 7.77) 1.5))**(1/(2*1.25))-1)*2*100
+	HQL> let (((discountFactor (InterestRate (Periodic 2) 6.65) 0.25 0.0)/(discountFactor (InterestRate (Periodic 2) 7.77) 1.5))**(1/(2*1.25))-1)*2*100
 	\end{lstlisting}
 	yields the following output:
 	\vskip 0.5\FrameSep
@@ -852,10 +962,21 @@ stringstyle=\color{black},tabsize=2,backgroundcolor=\color{lightgray},language=H
 	L(t,T) = F(t;S,S+\tau) = F(t;S,T), T>S
 	\]
 
-	\subsubsection{Using LIBOR rates}
+	\subsection{Using LIBOR rates}
 	LIBOR rates are quoted intra daily, but sometimes it is of interest to convert between spot rates and forward rates if one or the
 	other is not quoted or available.
 
+        \subsection{A note on stochastic interest rates}
+        Stochastic interest rates, or short rates, are not supported by HQL in the sense that it's used for valuation of instruments.
+        This section illustrates how stochastic interest rates are implemented and used in HQL, to give an understanding and to support for future work.
+        \\\\
+        Below is an example of a short rate model, the Merton's model from 1973:
+
+        \[
+        r_t = r_0 + at + \sigma W^{*}_{t}
+        \]
+        
+        Where the short rate $r_t$ is expressed as a function of $t$ and the one-dimensional Brownian motion $W^{*}_{t}$.
 
 	\section{The term structure}
 
@@ -927,14 +1048,14 @@ stringstyle=\color{black},tabsize=2,backgroundcolor=\color{lightgray},language=H
 	The flat term structure is nothing more than a flat yield curve, with a fixed yield for all maturities.
 
 	\begin{lstlisting}
-	HQL> let flatTerm x = 5.0
+	HQL> let let flatTerm x = 5.0
 	\end{lstlisting}
 
 	\subsection{Analytic term structure}
 	The analytical term structure describes the yield as an analytical function. Consider the example below:
 
 	\begin{lstlisting}
-	HQL> let AnalyticTerm x = 5 + (1/2)*sqrt(x)
+	HQL> let let AnalyticTerm x = 5 + (1/2)*sqrt(x)
 	\end{lstlisting}
 
 	\subsection{Interpolated term structure}
@@ -1055,7 +1176,7 @@ stringstyle=\color{black},tabsize=2,backgroundcolor=\color{lightgray},language=H
 	\framebox{TODO: Adapt HQL to handle this case}
 
 	\subsection{Floating coupon bond}
-	Not yet supported by HQL (this means stochastic interest rates).
+	Not yet supported by the HQL interface. For an example how HQL can be used to estimate stochastic interest rates, see section Y.
 
 	%% ---------------------------------------------------------------
 	%% Yield to maturity
@@ -1102,6 +1223,26 @@ stringstyle=\color{black},tabsize=2,backgroundcolor=\color{lightgray},language=H
 	face value over its lifetime. Payments are distributed equally over all the settlement
 	dates, increasing and decreasing the repayment amount and coupon respectively (see figure
 	\ref{fig:annuitycf}.
+
+        \ctable[
+	caption = Annuity parameters,
+	pos = ht,
+	doinside=\small,
+	center,
+	]{llll}{
+	}{
+	\toprule
+		Paramter & Type \\
+	  \midrule
+          Settlement & \texttt{Date} \\
+          Maturity & \texttt{Date} \\
+          Face & \texttt{Cash} \\
+          Coupon rate & \texttt{Double} \\
+          Settlements & \texttt{Settements} \\
+          Day count convention & \texttt{(Daycount d) => d} \\
+          Business day convention & \texttt{RollConvention} \\
+	  \bottomrule
+	}
 
 	\begin{figure}[h!]
 	\begin{center}
@@ -1171,7 +1312,6 @@ stringstyle=\color{black},tabsize=2,backgroundcolor=\color{lightgray},language=H
 	\end{lstlisting}
 
 	\subsection{Bullet}
-
 	Bullet has a fixed rate coupon which is paid at every settlement. No repayments before maturity. Figure \ref{fig:bulletcf} shows the cashflows.
 
 	\[ p(t,T) = \sum_{t=1}^{T}\frac{C}{(1+r)^t} + \frac{N}{(1+r)^T} \]
@@ -1220,10 +1360,29 @@ stringstyle=\color{black},tabsize=2,backgroundcolor=\color{lightgray},language=H
 	\end{center}
 	\end{figure}
 
+\ctable[
+	caption = Bullet parameters,
+	pos = ht,
+	doinside=\small,
+	center,
+	]{llll}{
+	}{
+	\toprule
+		Paramter & Type \\
+	  \midrule
+          Settlement & \texttt{Date} \\
+          Maturity & \texttt{Date} \\
+          Face & \texttt{Cash} \\
+          Coupon rate & \texttt{Double} \\
+          Settlements & \texttt{Settements} \\
+          Day count convention & \texttt{(Daycount d) => d} \\
+          Business day convention & \texttt{RollConvention} \\
+	  \bottomrule
+	}
 	\begin{lstlisting}
-	HQL> settle = (read "2010-01-01")::Date
-	HQL> maturity1 = (read "2015-01-02")::Date
-	HQL> bullet  = Bullet settle maturity (Cash 100 USD) 0.1 1 Following
+	HQL> let settle = (read "2010-01-01")::Date
+	HQL> let maturity1 = (read "2015-01-02")::Date
+	HQL> let bullet  = Bullet settle maturity (Cash 100 USD) 0.1 1 Following
 	\end{lstlisting}
 
 
@@ -1283,10 +1442,29 @@ stringstyle=\color{black},tabsize=2,backgroundcolor=\color{lightgray},language=H
 	\end{center}
 	\end{figure}
 
+\ctable[
+	caption = Consol parameters,
+	pos = ht,
+	doinside=\small,
+	center,
+	]{llll}{
+	}{
+	\toprule
+		Paramter & Type \\
+	  \midrule
+          Settlement & \texttt{Date} \\
+          Maturity & \texttt{Date} \\
+          Face & \texttt{Cash} \\
+          Coupon rate & \texttt{Double} \\
+          Settlements & \texttt{Settements} \\
+          Day count convention & \texttt{(Daycount d) => d} \\
+          Business day convention & \texttt{RollConvention} \\
+	  \bottomrule
+	}
 	\begin{lstlisting}
-	HQL> settle = (read "2010-01-01")::Date
-	HQL> maturity1 = (read "2015-01-02")::Date
-	HQL> bullet  = Consol settle maturity (Cash 100 USD) 0.1 1 Following
+	HQL> let settle = (read "2010-01-01")::Date
+	HQL> let maturity1 = (read "2015-01-02")::Date
+	HQL> let bullet  = Consol settle maturity (Cash 100 USD) 0.1 1 Following
 	\end{lstlisting}
 
 	\subsection{Serial}
@@ -1344,10 +1522,29 @@ stringstyle=\color{black},tabsize=2,backgroundcolor=\color{lightgray},language=H
 	\end{center}
 	\end{figure}
 
+\ctable[
+	caption = Serial parameters,
+	pos = ht,
+	doinside=\small,
+	center,
+	]{llll}{
+	}{
+	\toprule
+		Paramter & Type \\
+	  \midrule
+          Settlement & \texttt{Date} \\
+          Maturity & \texttt{Date} \\
+          Face & \texttt{Cash} \\
+          Coupon rate & \texttt{Double} \\
+          Settlements & \texttt{Settements} \\
+          Day count convention & \texttt{(Daycount d) => d} \\
+          Business day convention & \texttt{RollConvention} \\
+	  \bottomrule
+	}
 	\begin{lstlisting}
-	HQL> settle = (read "2010-01-01")::Date
-	HQL> maturity1 = (read "2015-01-02")::Date
-	HQL> bullet  = Serial settle maturity (Cash 100 USD) 0.1 1 Following
+	HQL> let settle = (read "2010-01-01")::Date
+	HQL> let maturity1 = (read "2015-01-02")::Date
+	HQL> let bullet  = Serial settle maturity (Cash 100 USD) 0.1 1 Following
 	\end{lstlisting}
 
 	\section{US Treasury Bonds}
@@ -1360,11 +1557,36 @@ stringstyle=\color{black},tabsize=2,backgroundcolor=\color{lightgray},language=H
 	Long term debt instruments that mature in twenty to thirty years.
 
 	\subsection{Example using HQL}
+ The bullet bond is created through the interface with the constructor Bullet:
 
+	\begin{lstlisting}
+	HQL> let settle = (read "2010-01-01")::Date
+	HQL> let maturity1 = (read "2015-01-02")::Date
+	HQL> let bullet  = Bullet settle maturity (Cash 100 USD) 0.1 1 Following
+	\end{lstlisting}
+	
+	Next, we'll calculate the present value of the previously defined bullet object. First we need a term structure. For more information about term structures in HQL see section xx below. The term structure below is a flat one, with a fixed rate of 5.0\%.
+	
+	\begin{lstlisting}
+	HQL> let ts  = AnalyticalTermStructure (x = 5.0)	
+	\end{lstlisting}
+
+	\begin{lstlisting}	
+	HQL> pv bullet ts
+	\end{lstlisting}
+	
+	yields the following output:
+	\vskip 0.5\FrameSep
+	\begin{lstlisting}[style=Output]
+	100.00
+	\end{lstlisting}
+
+
+	\framebox{TODO: Modify values for example}
 %% ============================================================================================
 %% Interest rate Swaps
 %% ============================================================================================
-\begin{comment}
+
 	\subsection{Interest rate Swaps}
 	Interest rate swaps are interest rate instruments what are priceable, and consist of two parts. Typically for a swap, the
 	two parts, called legs, are the floating leg and the fixed leg. The floating leg is in fact, for a vanilla swap, the floating spot rate whereas the fixed leg is fixed interest rate specified in the contract. A swap pays an amount at predefined intervals, according to the fixed and floating leg. One party will receive the floating rate, and the other the fixed rate of the swap.
@@ -1373,9 +1595,8 @@ stringstyle=\color{black},tabsize=2,backgroundcolor=\color{lightgray},language=H
 	A swap is valuated as a portfolio of a zero coupon bond and a floating coupon bond. The amount (positive or negative) depends on the holds of the contract, hence the one valuating it.
 
 	\subsubsection{Cash flows}
-	Illustrate cash flows of a swap using figure...
+	\framebox{TODO: Illustrate cash flows of a swap using figure...}
 
-\end{comment}
 
 %% ============================================================================================
 %% Fitting the termstructure
@@ -1385,7 +1606,7 @@ stringstyle=\color{black},tabsize=2,backgroundcolor=\color{lightgray},language=H
 	Various methods of fitting a termstructure to market data (LIBOR, forex futures, bonds).
 
 	\begin{lstlisting}
-	HQL> df*1000.0
+	HQL> let df*1000.0
 	\end{lstlisting}
 	yields the following output:
 	\vskip 0.5\FrameSep
@@ -1393,15 +1614,113 @@ stringstyle=\color{black},tabsize=2,backgroundcolor=\color{lightgray},language=H
 	775.6133702070988
 	\end{lstlisting}
 \end{comment}
+
+\section{Options}
+Options come in two variants, puts and calls. The call option gives the owner of the
+option the right, but not the obligation, to buy the underlying asset at the strike price.
+The put option gives the holder of the contract the right, but not the obligation, to sell
+the underlying asset. The Black-Scholes formula describes the European option,
+which can only be exercised on the maturity date, in contrast to, for example,
+American options. The buyer of the option pays a premium for this in order to cover
+the risk taken from the counterpart's side. Options have become very popular and they
+are used in the major exchanges throughout the world, covering most asset classes \cite{astborg:fsharp}.
+\\\\
+The contract specifications for options will also depend on their type.
+Generally, there are some properties that are more or less general to all of them.
+The general specifications are as follows:
+
+\begin{itemize}
+\item \emph{Side}
+\item \emph{Quantity}
+\item \emph{Strike price}
+\item \emph{Expiration date}
+\item \emph{Settlement terms}
+\end{itemize}
+
+\subsection{European options}
+European options are the basic form of options that other types of options extend.
+American options and Exotic options are some examples. We'll stick to European
+options in this section, which is the type HQL currently supports. HQL uses the closed
+form Black-Scholes formula to price put and call options.
+\\\\
+The following are the assumptions made under the Black-Scholes formula \cite{astborg:fsharp}, derived in appendix X:
+\begin{itemize}
+\item No arbitrage
+\item Possible to borrow money at a constant risk-free interest rate (throughout the
+holding of the option)
+\item Possible to buy, sell, and shortlist fractional amounts of underlying assets
+\item No transaction costs
+\item Price of the underlying asset follows a Brownian motion, constant drift,
+and volatility
+\item No dividends paid from underlying security
+\end{itemize}
+
+The famous Black-Scholes formula, with the parameters listed in table x, for the present value at time $t$.
+
+\[ V(S,t) = \left\{
+  \begin{array}{l l}
+    C(S,t) = N(d_1)S-N(d_2)Ke^{-r(T-t)} & \quad \text{For call options} \\
+    P(S,t) = N(-d_2)Ke^{-r(T-t)}-N(-d_1)S & \quad \text{Put option}
+  \end{array} \right.\]
+
+Where $d_1$ and $d_2$ are the two Black-Scholes parameters (input to the cumulative distrubution function $N$).
+
+\begin{align} 
+     d_1 &= \frac{1}{\sigma\sqrt{T - t}}\left[\ln\left(\frac{S}{K}\right) + \left(r + \frac{\sigma^2}{2}\right)(T - t)\right] \notag\\
+     d_2 &= \frac{1}{\sigma\sqrt{T - t}}\left[\ln\left(\frac{S}{K}\right) + \left(r - \frac{\sigma^2}{2}\right)(T - t)\right] \notag\\
+         &= d_1 - \sigma\sqrt{T - t} \notag
+\end{align}
+
+	\ctable[
+	caption = Parameters used in Black-Scholes,
+	pos = !hb,
+	doinside=\small,
+	center,
+	]{llll}{
+	}{
+	\toprule
+		Parameter & Description & Example\\
+	  \midrule
+              N & The cumulative distribution function & a \\
+              T & Time to maturity, expressed in years & a\\
+              S & The stock price or other underlying assets & a\\
+              K & The strike price & a\\
+              r & The risk-free annuallized interest rate & a\\
+
+	  \bottomrule
+	}
+\vskip 1.5\FrameSep
+
+\subsubsection{Pricing a call option}
+
+        \begin{lstlisting}	
+	HQL> let black_scholes Call 58.60 60.0 0.5 0.01 0.3
+	\end{lstlisting}
+yields the following output:
+	\vskip 0.5\FrameSep
+	\begin{lstlisting}[style=Output]
+	4.465202269
+	\end{lstlisting}
+
+
+\subsubsection{Pricing a put option}
+        \begin{lstlisting}	
+	HQL> let black_scholes Put 58.60 60.0 0.5 0.01 0.3
+	\end{lstlisting}
+yields the following output:
+	\vskip 0.5\FrameSep
+	\begin{lstlisting}[style=Output]
+	5.565951021
+	\end{lstlisting}
 %% ============================================================================================
 %% The Portfolio
 %% ============================================================================================
-\begin{comment}
+
 	\section{The Portfolio}
 	A portfolio, is as the name suggests, a collection of position in financial instruments. Typically stocks, bonds, options, futures and so on. In this section we'll mainly discuss the portfolio supported in HQL. The portfolio is in itself priceable, which means one can get the present and future value of a portfolio, consisting of various instruments from the HQL library.
 
 	The portfolio is also used as the building block for swaps. (to be continued...)
-\end{comment}
+
 
 %% ============================================================================================
 %% Day-count conventions
@@ -1478,24 +1797,195 @@ stringstyle=\color{black},tabsize=2,backgroundcolor=\color{lightgray},language=H
 	\end{description}
 
 
-	\section{Visualization}
-	As an extra feature, HQL supports visualization of cash flows in much the same fashion as the diagrams seen above for the various bond types.
-	The visualization module is defined in Utils.Graphics.Visualize module.
+        \section{Yahoo! Finance data}
+        In this section we'll introduce the HQL functionality to download and parse data from Yahoo Finance\footnotemark[1].
+        \fancyfootnotetext{1}{Yahoo! Finance - http://finance.yahoo.com}. The data at Yahoo Finance is available as CSV, comma separated values.
+        
+	\ctable[
+	caption = Input parameters to web service,
+	pos = !htp,
+	width = 80mm,
+	center,
+	doinside=\small
+	]{lll}{
+	}{
+	  \toprule
+		Parameter & Description & Example \\
+	  \midrule
+                s & Instrument symbol & \string^{IRX} \\
+                d & To month of year & 07 \\
+                e & To day of month & 29 \\
+                f & To year & 2014 \\
+                a & From month of year & 00 \\
+                b & From day of month & 1 \\
+                c & From year & 2013 \\
+	  \bottomrule
+	}
+        \noindent
+        The data is mapped to a record when parsed, defined as follows:
 
-	\begin{lstlisting}	
-	HQL> cash1 = Cash 500 USD
-	HQL> cash2 = Cash 1500 USD
-	HQL> sampleData = [("2014-06-01", cash1),("2015-01-01", cash1),("2015-06-01", cash1),("2016-01-01", cash1),("2016-06-01", cash2)]
-	HQL> GP.plotDefault $ cashflowDiagram testData	
+%\begin{mdframed}
+        \begin{minted}[tabsize=2,gobble=0,xleftmargin=25pt]{haskell}
+data YahooEntry = YahooEntry
+             { date :: LocalTime
+             , open :: Double
+             , high :: Double
+             , low :: Double
+             , close :: Double
+             , volume :: Integer
+             , adjclose :: Double
+             } deriving (Eq, Show)
+        \end{minted}
+     %\end{mdframed}
+
+        \subsection{Example - Downloading and parsing data}
+
+        Let's look at an example where we use HQL to download and parse the daily prices for 13-week Treasury Bill (\string^{IRX}) from 2000-01-01 to 2014-01-01.
+To do this, we use the command \texttt{wget} which is part of most Linux/Unix distributions:
+        
+        \begin{lstlisting}[breaklines=true]	
+        ~/HQL$ wget http://ichart.finance.yahoo.com/table.csv?s= %5EIRX&a=00&b=1&c=2000&d=00&e=1&f=2014&g=d&ignore=.csv
 	\end{lstlisting}
 
-	\framebox{TODO: Add output and add example where we use a bond}
+        This will download the data from Yahoo! Finance in the file \texttt{table.csv}. We'll now let HQL parse the file and plot the data using the
+        visualization and plotting functionality, covered in more detail in the next section below.
+
+        \framebox{TODO: HQL parsing and plot (code done)}
+
+	\section{Visualization and plotting}
+	As an extra feature, HQL supports visualization of cash flows in much the same fashion as the diagrams seen above for the various bond types.
+	The visualization module is defined in \texttt{Utils.Graphics.Visualize module}.
+
+	\begin{lstlisting}	
+	HQL> let cash1 = Cash 500 USD
+	HQL> let cash2 = Cash 1500 USD
+	HQL> let sampleData = [("2014-06-01", cash1),("2015-01-01", cash1),("2015-06-01", cash1),("2016-01-01", cash1),("2016-06-01", cash2)]
+	HQL> let GP.plotDefault $ cashflowDiagram testData	
+	\end{lstlisting}
+
+	\framebox{TODO: EPS plot output from HQL}
+
 
 \newpage
 
-% REFERENCES
-\bibliographystyle{abbrv}
-%\addcontentsline{toc}{section}{References}
+%\input{Appendices/AppendixA}
+
+
+\appendix
+
+\section{Test cases} \label{app:testcases}
+
+\subsection{Cross reference}
+This section is a short cross reference between the test cases in Derivatives Expert (DE) and HQL. 
+
+\ctable[
+	caption = Cross reference for test cases and their respective outputs,
+	pos = !htp,
+	center,
+	doinside=\small
+	]{lllll}{
+	}{
+	  \toprule
+		Test case DE & Test case HQL & Result DE & Result HQL & Explicit (exact) calculation\\
+	  \midrule
+                2 & - & 0.9203271932613013 & - & $(1+(5.6124/(100\cdot2)))^{-1.5\cdot2}$ \\
+                9 & - & 0.7756133702070986 & - & $(1+8.5/(100\cdot12))^{-3\cdot12}$ \\
+		11 & - & 0.7643885607510086 & - & $(1+(5 + (1/2)\cdot\sqrt{4.5})/(100\cdot2))^{-4.5\cdot2}$ \\
+	        14 & - & 0.9592326139088729 & - & $(1+(8.5/(100\cdot2)))^{-0.5\cdot2}$ \\
+	       	15 & - & 0.9593493353414723 & - & $e^{-8.3/100\cdot1/2}$ \\
+	  \bottomrule
+	}
+\framebox{TODO: Map DE test cases to HQL}
+\section{HQL formula sheet} \label{app:formulas}
+In this section the formulas derived above and in this appendix, is summarized in a convinient table with descriptions.
+
+\framebox{TODO: Table}
+
+\section{Derivation of Black Scholes} \label{app:derivbs}
+This section provides for a derivation of Black Scholes formula, following the method in the classical paper from 1973 \cite{blackscholes}.
+\\\\
+The following "ideal conditions" are assumed for the stock and the option \cite{blackscholes}\cite{astborg:fsharp}:
+\begin{itemize}
+\item No arbitrage
+\item Possible to borrow money at a constant risk-free interest rate (throughout the
+holding of the option)
+\item Possible to buy, sell, and shortlist fractional amounts of underlying assets
+\item No transaction costs
+\item Price of the underlying asset follows a Brownian motion, constant drift,
+and volatility
+\item No dividends paid from underlying security
+\end{itemize}
+
+Under the assumptions above, the price of the stock depends only on the price of the underlying (for example stock), which follows
+a geometric brownian motion. The geometric brownian motion is a modification to the original assumption made by Bachelier (Théorie de la speculation), where
+the returns follow the brownian motions instead of the stock price itself \cite{bachelier}. The asset followes thus a geometrical brownian motion,
+
+\[
+\frac{dS}{S} = \mu dt + \sigma dW
+\]
+
+where $W$ is the Brownian motion, $\mu$ is the drift and $\sigma$ the annualized volatility, with normally distributed increments. Further, the payoff for the put and call option are know as,
+
+\[ V(S,T) = \left\{
+  \begin{array}{l l}
+    max\left\{S_T-K,0 \right\} & \quad \text{For call options} \\
+    max\left\{K-S_T,0 \right\} & \quad \text{Put option}
+  \end{array} \right.\]
+
+where $S_T$ is the price ot the asset at time $T$ and $K$ is the strike price of the option.
+
+\[
+dV = \left(\mu S \frac{\partial V}{\partial S} + \frac{\partial V}{\partial t} + \frac{1}{2}\sigma^2 S^2 \frac{\partial^2 V}{\partial S^2}\right)dt + \sigma S \frac{\partial V}{\partial S}\,dW
+\]
+
+\[ V(S,t) = \left\{
+  \begin{array}{l l}
+    C(S,t) = N(d_1)S-N(d_2)Ke^{-r(T-t)} & \quad \text{For call options} \\
+    P(S,t) = N(-d_2)Ke^{-r(T-t)}-N(-d_1)S & \quad \text{Put option}
+  \end{array} \right.\]
+
+Where $d_1$ and $d_2$ are the two Black-Scholes parameters, as input to the cumulative distrubution function $N(p)$:
+
+\begin{align} 
+     d_1 &= \frac{1}{\sigma\sqrt{T - t}}\left[\ln\left(\frac{S}{K}\right) + \left(r + \frac{\sigma^2}{2}\right)(T - t)\right] \notag\\
+     d_2 &= \frac{1}{\sigma\sqrt{T - t}}\left[\ln\left(\frac{S}{K}\right) + \left(r - \frac{\sigma^2}{2}\right)(T - t)\right] \notag\\
+         &= d_1 - \sigma\sqrt{T - t} \notag
+\end{align}
+
+\gls{Settlement}
+\gls{Maturity}
+\gls{Period}
+\gls{Basis}
+\gls{EndMonthRule}
+\gls{IssueDate}
+\gls{Term}
+\gls{Tenor}
+\gls{Annuity}
+\gls{Compounding}
+\gls{Annualized_rate}
+\gls{Amortized_bond}
+\gls{Coupon_bond}
+\gls{Zero_coupon_bond}
+\gls{Serial}
+\gls{Annuity}
+\gls{Bullet}
+
+The above result can be interpreted as follows. First, the stock price is
+scaled using the cumulative distribution function with $d_1$ as a parameter.
+Then, the stock price is reduced by the discounted strike price scaled by the cumulative
+distribution function of $d_2$ . In other words, it's the difference between the stock price
+and the strike price using probability scaling of each and discounting to present time.
+
+\newpage
+\printglossary[title=Terms and abbreviations,toctitle=Terms and abbreviations]
+
+\newpage
+%\addcontentsline{toc}{chapter}{\numberline{}Bibliography}
+\bibliographystyle{acm}
 \bibliography{hql}
+
+\newpage
+%\addcontentsline{toc}{chapter}{\numberline{}Index}
+\printindex
 
 \end{document}
