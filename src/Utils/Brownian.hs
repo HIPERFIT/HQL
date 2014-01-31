@@ -7,7 +7,7 @@
 -- Stability:   experimental
 -- Portability: portable
 --
--- Types and functions for working with interest rates
+-- Proof of concept of stochastic process simulation
 module Utils.Brownian where
 
 import Control.Monad.Random

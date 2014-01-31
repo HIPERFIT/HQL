@@ -1,10 +1,10 @@
--- Module:      Instruments.Utils.InterestRate
+-- Module:      Instruments.Utils.TermStructure
 -- Copyright:   (c) 2013 HIPERFIT
 -- License:     BSD-3
 -- Maintainer:  Johan Astborg, Andreas Bock <bock@andreasbock.dk>
 -- Portability: portable
 --
--- Types and functions for working with interest rates.
+-- Types and functions for term structures
 module Instruments.Utils.TermStructure where
 
 import Instruments.Utils.InterestRate

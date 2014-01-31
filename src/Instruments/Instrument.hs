@@ -7,15 +7,11 @@
 -- Stability:   experimental
 -- Portability: portable
 --
--- Types and functions for working with interest rates
+-- Top-level class for financial instruments
 module Instruments.Instrument where
 import Utils.Currency
 
--- | Instrument is a high-level class for financial instruments
--- class Instrument i where
---   expired :: i -> IO Bool
-
--- | Instrument is a high-level class for financial instruments
+-- | Instrument is a base class for financial instruments
 class Instrument i where
   type PricingEngine :: *
   expired :: i -> IO Bool

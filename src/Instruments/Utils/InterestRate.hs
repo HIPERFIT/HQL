@@ -5,7 +5,7 @@
 -- Portability: portable
 --
 -- Types and functions for working with interest rates,
--- compoudning and discounting.
+-- compounding and discounting.
 
 module Instruments.Utils.InterestRate where
 import Control.Applicative

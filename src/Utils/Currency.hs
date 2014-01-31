@@ -1,12 +1,12 @@
 -- |
--- Module:      Instruments.FixedIncome.Bonds.Bonds
+-- Module:      Utils.Currency
 -- Copyright:   (c) 2013 HIPERFIT
 -- License:     BSD-3
 -- Maintainer:  Andreas Bock <bock@andreasbock.dk>
 -- Stability:   experimental
 -- Portability: portable
 --
--- Types and functions for working with interest rates
+-- Types and functions for HQLs Cash type
 
 module Utils.Currency where
 import Prelude hiding (sum)

@@ -1,12 +1,12 @@
 -- |
--- Module:      Instruments.FixedIncome.Bonds.Bonds
+-- Module:      Utils.DayCount
 -- Copyright:   (c) 2013 HIPERFIT
 -- License:     BSD-3
 -- Maintainer:  Andreas Bock <bock@andreasbock.dk>
 -- Stability:   experimental
 -- Portability: portable
 --
--- Types and functions for working with interest rates
+-- Defines types and classes for computing day count modifiers
 module Utils.DayCount where
 import qualified Data.Time.Calendar as Cal
 import qualified Data.Time as T

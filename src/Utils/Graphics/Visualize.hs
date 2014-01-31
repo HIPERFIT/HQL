@@ -1,5 +1,3 @@
-
--- |
 -- Module:      Utils.Graphics.Visualize
 -- Copyright:   (c) 2013 HIPERFIT
 -- License:     BSD-3
@@ -58,6 +56,7 @@ cashflowDiagram values =
       Plot2D.list Graph2D.histograms dat) $
       [("Cashflow", (map (getAmount . snd) values))] 
 
+-- Example of a cashflow diagram:
 cash1 = Cash 500 USD
 cash2 = Cash 1500 USD
 testData = [("2014-06-01", cash1),("2015-01-01", cash1),("2015-06-01", cash1),("2016-01-01", cash1),("2016-06-01", cash2)]
