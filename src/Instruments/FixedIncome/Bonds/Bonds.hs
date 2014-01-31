@@ -59,9 +59,12 @@ class Instrument b => Bond b where
   -- it has no theoretical value
   dirty bond ts now = sum $ zipWith discount dfs cs
     where (ds,cs) = unzip $ cashflow bond
-          dfs = dfsAt ts $ map (getYearOffset now) ds
+          dfs = dfsAt ts $ map (sanity . getYearOffset now) ds
           discount (Just df) = scale df
           discount Nothing   = scale 0 
+          sanity x
+            | x >= 0    = x
+            | otherwise = error "Cannot price past cashflow!" 
   ytm = undefined
   ai = undefined
 
