@@ -1,5 +1,4 @@
 {-# LANGUAGE TypeFamilies, GADTs, RecordWildCards #-}
-
 -- |
 -- Module:      Pricing.PricingEngine
 -- Copyright:   (c) 2013 HIPERFIT
@@ -7,5 +6,6 @@
 -- Maintainer:  -
 -- Stability:   experimental
 -- Portability: portable
---
--- Types and functions for working with interest rates
+-- Import all pricing engines
+
+import Instruments.Utils.TermStructure
