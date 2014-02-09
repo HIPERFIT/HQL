@@ -6,7 +6,7 @@ category:         Finance
 author:           Johan Astborg <joastbg@gmail.com>
 maintainer:       Johan Astborg <joastbg@gmail.com>
                   Andreas Bock <bock@andreasbock.dk>
-copyright:        (c) Sinan Gabel, all rights reserved.
+copyright:        (c) Johan Astborg, Andreas Bock
 homepage: 	  https://github.com/HIPERFIT/HQL
 bug-reports:      https://github.com/HIPERFIT/HQL/issues
 build-type:       Simple
@@ -41,7 +41,7 @@ library
     time,
     array >= 0.4.0.1,
     gnuplot >= 0.5.2
-  
+
   ghc-options: -O2 -Wall
 
 test-suite tests

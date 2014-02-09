@@ -1,7 +1,7 @@
 {-# LANGUAGE TypeFamilies, GADTs, RecordWildCards #-}
 -- |
 -- Module:      Pricing.PricingEngine
--- Copyright:   (c) 2013 HIPERFIT
+-- Copyright:   (c) Johan Astborg, Andreas Bock
 -- License:     BSD-3
 -- Maintainer:  -
 -- Stability:   experimental

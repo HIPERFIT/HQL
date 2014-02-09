@@ -1,6 +1,6 @@
 -- |
 -- Module:      Utils.Currency
--- Copyright:   (c) 2013 HIPERFIT
+-- Copyright:   (c) Johan Astborg, Andreas Bock
 -- License:     BSD-3
 -- Maintainer:  Andreas Bock <bock@andreasbock.dk>
 -- Stability:   experimental
@@ -15,7 +15,7 @@ data Currency = USD | EUR | GBP | CHF | JPY | DKK | SEK deriving (Show,Eq)
 
 -- redesign, see discounting
 data Cash = Cash Double Currency
-  
+
 -- Format cash using currency symbol
 -- TODO: Format with ***##.## decimals etc
 instance Show Cash where
@@ -45,7 +45,7 @@ instance Num Cash where
   (Cash v DKK) - (Cash w DKK) = Cash (v - w) DKK
   (Cash v SEK) - (Cash w SEK) = Cash (v - w) SEK
   _ - _ = error "Currency mismatch!"
-    
+
   (Cash v USD) * (Cash w USD) = Cash (v * w) USD
   (Cash v EUR) * (Cash w EUR) = Cash (v * w) EUR
   (Cash v GBP) * (Cash w GBP) = Cash (v * w) GBP
@@ -113,7 +113,7 @@ instance Show CurrencyPair where
 
 -- TODO: Bid/Ask
 instance Show ExchangeRate where
-    show (ExchangeRate mid pair) = show pair ++ " " ++ show mid 
+    show (ExchangeRate mid pair) = show pair ++ " " ++ show mid
 
 {- Sample usage:
 
@@ -134,7 +134,7 @@ instance Show ExchangeRate where
 
     **** TODOs
     Support conversion of currencies, like this:
-    
+
     Cash 1000.00 USD `to` EUR
     -- Will use implicits and infix operator
     -- Idea: use the exchange rate as an implicit (ImplicitParams)

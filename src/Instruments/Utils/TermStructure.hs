@@ -1,5 +1,5 @@
 -- Module:      Instruments.Utils.TermStructure
--- Copyright:   (c) 2013 HIPERFIT
+-- Copyright:   (c) Johan Astborg, Andreas Bock
 -- License:     BSD-3
 -- Maintainer:  Johan Astborg, Andreas Bock <bock@andreasbock.dk>
 -- Portability: portable
@@ -33,11 +33,11 @@ yieldAt (AnalyticalTermStructure f) m = return $ f m
 -- | Returns the discount factor at an offset
 dfAt :: TermStructure -> Maturity -> Maybe Rate
 dfAt a m = recip <$> (\y -> (1+y)**m) <$> yieldAt a m
- 
+
 -- | Returns the forward rate given two offsets
 fwdRate :: TermStructure -> Maturity -> Maturity -> Maybe DiscountFactor
 fwdRate t m0 m1 = (/) <$> dfAt t m1 <*> dfAt t m0
-  
+
 -- | Returns the discount factors given a list of offsets
 dfsAt :: TermStructure -> [Maturity] -> [Maybe Rate]
 dfsAt t = map (dfAt t)

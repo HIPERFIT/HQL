@@ -1,7 +1,7 @@
 {-# LANGUAGE TypeFamilies, GADTs, RecordWildCards, RankNTypes #-}
 -- |
 -- Module:      Instruments.FixedIncome.Bonds.Bonds
--- Copyright:   (c) 2013 HIPERFIT
+-- Copyright:   (c) Johan Astborg, Andreas Bock
 -- License:     BSD-3
 -- Maintainer:  Andreas Bock <bock@andreasbock.dk>
 -- Stability:   experimental
@@ -31,9 +31,9 @@ type Payments = [Payment]
 
 --
 -- Classes
--- 
+--
 
--- | Bond class specifies common denominator for all bond types 
+-- | Bond class specifies common denominator for all bond types
 class Instrument b => Bond b where
   clean, dirty :: b -> TermStructure -> Date -> Cash
   -- | Yield to maturity
@@ -53,7 +53,7 @@ class Instrument b => Bond b where
   paymentDates :: b -> [Date]
   duration     :: b -> Double
   convexity    :: b -> Payment
-  
+
   clean bond ts now = dirty bond ts now - ai bond now
   -- If we cannot discount a given cashflow
   -- it has no theoretical value
@@ -61,10 +61,10 @@ class Instrument b => Bond b where
     where (ds,cs) = unzip $ cashflow bond
           dfs = dfsAt ts $ map (sanity . getYearOffset now) ds
           discount (Just df) = scale df
-          discount Nothing   = scale 0 
+          discount Nothing   = scale 0
           sanity x
             | x >= 0    = x
-            | otherwise = error "Cannot price past cashflow!" 
+            | otherwise = error "Cannot price past cashflow!"
   ytm = undefined
   ai = undefined
 
@@ -87,7 +87,7 @@ class Instrument m => MBO m where
 -- Instruments
 --
 
-data FixedAmortizedBond where 
+data FixedAmortizedBond where
   Annuity :: { asett :: Date,
                amatu :: Date,
                aface :: Cash,
@@ -163,7 +163,7 @@ instance Bond FixedCouponBond where
   paymentDates Zero{..} = fmatu : []
   paymentDates Bullet{..} = interpolateDates fmatu froll fstms fsett
   paymentDates Consol{..} = extrapolateDates froll fstms fsett
-  
+
   convexity = undefined
   duration  = undefined
 
@@ -176,7 +176,7 @@ instance Bond FixedCouponBond where
 instance Bond FixedAmortizedBond where
   principal Serial{..} = aface
   principal Annuity{..} = aface
-  outstanding s@Serial{..} = 
+  outstanding s@Serial{..} =
     let
       dates = paymentDates s
       repayment = scale (recip . fromIntegral $ length dates) aface
@@ -201,7 +201,7 @@ instance Bond FixedAmortizedBond where
           yield = scale (recip $ (1-(1+r)**(-n))/r) aface
           n = fromIntegral $ length dates - 1 -- Subtract settlement
           r = arate / fromIntegral astms
-  coupons Serial{..} = 
+  coupons Serial{..} =
     let
       dates = interpolateDates amatu aroll astms asett
       repayment = scale (recip . fromIntegral $ length dates) aface

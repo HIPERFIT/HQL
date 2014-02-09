@@ -1,6 +1,6 @@
 -- |
 -- Module:      Utils.Calendar
--- Copyright:   (c) 2013 HIPERFIT
+-- Copyright:   (c) Johan Astborg, Andreas Bock
 -- License:     BSD-3
 -- Maintainer:  Andreas Bock <bock@andreasbock.dk>
 -- Stability:   experimental
@@ -25,7 +25,7 @@ class Calendar c where
   isLegalDay :: c -> Date -> Bool
   isHoliday  :: c -> Date -> Bool
 
--- This uses interpolation 
+-- This uses interpolation
 extrapolateDates :: RollConvention -> Settlements -> Date -> [Date]
 extrapolateDates conv stms from = map (rollDay conv) $ iterate (T.addDays between) from
   where  between = daysBetweenSettlements from stms
@@ -38,7 +38,7 @@ interpolateDates mat conv stms from = iterateEnd from
            | otherwise = date' : iterateEnd date'
            where date' = rollDay conv $ T.addDays between date
 daysBetweenSettlements :: Date -> Settlements -> Days
-daysBetweenSettlements d sts 
+daysBetweenSettlements d sts
   | T.isLeapYear y = floor $ 366.0 / fromIntegral sts -- floor or ceil?
   | otherwise  = floor $ 365.0 / fromIntegral sts
   where (y,_,_) = WeekDate.toWeekDate d
@@ -79,7 +79,7 @@ getYearOffset now date
   | Cal.isLeapYear y = diff / 366
   | otherwise      = diff / 365
   where (y,_,_) = WeekDate.toWeekDate date
-        diff = fromIntegral $ Cal.diffDays date now 
+        diff = fromIntegral $ Cal.diffDays date now
 
 getDay :: IO Date
 getDay = T.getCurrentTime >>= \d -> return (T.utctDay d)

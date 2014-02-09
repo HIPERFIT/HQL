@@ -1,6 +1,6 @@
 -- |
 -- Module:      Utils.DayCount
--- Copyright:   (c) 2013 HIPERFIT
+-- Copyright:   (c) Johan Astborg, Andreas Bock
 -- License:     BSD-3
 -- Maintainer:  Andreas Bock <bock@andreasbock.dk>
 -- Stability:   experimental
@@ -19,7 +19,7 @@ data Basis = ACTACT | ACT360   | ACT365F  | Thirty360
 
 instance DayCount Basis where
   modifier ACTACT dt0 dt1 = dc dt0 end0 + dc dt1 start1 + yearsBetween
-    where dc start end 
+    where dc start end
             | isInLeapYear start = between / 366
             | otherwise          = between / 365
             where between = abs $ diffTime start end

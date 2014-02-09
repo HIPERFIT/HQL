@@ -1,5 +1,5 @@
 -- Module:      Instruments.Utils.InterestRate
--- Copyright:   (c) 2013 HIPERFIT
+-- Copyright:   (c) Johan Astborg, Andreas Bock
 -- License:     BSD-3
 -- Maintainer:  Johan Astborg <joastbg@gmail.com>
 -- Portability: portable
@@ -24,21 +24,21 @@ type Offset = Double
 -- For discrete exponential compounding, use Exponential.
 -- For discrete simple compounding use Simple.
 -- Continuous compounding is the default used in HQL internally.
-data Compounding = Continuous 
+data Compounding = Continuous
         	     | Exponential
-		         | Linear 
+		         | Linear
                  deriving (Show)
 
 -- | Represents the compounding frequency
--- 
+--
 -- An interest rate can have different compounding frequencies.
 -- For other frequencies than specified, use Other.
 data Frequency = Annually
                  | SemiAnnually
                  | Quarterly
                  | Monthly
-                 | Daily 
-                 | Other Int 
+                 | Daily
+                 | Other Int
 		         deriving (Show, Eq)
 
 convertFreq :: Frequency -> Double
@@ -58,10 +58,10 @@ class InterestRate a where
   continuousRate :: a -> ContinuousRate
 
   -- | Returns the discount factor at an offset
-  discountFactor :: a -> Offset -> DiscountFactor 
+  discountFactor :: a -> Offset -> DiscountFactor
 
   -- | Returns the compound factor at an offset
-  compoundFactor :: a -> Offset -> CompoundFactor 
+  compoundFactor :: a -> Offset -> CompoundFactor
 
   -- | Get the intrinsic rate
   rate :: a -> Rate
@@ -72,14 +72,14 @@ instance InterestRate ContinuousRate where
   compoundFactor rate offset = 1 / discountFactor rate offset
   rate (ContinuousRate r) = r
 
-instance InterestRate ExponentialRate where	 
+instance InterestRate ExponentialRate where
   continuousRate (ExponentialRate r n) = ContinuousRate $ (exp(r/(100*nn)) - 1)*nn*100
 		where nn = convertFreq n;
-  discountFactor (ExponentialRate r n) offset = 1/((1+r/(100.0*nn))**(offset/nn)) 
+  discountFactor (ExponentialRate r n) offset = 1/((1+r/(100.0*nn))**(offset/nn))
 		where nn = convertFreq n;
   compoundFactor rate offset = 1 / discountFactor rate offset
   rate (ExponentialRate r _) = r
-	
+
 instance InterestRate SimpleRate where
   continuousRate (SimpleRate r) = ContinuousRate $ (exp (r/100.0) - 1) * 100.0
   discountFactor (SimpleRate r) = const $ 1/(1+r/100.0)

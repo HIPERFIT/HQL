@@ -1,4 +1,4 @@
--- Copyright:   (c) 2013 HIPERFIT
+-- Copyright:   (c) Johan Astborg, Andreas Bock
 -- License:     BSD-3
 -- Maintainers: Andreas Bock <bock@andreasbock.dk>
 --              Johan Astborg <joastbg@gmail.com>
@@ -21,7 +21,7 @@ import Instruments.FixedIncome.Bonds.Bonds
 -- time and are therefore time sensitive!       --
 --------------------------------------------------
 
--- Define values to be used when creating bonds 
+-- Define values to be used when creating bonds
 settle   = read "2015-01-01" ::Date  -- Settlement date
 maturity = read "2016-01-01" ::Date  -- Maturity of the bonds
 face     = Cash 100 DKK              -- Principal

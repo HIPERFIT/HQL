@@ -1,5 +1,5 @@
 -- Module:      Utils.Graphics.Visualize
--- Copyright:   (c) 2013 HIPERFIT
+-- Copyright:   (c) Johan Astborg, Andreas Bock
 -- License:     BSD-3
 -- Maintainer:  Johan Astborg <joastbg@gmail.com>
 -- Stability:   experimental
@@ -40,12 +40,12 @@ import Utils.Currency
 getAmount (Cash amount _) = amount
 
 cashflowDiagram :: [(String, Cash)] -> Frame.T (Graph2D.T Int Double)
-cashflowDiagram values = 
+cashflowDiagram values =
    Frame.cons (
       Opts.title "HQL Cashflow Diagram" $
       Histogram.clusteredGap 3 $
       Opts.yRange2d (0,(maximum $ map (getAmount . snd) values)+(minimum $ map (getAmount . snd) values)) $
-      OptsStyle.fillBorderLineType (-1) $      
+      OptsStyle.fillBorderLineType (-1) $
       OptsStyle.fillSolid $
       Opts.keyInside $
       Opts.xTicks2d
@@ -54,7 +54,7 @@ cashflowDiagram values =
       foldMap (\(title,dat) ->
       fmap (Graph2D.lineSpec (LineSpec.title title LineSpec.deflt)) $
       Plot2D.list Graph2D.histograms dat) $
-      [("Cashflow", (map (getAmount . snd) values))] 
+      [("Cashflow", (map (getAmount . snd) values))]
 
 -- Example of a cashflow diagram:
 cash1 = Cash 500 USD
