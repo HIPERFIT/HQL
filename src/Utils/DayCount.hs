@@ -12,9 +12,6 @@ import qualified Data.Time.Calendar as Cal
 import qualified Data.Time as T
 import Utils.Calendar
 
-class DayCount d where
-  modifier :: d -> Date -> Date -> Double
-
 data Basis = ACTACT | ACT360   | ACT365F  | Thirty360
 
 instance DayCount Basis where

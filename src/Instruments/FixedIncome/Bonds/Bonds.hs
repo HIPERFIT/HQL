@@ -53,13 +53,13 @@ class Instrument b => Bond b where
   paymentDates :: b -> [Date]
   duration     :: b -> Double
   convexity    :: b -> Payment
-
+  diffDayCount :: b -> Date -> Date -> Double
   clean bond ts now = dirty bond ts now - ai bond now
   -- If we cannot discount a given cashflow
   -- it has no theoretical value
   dirty bond ts now = sum $ zipWith discount dfs cs
     where (ds,cs) = unzip $ cashflow bond
-          dfs = dfsAt ts $ map (sanity . getYearOffset now) ds
+          dfs = dfsAt ts $ map (sanity . diffDayCount bond now) ds
           discount (Just df) = scale df
           discount Nothing   = scale 0
           sanity x
@@ -93,14 +93,14 @@ data FixedAmortizedBond where
                aface :: Cash,
                arate :: Double,
                astms :: Settlements,
-               adcc  :: (DayCount d) => d,
+               adcc  :: Basis,
                aroll :: RollConvention } -> FixedAmortizedBond
   Serial :: {  asett :: Date,
                amatu :: Date,
                aface :: Cash,
                arate :: Double,
                astms :: Settlements,
-               adcc  :: (DayCount d) => d,
+               adcc  :: Basis,
                aroll :: RollConvention } -> FixedAmortizedBond
 
 data FixedCouponBond where
@@ -108,20 +108,20 @@ data FixedCouponBond where
               fmatu :: Date,
               fface :: Cash,
               frate :: Double,
-              fdcc  :: (DayCount d) => d,
+              fdcc  :: Basis,
               froll :: RollConvention } -> FixedCouponBond
   Consol :: { fsett :: Date,
               fface :: Cash,
               frate :: Double,
               fstms :: Settlements,
-              fdcc  :: (DayCount d) => d,
+              fdcc  :: Basis,
               froll :: RollConvention } -> FixedCouponBond
   Bullet :: { fsett :: Date,
               fmatu :: Date,
               fface :: Cash,
               frate :: Double,
               fstms :: Settlements,
-              fdcc  :: (DayCount d) => d,
+              fdcc  :: Basis,
               froll :: RollConvention } -> FixedCouponBond
 --
 -- Instances
@@ -141,6 +141,9 @@ instance Instrument FixedAmortizedBond where
   expired Annuity{..} = isExpired amatu
 
 instance Bond FixedCouponBond where
+  diffDayCount Zero{..}    = modifier fdcc
+  diffDayCount Bullet{..}  = modifier fdcc
+  diffDayCount Consol{..}  = modifier fdcc
   principal Zero{..} = fface
   principal Consol{..} = fface
   principal Bullet{..} = fface
@@ -174,6 +177,8 @@ instance Bond FixedCouponBond where
   ytm _ _ = error "Not implemented (Newton-Raphson method)."
 
 instance Bond FixedAmortizedBond where
+  diffDayCount Annuity{..} = modifier adcc
+  diffDayCount Serial{..}  = modifier adcc
   principal Serial{..} = aface
   principal Annuity{..} = aface
   outstanding s@Serial{..} =
