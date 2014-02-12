@@ -39,8 +39,8 @@ import Utils.Currency
 
 getAmount (Cash amount _) = amount
 
-cashflowDiagram :: [(String, Cash)] -> Frame.T (Graph2D.T Int Double)
-cashflowDiagram values =
+diagram :: [(String, Cash)] -> Frame.T (Graph2D.T Int Double)
+diagram values =
    Frame.cons (
       Opts.title "HQL Cashflow Diagram" $
       Histogram.clusteredGap 3 $
@@ -54,10 +54,12 @@ cashflowDiagram values =
       foldMap (\(title,dat) ->
       fmap (Graph2D.lineSpec (LineSpec.title title LineSpec.deflt)) $
       Plot2D.list Graph2D.histograms dat) $
-      [("Cashflow", (map (getAmount . snd) values))]
+      [("Cashflow", (map (getAmount . snd) values))] 
 
 -- Example of a cashflow diagram:
-cash1 = Cash 500 USD
-cash2 = Cash 1500 USD
-testData = [("2014-06-01", cash1),("2015-01-01", cash1),("2015-06-01", cash1),("2016-01-01", cash1),("2016-06-01", cash2)]
-testPlot = GP.plotDefault $ cashflowDiagram testData
+-- cash1 = Cash 500 USD
+-- cash2 = Cash 1500 USD
+-- testData = [("2014-06-01", cash1),("2015-01-01", cash1),("2015-06-01", cash1),("2016-01-01", cash1),("2016-06-01", cash2)]
+-- testPlot = GP.plotDefault $ diagram testData
+graphPayments f = GP.plotDefault $ diagram f'
+  where f' = map (\(d,c) -> (show d, c)) f
