@@ -12,7 +12,7 @@ import qualified Data.Time.Calendar as Cal
 import qualified Data.Time as T
 import Utils.Calendar
 
-data Basis = ACTACT | ACT360   | ACT365F  | Thirty360
+data Basis = ACTACT | ACT360 | ACT365F  | Thirty360 deriving (Show)
 
 modifier ACTACT dt0 dt1 = dc dt0 end0 + dc dt1 start1 + yearsBetween
   where dc start end

@@ -227,5 +227,47 @@ instance Bond FixedAmortizedBond where
 
 instance Amortized FixedAmortizedBond
 
+instance Show FixedCouponBond where
+  show Zero{..} = "Zero:\n"
+                  ++ "  Settlement Date:  " ++ show fsett ++ "\n"
+                  ++ "  Maturity:         " ++ show fmatu ++ "\n"
+                  ++ "  Face value:       " ++ show fface ++ "\n"
+                  ++ "  Rate:             " ++ show frate ++ "\n"
+                  ++ "  Basis:            " ++ show fdcc  ++ "\n"
+                  ++ "  Roll Convention:  " ++ show froll
+  show Consol{..} = "Consol:\n"
+                    ++ "  Settlement Date:  " ++ show fsett ++ "\n"
+                    ++ "  Face value:       " ++ show fface ++ "\n"
+                    ++ "  Rate:             " ++ show frate ++ "\n"
+                    ++ "  Settlements/year: " ++ show fstms ++ "\n"
+                    ++ "  Basis:            " ++ show fdcc  ++ "\n"
+                    ++ "  Roll Convention:  " ++ show froll
+  show Bullet{..} = "Bullet:\n"
+                    ++ "  Settlement Date:  " ++ show fsett ++ "\n"
+                    ++ "  Maturity:         " ++ show fmatu ++ "\n"
+                    ++ "  Face value:       " ++ show fface ++ "\n"
+                    ++ "  Rate:             " ++ show frate ++ "\n"
+                    ++ "  Settlements/year: " ++ show fstms ++ "\n"
+                    ++ "  Basis:            " ++ show fdcc  ++ "\n"
+                    ++ "  Roll Convention:  " ++ show froll
+
+instance Show FixedAmortizedBond where
+  show Annuity{..} = "Annuity:\n"
+                     ++ "  Settlement Date:  " ++ show asett ++ "\n"
+                     ++ "  Maturity:         " ++ show amatu ++ "\n"
+                     ++ "  Face value:       " ++ show aface ++ "\n"
+                     ++ "  Rate:             " ++ show arate ++ "\n"
+                     ++ "  Settlements/year: " ++ show astms ++ "\n"
+                     ++ "  Basis:            " ++ show adcc  ++ "\n"
+                     ++ "  Roll Convention:  " ++ show aroll
+  show Serial{..} = "Serial:\n"
+                     ++ "  Settlement Date:  " ++ show asett ++ "\n"
+                     ++ "  Maturity:         " ++ show amatu ++ "\n"
+                     ++ "  Face value:       " ++ show aface ++ "\n"
+                     ++ "  Rate:             " ++ show arate ++ "\n"
+                     ++ "  Settlements/year: " ++ show astms ++ "\n"
+                     ++ "  Basis:            " ++ show adcc  ++ "\n"
+                     ++ "  Roll Convention:  " ++ show aroll
+
 mkPayment :: Rate -> Cash -> Date -> Payment
 mkPayment rate face date = (date, scale rate face)

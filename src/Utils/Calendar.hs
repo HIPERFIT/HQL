@@ -18,7 +18,7 @@ type Date = T.Day
 type Days = Integer
 type Years = Double
 
-data RollConvention = Following | Preceding | ModifiedFollowing
+data RollConvention = Following | Preceding | ModifiedFollowing deriving (Show)
 type Settlements = Int
 
 class Calendar c where
