@@ -6,10 +6,13 @@
 -- Types and functions for working with and evaluating swaps
 
 module Instruments.Swaps.Swap where
+
+import Control.Monad (liftM)
 import Instruments.Utils.InterestRate
 import Instruments.Utils.FloatingRate
-import Utils.Currency
+import Utils.Currency as Cur
 import Utils.Calendar
+import Utils.DayCount
 import Instruments.Instrument
 
     
@@ -18,41 +21,52 @@ type Spread = Double
 type Nominal = Double
 type Discount = Double 
 type Seed = Double
-
+type InterestRateSwap = Double
     
--- VanillaSwap and legs
-
--- | I made a leg class so i can call npv_leg regardless of legtype
-class Leg l where
-    npv_leg :: l -> Cash
-
---data VanillaLeg a = FixedLeg a | FloatingLeg    
-
-data FixedLeg a = Fixed a Nominal [Date]    
-
--- | i need interestrate    
-instance InterestRate a => Leg (FixedLeg a) where
-    npv_leg (Fixed rate nom dates) = undefined
-
--- | this one gets an a so it looks like fixedleg    
-data FloatingLeg a = Floating FloatingRate Nominal [Date]
-
-instance Leg FloatingLeg where
-    npv_leg (Floating rate nom dates) = undefined
-
---data VanillaLeg a = FixedLeg a | FloatingLeg    
-
--- we still want 2 legs    
-data VanillaSwap a = VanillaSwap (Leg a) (Leg a)
-
+data Leg a where 
+    FiLeg :: {prin :: Cash,
+              inra :: a,
+              accr :: Basis, -- accrual factor
+              dats :: [Date] } -> Leg a
+    FlLeg :: {prin :: Cash,
+              inra :: a, -- FloatingModel
+              accr :: Basis,
+              matu :: Maturity,
+              flra :: FloatingRate a, -- How do i make this return a?
+              dats :: [Date] } -> Leg a
+    
+data VanillaSwap a where
+     VanillaSwap :: {l1 :: Leg a, 
+                     l2 :: Leg a} -> VanillaSwap a
 
 class Instrument s => Swap s where
-    npv :: s -> Cash
 
 instance InterestRate a => Swap (VanillaSwap a) where
-    npv _ = undefined
     --npv leg1 leg2 = npv_leg leg1 - npv_leg leg2
 
-instance Instrument (VanillaSwap a) where
+instance InterestRate a => Instrument (VanillaSwap a) where
+    type PricingEngine = InterestRateSwap 
     expired _ = undefined
+    pv VanillaSwap{..} = undefined --npv_leg l1 - npv_leg l2
     
+
+pv_leg :: InterestRate a => Leg a -> Cash
+pv_leg FlLeg{..} = Cur.sum . map (\(dt0, dt1) -> 
+                let accrualfact = modifier accr dt0 dt1 in
+                let fora dt0 dt1 = (1/accrualfact) * ((discountFactor inra $ modifier accr dt0 dt0) / 
+                                                      (discountFactor inra accrualfact) - 1) in
+                   Cur.scale ((discountFactor inra $ modifier accr dt0 dt1) * (fora dt0 dt1)) $ prin) $ getPairs dats
+                        
+pv_leg FiLeg{..} = Cur.sum . map (\(dt0, dt1) -> 
+                   let accrualfact = modifier accr dt0 dt1 in
+                   Cur.scale accrualfact $ Cur.scale (discountFactor inra accrualfact) interest)          $ getPairs dats
+                   where interest = Cur.scale (rate inra / 100) prin
+                    
+getPairs :: [a] -> [(a, a)]
+getPairs [] = []
+getPairs (_:[]) = []
+getPairs list = (head list, head $ tail list) : getPairs(tail list)
+
+instance Show (Leg a) where
+    show FiLeg{..} = "Rate = 10"
+    show FlLeg{..} = "Principal = 10000000" 

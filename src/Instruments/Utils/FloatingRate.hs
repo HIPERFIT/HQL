@@ -1,3 +1,4 @@
+{-# LANGUAGE GADTs #-}
 -- Module:      Instruments.Swap.Swap
 -- Copyright:   (c) Kasper Passov
 -- Maintainer:  Kasper Passov <kasper.passov@gmail.com>
@@ -7,17 +8,35 @@ module Instruments.Utils.FloatingRate where
 import Instruments.Utils.InterestRate
 import System.Random(RandomGen)
 import Utils.Calendar
+import Data.Maybe(fromJust)
 
-class RateModel m where
+
+data FloatingRate a where
+    LIBOR :: {tabl :: Table a} -> FloatingRate a deriving(Show)
+                  -- | HullWhite
+    
+type Table a = [(Maturity, a)]
+
+--data MaturityFl = Overnight
+--              | OneWeak
+--              | OneMonth
+--              | TwoMonths
+--              | ThreeMonths
+--              | SixMonths
+--              | OneYear
+--                deriving (Show, Eq)
+
+class FloatingModel m where
     -- | returns the deterministic rate
-    getRateDet  :: m -> Date -> Rate
+    getRateTable  :: m -> Maturity -> Rate
     -- | returns the rate according to the model
     getRate :: RandomGen g => m -> g -> (Rate, g)
     isDet :: m -> Bool
 
-data FloatingRate = LIBOR [(Maturity, Rate)]
-                  -- | HullWhite
-    
-    
---instance RateModel FloatingRate where
-  --  getRateDet 
+instance InterestRate a => FloatingModel (FloatingRate a) where
+    getRateTable (LIBOR (tabl)) matu = rate $ fromJust $ lookup matu tabl
+    getRate (LIBOR _) = error "LIBOR is deterministic."
+    isDet (LIBOR _) = True
+
+
+

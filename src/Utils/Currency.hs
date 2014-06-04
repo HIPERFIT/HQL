@@ -11,6 +11,7 @@
 module Utils.Currency where
 import Prelude hiding (sum)
 -- Some common currencies
+
 data Currency = USD | EUR | GBP | CHF | JPY | DKK | SEK deriving (Show,Eq)
 
 -- redesign, see discounting
@@ -98,6 +99,11 @@ add d (Cash v JPY) = Cash (d+v) JPY
 add d (Cash v CHF) = Cash (d+v) CHF
 add d (Cash v DKK) = Cash (d+v) DKK
 add d (Cash v SEK) = Cash (d+v) SEK
+
+--expC, add, scale :: Cash -> Double -> Cash
+--expC c d = expC d c
+--scale c d = scale d c
+--add c d = add d c
 
 sum :: [Cash] -> Cash
 sum (c:[]) = c
