@@ -1,7 +1,6 @@
 import Instruments.Swaps.Swap
 import Instruments.Instrument
 import Instruments.Utils.InterestRate
-import Instruments.Utils.FloatingRate
 import Instruments.Utils.TermStructure
 import Control.Monad(liftM)
 import Utils.Currency

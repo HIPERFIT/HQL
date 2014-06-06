@@ -11,7 +11,6 @@ import Control.Monad (liftM)
 import Data.List
 import Data.Maybe(fromJust)
 import Instruments.Utils.InterestRate
-import Instruments.Utils.FloatingRate
 import Instruments.Utils.TermStructure
 import Utils.Currency as Cur
 import Utils.Calendar
