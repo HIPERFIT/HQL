@@ -14,6 +14,7 @@ import Utils.Calendar
 
 data Basis = ACTACT | ACT360 | ACT365F  | Thirty360 deriving (Show)
 
+modifier :: Fractional a => Basis -> T.Day -> T.Day -> a
 modifier ACTACT dt0 dt1 = dc dt0 end0 + dc dt1 start1 + yearsBetween
   where dc start end
           | isInLeapYear start = between / 366

@@ -8,8 +8,11 @@
 module Instruments.Swaps.Swap where
 
 import Control.Monad (liftM)
+import Data.List
+import Data.Maybe(fromJust)
 import Instruments.Utils.InterestRate
 import Instruments.Utils.FloatingRate
+import Instruments.Utils.TermStructure
 import Utils.Currency as Cur
 import Utils.Calendar
 import Utils.DayCount
@@ -21,52 +24,82 @@ type Spread = Double
 type Nominal = Double
 type Discount = Double 
 type Seed = Double
-type InterestRateSwap = Double
     
 data Leg a where 
-    FiLeg :: {prin :: Cash,
-              inra :: a,
-              accr :: Basis, -- accrual factor
-              dats :: [Date] } -> Leg a
-    FlLeg :: {prin :: Cash,
-              inra :: a, -- FloatingModel
-              accr :: Basis,
-              matu :: Maturity,
-              flra :: FloatingRate a, -- How do i make this return a?
-              dats :: [Date] } -> Leg a
-    
+    FiLeg :: { prin :: Cash,
+               dats :: [Date], 
+               inra :: a,
+               accr :: Basis} -> Leg a
+    FlLeg :: { prin :: Cash,
+               dats :: [Date],
+               accr :: Basis} -> Leg a 
+               
 data VanillaSwap a where
      VanillaSwap :: {l1 :: Leg a, 
                      l2 :: Leg a} -> VanillaSwap a
 
 class Instrument s => Swap s where
+    --disFac :: s -> TermStructure -> DiscountFactor
 
 instance InterestRate a => Swap (VanillaSwap a) where
     --npv leg1 leg2 = npv_leg leg1 - npv_leg leg2
 
 instance InterestRate a => Instrument (VanillaSwap a) where
-    type PricingEngine = InterestRateSwap 
-    expired _ = undefined
-    pv VanillaSwap{..} = undefined --npv_leg l1 - npv_leg l2
-    
+    type PricingEngine = TermStructure 
+    expired VanillaSwap{..} = legExpired l1 l2
+    pv VanillaSwap{..} ts = do{v1 <- pvLeg l1 ts;
+                               v2 <- pvLeg l2 ts;
+                               return $ v1 - v2}
+            
+pvLeg :: InterestRate a => Leg a -> TermStructure -> IO Cash
+pvLeg FlLeg{..} ts = do{dates <- dateTrips;
+                         return $ Cur.sum $ map (\(dt0, dt1, dt2) ->
+                             let accrfacprev = modifier accr dt0 dt1 in -- The accrualfactor of calculation i - 1 in fraction of years
+                             let accrfac = modifier accr dt1 dt2 in -- Accrualfactor for i in fraction of years
+                             Cur.scale (fromJust (dfAt ts accrfacprev) - fromJust (dfAt ts accrfac)) prin) dates}
+        where dateTrips = liftM getTrips $ getValid dats -- the dates (including today) in tuples of three.
+        
+pvLeg FiLeg{..} _ = do{dates <- datePairs;
+                        return $ Cur.sum $ map (\(dt0,dt1) -> 
+                            let accrfact = modifier accr dt0 dt1 in 
+                                Cur.scale (accrfact * discountFactor inra accrfact) interest) 
+                        dates}
+        where interest = Cur.scale (rate inra / 100) prin
+              datePairs = liftM getPairs $ getValid dats -- the dates (including today) in tuples of two
 
-pv_leg :: InterestRate a => Leg a -> Cash
-pv_leg FlLeg{..} = Cur.sum . map (\(dt0, dt1) -> 
-                let accrualfact = modifier accr dt0 dt1 in
-                let fora dt0 dt1 = (1/accrualfact) * ((discountFactor inra $ modifier accr dt0 dt0) / 
-                                                      (discountFactor inra accrualfact) - 1) in
-                   Cur.scale ((discountFactor inra $ modifier accr dt0 dt1) * (fora dt0 dt1)) $ prin) $ getPairs dats
+getValid :: [Date] -> IO [Date]                
+getValid dats = do{today <- getDay;
+                   valids <- filterExpired dats;
+                   return (sort $ today : valids)} 
                         
-pv_leg FiLeg{..} = Cur.sum . map (\(dt0, dt1) -> 
-                   let accrualfact = modifier accr dt0 dt1 in
-                   Cur.scale accrualfact $ Cur.scale (discountFactor inra accrualfact) interest)          $ getPairs dats
-                   where interest = Cur.scale (rate inra / 100) prin
-                    
 getPairs :: [a] -> [(a, a)]
 getPairs [] = []
-getPairs (_:[]) = []
-getPairs list = (head list, head $ tail list) : getPairs(tail list)
+getPairs [x] = []
+getPairs (x:yz@(y:z)) = (x, y) : getPairs yz
 
+getTrips :: [a] -> [(a, a, a)]
+getTrips [] = []
+getTrips [x] = []
+getTrips (x:y:[]) = [] 
+getTrips (x:yzv@(y:z:v)) = (x, y, z) : getTrips yzv
+
+
+after :: [Date] -> Date -> [Date]
+ds `after` d = filter (d<) ds
+
+filterExpired :: [Date] -> IO [Date]
+filterExpired ds = liftM (ds `after`) getDay
+
+getDates :: Leg a -> [Date]
+getDates FiLeg{..} = dats
+getDates FlLeg{..} = dats
+
+legExpired :: Leg a -> Leg a -> IO Bool
+legExpired l1 l2 = do nonexp1 <- filterExpired $ getDates l1;
+                      nonexp2 <- filterExpired $ getDates l2;
+                      return $ null nonexp1 && null nonexp2
+                
+                
 instance Show (Leg a) where
     show FiLeg{..} = "Rate = 10"
     show FlLeg{..} = "Principal = 10000000" 

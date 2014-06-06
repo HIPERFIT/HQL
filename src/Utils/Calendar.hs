@@ -84,6 +84,7 @@ getYearOffset now date
 getDay :: IO Date
 getDay = T.getCurrentTime >>= \d -> return (T.utctDay d)
 
+isExpired :: Date -> IO Bool
 isExpired maturityDate = do {now <- getDay; return $ T.diffDays now maturityDate < 0}
 
 isInLeapYear d = T.isLeapYear y
